@@ -70,10 +70,14 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ steps.version.outputs.version }}'
+          # The registry looks the package up through the registration index, which is updated after the
+          # flat container; wait for both.
           for ($i = 0; $i -lt 60; $i++) {
             try {
-              $index = Invoke-RestMethod 'https://api.nuget.org/v3-flatcontainer/netwright/index.json'
-              if ($index.versions -contains $version) { Write-Host "Netwright $version is available."; exit 0 }
+              $flat = Invoke-RestMethod 'https://api.nuget.org/v3-flatcontainer/netwright/index.json'
+              $registration = Invoke-RestMethod 'https://api.nuget.org/v3/registration5-semver1/netwright/index.json'
+              $registered = $registration.items | ForEach-Object { $_.upper } | Where-Object { $_ -eq $version }
+              if ($flat.versions -contains $version -and $registered) { Write-Host "Netwright $version is indexed."; exit 0 }
             } catch { }
             Start-Sleep -Seconds 30
           }
@@ -86,5 +90,11 @@ jobs:
           tar -xzf mcp-publisher.tar.gz mcp-publisher.exe
           ./mcp-publisher.exe login github-oidc
           if ($LASTEXITCODE -ne 0) { throw 'MCP Registry login failed' }
-          ./mcp-publisher.exe publish src/Netwright/.mcp/server.json
-          if ($LASTEXITCODE -ne 0) { throw 'MCP Registry publish failed' }
+          # nuget.org search can lag behind the registration index for a few minutes; retry.
+          for ($attempt = 1; $attempt -le 10; $attempt++) {
+            ./mcp-publisher.exe publish src/Netwright/.mcp/server.json
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            Write-Host "Attempt $attempt failed; retrying in 60 s."
+            Start-Sleep -Seconds 60
+          }
+          throw 'MCP Registry publish failed'
