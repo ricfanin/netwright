@@ -8,6 +8,7 @@ public enum FixtureKind
     Wpf,
     WinForms,
     WinFormsNetFramework,
+    WinUI,
 }
 
 /// <summary>Locates the built Fixture Apps and starts sessions against them.</summary>
@@ -21,6 +22,7 @@ public static class Fixtures
         {
             FixtureKind.Wpf => ("Netwright.Fixtures.Wpf", "net8.0-windows"),
             FixtureKind.WinForms => ("Netwright.Fixtures.WinForms", "net8.0-windows"),
+            FixtureKind.WinUI => ("Netwright.Fixtures.WinUI", Path.Combine("net8.0-windows10.0.19041.0", "win-x64")),
             _ => ("Netwright.Fixtures.WinForms", "net48"),
         };
 
@@ -46,7 +48,7 @@ public static class Fixtures
 
     public static void KillStrays()
     {
-        foreach (var name in new[] { "Netwright.Fixtures.Wpf", "Netwright.Fixtures.WinForms" })
+        foreach (var name in new[] { "Netwright.Fixtures.Wpf", "Netwright.Fixtures.WinForms", "Netwright.Fixtures.WinUI" })
         {
             foreach (var process in Process.GetProcessesByName(name))
             {

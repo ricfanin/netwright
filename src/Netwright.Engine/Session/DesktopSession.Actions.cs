@@ -27,8 +27,21 @@ public sealed partial class DesktopSession
 
         public UiTree Before { get; } = before;
 
+        private int _abandoned;
+
         /// <summary>Set before any call that may block, so the summary survives a modal dialog.</summary>
         public string Summary { get; set; } = "";
+
+        /// <summary>
+        /// Set when the pipeline stopped waiting for a blocked call and released the session. The
+        /// blocked work must not send any further input once it resumes, because by then another
+        /// action may own the foreground.
+        /// </summary>
+        public bool Abandoned
+        {
+            get => Volatile.Read(ref _abandoned) == 1;
+            set => Volatile.Write(ref _abandoned, value ? 1 : 0);
+        }
     }
 
     public Task<ActionOutcome> ClickAsync(string target, ClickRequest? request = null, CancellationToken cancellationToken = default)
@@ -52,6 +65,11 @@ public sealed partial class DesktopSession
             if (request.Foreground)
             {
                 var point = ClickPoint(node);
+                if (context.Abandoned)
+                {
+                    return;
+                }
+
                 context.Summary = $"{(request.ClickCount == 2 ? "double-clicked" : request.Button == MouseButtonKind.Left ? "clicked" : $"{request.Button.ToString().ToLowerInvariant()}-clicked")} {line} with the mouse";
                 var button = request.Button switch
                 {
@@ -130,6 +148,11 @@ public sealed partial class DesktopSession
                 context.Summary = string.Create(CultureInfo.InvariantCulture, $"typed {request.Text.Length} chars into {line} with the keyboard{(request.Submit ? " and pressed Enter" : "")}");
                 PatternCalls.SetFocus(node);
                 Wait.UntilInputIsProcessed();
+                if (context.Abandoned)
+                {
+                    return;
+                }
+
                 if (request.Clear)
                 {
                     Keyboard.TypeSimultaneously(VirtualKeyShort.CONTROL, VirtualKeyShort.KEY_A);
@@ -267,6 +290,11 @@ public sealed partial class DesktopSession
                 {
                     PatternCalls.SetFocus(context.Node);
                     Wait.UntilInputIsProcessed();
+                }
+
+                if (context.Abandoned)
+                {
+                    return;
                 }
 
                 foreach (var chord in chords)
@@ -444,6 +472,7 @@ public sealed partial class DesktopSession
                 }
                 else
                 {
+                    context.Abandoned = true;
                     _ = work.ContinueWith(t => _ = t.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
                     note = "The call is still running inside the Target App, which usually means it opened a modal dialog.";
                     if (context.Summary.Length == 0)

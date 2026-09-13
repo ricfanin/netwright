@@ -313,6 +313,17 @@ public sealed partial class SessionTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task Allow_list_is_checked_before_building_a_project()
+    {
+        await using var session = new DesktopSession(new SessionOptions { AllowedApps = ["notepad*"], DotnetExecutable = "does-not-exist.exe" });
+        var project = Path.Combine(Fixtures.RepositoryRoot, "tests", "fixtures", "Netwright.Fixtures.Wpf", "Netwright.Fixtures.Wpf.csproj");
+
+        var ex = await Assert.ThrowsAsync<NetwrightException>(() => session.LaunchAsync(new LaunchRequest { Project = project }));
+
+        Assert.Equal(ErrorCodes.NotAllowed, ex.Code);
+    }
+
+    [Fact]
     public async Task Attaches_to_a_running_app_by_name()
     {
         Fixtures.KillStrays();

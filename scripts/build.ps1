@@ -22,6 +22,12 @@ dotnet test tests/Netwright.Testing.Tests -c $config --no-build
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 if ($Integration) {
+    Write-Host 'Building the Fixture Apps...' -ForegroundColor Cyan
+    foreach ($fixture in 'Netwright.Fixtures.Wpf', 'Netwright.Fixtures.WinForms', 'Netwright.Fixtures.WinUI') {
+        dotnet build "tests/fixtures/$fixture" -c Release
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+    }
+
     Write-Host 'Publishing the server for end-to-end tests...' -ForegroundColor Cyan
     dotnet publish src/Netwright -c Release -r win-x64 -o artifacts/netwright
     if ($LASTEXITCODE -ne 0) { exit 1 }

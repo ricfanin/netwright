@@ -56,6 +56,7 @@ jobs:
         run: |
           dotnet build tests/fixtures/Netwright.Fixtures.Wpf -c Release
           dotnet build tests/fixtures/Netwright.Fixtures.WinForms -c Release
+          dotnet build tests/fixtures/Netwright.Fixtures.WinUI -c Release
           dotnet publish src/Netwright -c Release -r win-x64 -o artifacts/netwright
           dotnet build tests/Netwright.IntegrationTests -c Release
 

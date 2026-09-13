@@ -1,0 +1,16 @@
+<Window x:Class="Netwright.Fixtures.WinUI.ToolWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Tool Window">
+    <StackPanel Margin="16">
+        <TextBox x:Name="txtToolNote"
+                 AutomationProperties.AutomationId="txtToolNote"
+                 Margin="0,0,0,12" />
+        <Button x:Name="btnToolClose"
+                AutomationProperties.AutomationId="btnToolClose"
+                Content="Close"
+                MinWidth="75"
+                HorizontalAlignment="Right"
+                Click="BtnToolClose_Click" />
+    </StackPanel>
+</Window>

@@ -1,0 +1,237 @@
+<Window x:Class="Netwright.Fixtures.WinUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Netwright.Fixtures.WinUI"
+        Title="Netwright Fixture (WinUI)">
+
+    <Grid>
+        <Grid.Resources>
+            <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Margin" Value="4" />
+                <Setter Property="Padding" Value="10,3" />
+            </Style>
+            <Style x:Key="ValueLabel" TargetType="TextBlock">
+                <Setter Property="Margin" Value="4" />
+                <Setter Property="MinWidth" Value="160" />
+                <Setter Property="MinHeight" Value="18" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="FieldCaption" TargetType="TextBlock">
+                <Setter Property="Margin" Value="4" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top bar -->
+        <MenuBar x:Name="menuMain" Grid.Row="0" AutomationProperties.AutomationId="menuMain">
+            <MenuBarItem x:Name="miFile" AutomationProperties.AutomationId="miFile" Title="File">
+                <MenuFlyoutItem x:Name="miOpenModal" AutomationProperties.AutomationId="miOpenModal" Text="Open modal..." Click="OpenModal_Click" />
+                <MenuFlyoutItem x:Name="miExit" AutomationProperties.AutomationId="miExit" Text="Exit" Click="Exit_Click" />
+            </MenuBarItem>
+        </MenuBar>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="4">
+            <Button x:Name="btnOpenModal" AutomationProperties.AutomationId="btnOpenModal" Content="Open modal" Click="OpenModal_Click" />
+            <TextBlock x:Name="lblModalResult" AutomationProperties.AutomationId="lblModalResult" Style="{StaticResource ValueLabel}" Text="Modal result: none" />
+            <Button x:Name="btnOpenWindow" AutomationProperties.AutomationId="btnOpenWindow" Content="Open tool window" Click="BtnOpenWindow_Click" />
+            <Button x:Name="btnTrace" AutomationProperties.AutomationId="btnTrace" Content="Write diagnostics" Click="BtnTrace_Click" />
+            <TextBlock x:Name="lblDiag" AutomationProperties.AutomationId="lblDiag" Style="{StaticResource ValueLabel}" Text="" />
+            <Button x:Name="btnCrash" AutomationProperties.AutomationId="btnCrash" Content="Crash" Click="BtnCrash_Click" />
+        </StackPanel>
+
+        <TabView x:Name="tabs" Grid.Row="2" Margin="4"
+                 AutomationProperties.AutomationId="tabs"
+                 IsAddTabButtonVisible="False" CanReorderTabs="False" CanDragTabs="False"
+                 TabWidthMode="SizeToContent">
+            <TabView.TabItems>
+
+                <!-- Form -->
+                <TabViewItem x:Name="tabForm" AutomationProperties.AutomationId="tabForm" Header="Form" IsClosable="False">
+                    <Grid Margin="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="320" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldCaption}" Text="Name:" />
+                        <TextBox x:Name="txtName" Grid.Row="0" Grid.Column="1" Margin="4"
+                                 AutomationProperties.AutomationId="txtName" AutomationProperties.Name="Name" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldCaption}" Text="Email:" />
+                        <TextBox x:Name="txtEmail" Grid.Row="1" Grid.Column="1" Margin="4"
+                                 AutomationProperties.AutomationId="txtEmail" AutomationProperties.Name="Email" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldCaption}" Text="Country:" />
+                        <ComboBox x:Name="cmbCountry" Grid.Row="2" Grid.Column="1" Margin="4" MinWidth="200" IsEditable="False"
+                                  AutomationProperties.AutomationId="cmbCountry" AutomationProperties.Name="Country" />
+
+                        <CheckBox x:Name="chkTerms" Grid.Row="3" Grid.Column="1" Margin="4"
+                                  AutomationProperties.AutomationId="chkTerms" Content="Accept terms"
+                                  Checked="ChkTerms_Changed" Unchecked="ChkTerms_Changed" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldCaption}" Text="Plan:" />
+                        <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="4">
+                            <RadioButton x:Name="rbPlanFree" AutomationProperties.AutomationId="rbPlanFree" GroupName="Plan"
+                                         Content="Free" IsChecked="True" Margin="0,0,16,0" />
+                            <RadioButton x:Name="rbPlanPro" AutomationProperties.AutomationId="rbPlanPro" GroupName="Plan"
+                                         Content="Pro" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldCaption}" Text="Quantity:" />
+                        <Slider x:Name="sldQuantity" Grid.Row="5" Grid.Column="1" Margin="4"
+                                AutomationProperties.AutomationId="sldQuantity" AutomationProperties.Name="Quantity"
+                                Minimum="0" Maximum="10" Value="1"
+                                StepFrequency="1" SmallChange="1" LargeChange="1" TickFrequency="1"
+                                SnapsTo="StepValues" TickPlacement="BottomRight" />
+
+                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+                            <Button x:Name="btnSubmit" AutomationProperties.AutomationId="btnSubmit" Content="Submit"
+                                    IsEnabled="False" Click="BtnSubmit_Click" />
+                            <Button x:Name="btnReset" AutomationProperties.AutomationId="btnReset" Content="Reset"
+                                    Click="BtnReset_Click" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="lblResult" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3"
+                                   AutomationProperties.AutomationId="lblResult"
+                                   Style="{StaticResource ValueLabel}" Text="" />
+                    </Grid>
+                </TabViewItem>
+
+                <!-- Async -->
+                <TabViewItem x:Name="tabAsync" AutomationProperties.AutomationId="tabAsync" Header="Async" IsClosable="False">
+                    <StackPanel Margin="8" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="btnLoad" AutomationProperties.AutomationId="btnLoad" Content="Load data" Click="BtnLoad_Click" />
+                            <TextBlock x:Name="lblStatus" AutomationProperties.AutomationId="lblStatus" Style="{StaticResource ValueLabel}" Text="Idle" />
+                        </StackPanel>
+                        <ListBox x:Name="lstItems" AutomationProperties.AutomationId="lstItems" AutomationProperties.Name="Items"
+                                 Width="300" Height="160" Margin="4" HorizontalAlignment="Left" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="btnEnableLater" AutomationProperties.AutomationId="btnEnableLater" Content="Enable later" Click="BtnEnableLater_Click" />
+                            <Button x:Name="btnLater" AutomationProperties.AutomationId="btnLater" Content="Later" IsEnabled="False" Click="BtnLater_Click" />
+                            <TextBlock x:Name="lblLater" AutomationProperties.AutomationId="lblLater" Style="{StaticResource ValueLabel}" Text="" />
+                        </StackPanel>
+                    </StackPanel>
+                </TabViewItem>
+
+                <!-- Grid: WinUI has no built-in DataGrid; a virtualized ListView with one row per order stands in. -->
+                <TabViewItem x:Name="tabGrid" AutomationProperties.AutomationId="tabGrid" Header="Grid" IsClosable="False">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Padding="16,4,16,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="120" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Id" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="1" Text="Customer" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="2" Text="Amount" FontWeight="SemiBold" />
+                        </Grid>
+                        <ListView x:Name="gridOrders" Grid.Row="1"
+                                  AutomationProperties.AutomationId="gridOrders" AutomationProperties.Name="Orders"
+                                  SelectionMode="Single"
+                                  ContainerContentChanging="GridOrders_ContainerContentChanging">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:Order">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="200" />
+                                            <ColumnDefinition Width="120" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind IdText}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Customer}" />
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Amount}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </TabViewItem>
+
+                <!-- Tree -->
+                <TabViewItem x:Name="tabTree" AutomationProperties.AutomationId="tabTree" Header="Tree" IsClosable="False">
+                    <StackPanel Margin="8" HorizontalAlignment="Left">
+                        <!-- AutomationId "treeFolders" / Name "Folders" are applied to the inner TreeViewList in TreeFolders_Loaded. -->
+                        <TreeView x:Name="treeFolders"
+                                  Width="300" Height="240" Margin="4" HorizontalAlignment="Left"
+                                  SelectionMode="Single"
+                                  Loaded="TreeFolders_Loaded"
+                                  SelectionChanged="TreeFolders_SelectionChanged">
+                            <TreeView.RootNodes>
+                                <TreeViewNode Content="Root">
+                                    <TreeViewNode.Children>
+                                        <TreeViewNode Content="Documents">
+                                            <TreeViewNode.Children>
+                                                <TreeViewNode Content="Invoices" />
+                                                <TreeViewNode Content="Reports" />
+                                            </TreeViewNode.Children>
+                                        </TreeViewNode>
+                                        <TreeViewNode Content="Pictures" />
+                                    </TreeViewNode.Children>
+                                </TreeViewNode>
+                            </TreeView.RootNodes>
+                        </TreeView>
+                        <TextBlock x:Name="lblSelectedNode" AutomationProperties.AutomationId="lblSelectedNode" Style="{StaticResource ValueLabel}" Text="" />
+                        <Expander x:Name="expAdvanced" AutomationProperties.AutomationId="expAdvanced" Header="Advanced"
+                                  IsExpanded="False" Margin="4" MinWidth="300">
+                            <CheckBox x:Name="chkVerbose" AutomationProperties.AutomationId="chkVerbose" Content="Verbose logging" Margin="16,4,4,4" />
+                        </Expander>
+                    </StackPanel>
+                </TabViewItem>
+
+                <!-- Keyboard -->
+                <TabViewItem x:Name="tabKeyboard" AutomationProperties.AutomationId="tabKeyboard" Header="Keyboard" IsClosable="False">
+                    <StackPanel Margin="8" HorizontalAlignment="Left">
+                        <TextBox x:Name="txtKeys" AutomationProperties.AutomationId="txtKeys" AutomationProperties.Name="Keys"
+                                 Width="300" Margin="4" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="lblLastKey" AutomationProperties.AutomationId="lblLastKey" Style="{StaticResource ValueLabel}" Text="Last key: none" />
+                        <local:MouseTarget x:Name="pnlMouse" AutomationProperties.AutomationId="pnlMouse" AutomationProperties.Name="Mouse target"
+                                           Width="200" Height="100" Margin="4" HorizontalAlignment="Left"
+                                           Background="SteelBlue" BorderBrush="DarkSlateBlue" BorderThickness="1"
+                                           PointerPressed="PnlMouse_PointerPressed" />
+                        <TextBlock x:Name="lblMouse" AutomationProperties.AutomationId="lblMouse" Style="{StaticResource ValueLabel}" Text="Mouse: none" />
+                    </StackPanel>
+                </TabViewItem>
+
+                <!-- Scroll -->
+                <TabViewItem x:Name="tabScroll" AutomationProperties.AutomationId="tabScroll" Header="Scroll" IsClosable="False">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ScrollViewer x:Name="scrLong" Grid.Row="0"
+                                      AutomationProperties.AutomationId="scrLong" AutomationProperties.Name="Long list"
+                                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="pnlScrollItems" Width="300" HorizontalAlignment="Left" />
+                        </ScrollViewer>
+                        <TextBlock x:Name="lblScrollClicked" Grid.Row="1" AutomationProperties.AutomationId="lblScrollClicked"
+                                   Style="{StaticResource ValueLabel}" Text="" />
+                    </Grid>
+                </TabViewItem>
+            </TabView.TabItems>
+        </TabView>
+    </Grid>
+</Window>

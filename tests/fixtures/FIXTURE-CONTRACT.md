@@ -101,6 +101,20 @@ These are how the frameworks surface through UI Automation, not bugs in the fixt
 | Caption labels | `Name:` / `Email:` text next to the fields | `Name` / `Email` text labels share the input's name; filter by role |
 | Modal and crash buttons | Deferred by the WPF dispatcher | Posted with `BeginInvoke`, because a UIA Invoke runs WinForms click handlers synchronously and would block on `ShowDialog` |
 
+### WinUI 3 Fixture App (Tier 2)
+
+| Topic | WinUI 3 |
+|---|---|
+| Confirm dialog | A separate `Window` titled `Confirm`, owned by the main window, which is disabled while it is open. It is not a `ContentDialog`. Opened through the dispatcher |
+| Tabs | `tabs` is a TabView; the tab items live one level deeper, under an inner list `TabListView` |
+| Menu | `menuMain` is a `menubar`. Drop-down items keep their AutomationIds inside a popup window |
+| Grid | There is no DataGrid: `gridOrders` is a `list` of `item`s named `1 \| Customer 1 \| 10.00` (virtualized, no `rows=`) |
+| Tree | Items are direct children of `treeFolders`; nesting only shows through expand/collapse state |
+| Expander | `expAdvanced` is exposed as a `button` with ExpandCollapse |
+| Crash | Ends with a fail-fast (`0xC000027B`) without a .NET runtime event, so the Crash Report only shows the exit code |
+
+The build is self-contained (no Windows App Runtime install): `bin\Release\net8.0-windows10.0.19041.0\win-x64\Netwright.Fixtures.WinUI.exe`.
+
 ## Non-goals
 
 - No timers or animations that keep changing the UI when idle. The UI must become Settled.

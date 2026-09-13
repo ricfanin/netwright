@@ -64,6 +64,9 @@ public sealed partial class DesktopSession : IAsyncDisposable
 
             if (!string.IsNullOrWhiteSpace(request.Project))
             {
+                // Building runs the project's MSBuild logic, so the allow list must be checked before
+                // the build, against the executable the project is expected to produce.
+                EnsureAllowed(System.IO.Path.ChangeExtension(System.IO.Path.GetFullPath(request.Project), ".exe"));
                 (fileName, arguments) = await ProjectBuilder.BuildAsync(_options.DotnetExecutable, request.Project, request.Configuration, request.Framework, cancellationToken).ConfigureAwait(false);
                 if (request.Arguments.Count > 0)
                 {
@@ -136,7 +139,17 @@ public sealed partial class DesktopSession : IAsyncDisposable
         {
             ArgumentNullException.ThrowIfNull(request);
             var process = FindProcess(request);
-            var path = TryGetExecutablePath(process) ?? process.ProcessName + ".exe";
+            var path = TryGetExecutablePath(process);
+            if (path is null && _options.AllowedApps.Count > 0)
+            {
+                // A process name is chosen by whoever named the executable; never let it satisfy the allow list.
+                throw new NetwrightException(
+                    ErrorCodes.NotAllowed,
+                    $"Cannot read the executable path of {process.ProcessName} (pid {process.Id}), so it cannot be checked against the allowed apps list.",
+                    "The process may be elevated; run Netwright at the same integrity level.");
+            }
+
+            path ??= process.ProcessName + ".exe";
             EnsureAllowed(path);
 
             if (_app is { HasExited: false } current && current.RootProcessId == process.Id)
