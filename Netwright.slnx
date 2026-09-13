@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Netwright.Engine/Netwright.Engine.csproj" />
+    <Project Path="src/Netwright/Netwright.csproj" />
+    <Project Path="src/Netwright.Testing/Netwright.Testing.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Netwright.Engine.Tests/Netwright.Engine.Tests.csproj" />
+    <Project Path="tests/Netwright.IntegrationTests/Netwright.IntegrationTests.csproj" />
+    <Project Path="tests/Netwright.Testing.Tests/Netwright.Testing.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/fixtures/">
+    <Project Path="tests/fixtures/Netwright.Fixtures.Wpf/Netwright.Fixtures.Wpf.csproj" />
+    <Project Path="tests/fixtures/Netwright.Fixtures.WinForms/Netwright.Fixtures.WinForms.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Netwright.Benchmarks/Netwright.Benchmarks.csproj" />
+  </Folder>
+</Solution>
