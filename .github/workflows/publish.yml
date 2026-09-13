@@ -1,0 +1,90 @@
+name: Publish
+
+# Publishes the NuGet packages with nuget.org Trusted Publishing (no stored API key),
+# then registers the server in the MCP Registry through GitHub OIDC.
+# Run it by pushing a tag like v2.0.0, or manually from the Actions tab.
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC token for NuGet Trusted Publishing and the MCP Registry
+  contents: read
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          dotnet-version: '8.0.x'
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content src/Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") {
+            throw "Tag $env:GITHUB_REF_NAME does not match the version $version in src/Directory.Build.props."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Build and unit test
+        run: |
+          dotnet build Netwright.slnx -c Release
+          dotnet test tests/Netwright.Engine.Tests -c Release --no-build
+          dotnet test tests/Netwright.Testing.Tests -c Release --no-build
+
+      - name: Pack
+        run: |
+          dotnet pack src/Netwright -c Release -o artifacts/nupkg
+          dotnet pack src/Netwright.Engine -c Release -o artifacts/nupkg
+          dotnet pack src/Netwright.Testing -c Release -o artifacts/nupkg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/nupkg/*.nupkg
+
+      - name: NuGet login (Trusted Publishing)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to nuget.org
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/nupkg/*.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            if ($LASTEXITCODE -ne 0) { throw "Push failed for $($_.Name)" }
+          }
+
+      - name: Wait for nuget.org to index Netwright
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          for ($i = 0; $i -lt 60; $i++) {
+            try {
+              $index = Invoke-RestMethod 'https://api.nuget.org/v3-flatcontainer/netwright/index.json'
+              if ($index.versions -contains $version) { Write-Host "Netwright $version is available."; exit 0 }
+            } catch { }
+            Start-Sleep -Seconds 30
+          }
+          throw "Netwright $version did not appear on nuget.org within 30 minutes."
+
+      - name: Publish to the MCP Registry
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_windows_amd64.tar.gz -OutFile mcp-publisher.tar.gz
+          tar -xzf mcp-publisher.tar.gz mcp-publisher.exe
+          ./mcp-publisher.exe login github-oidc
+          if ($LASTEXITCODE -ne 0) { throw 'MCP Registry login failed' }
+          ./mcp-publisher.exe publish src/Netwright/.mcp/server.json
+          if ($LASTEXITCODE -ne 0) { throw 'MCP Registry publish failed' }
