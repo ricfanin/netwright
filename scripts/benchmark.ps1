@@ -65,7 +65,7 @@ if ($Servers -contains 'flaui-mcp') {
     $definitions['flaui-mcp'] = @{ Label = 'FlaUI-MCP'; Adapter = 'flaui-mcp'; Command = $dotnet; Args = @((Resolve-Path 'artifacts/competitors/flaui-mcp-bin/FlaUI.Mcp.dll').Path); Protocol = $null }
 }
 if ($Servers -contains 'windows-mcp') {
-    $definitions['windows-mcp'] = @{ Label = 'Windows-MCP'; Adapter = 'windows-mcp'; Command = 'uvx'; Args = @('windows-mcp', 'serve'); Protocol = '2026-07-28' }
+    $definitions['windows-mcp'] = @{ Label = 'Windows-MCP'; Adapter = 'windows-mcp'; Command = 'uvx'; Args = @('windows-mcp', 'serve'); Protocol = $null }
 }
 
 foreach ($server in $Servers) {

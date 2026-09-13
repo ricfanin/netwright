@@ -1,0 +1,172 @@
+{
+  "Label": "Netwright 2.0",
+  "Adapter": "Netwright 2.x",
+  "Fixture": "wpf",
+  "Timestamp": "2026-09-13T13:00:47.3289818+02:00",
+  "Machine": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD, 16 logical cores",
+  "OperatingSystem": "Microsoft Windows 10.0.26200",
+  "TokenEncoding": "o200k_base",
+  "Iterations": 5,
+  "ToolDefinitions": {
+    "ToolCount": 15,
+    "TotalTokens": 1387,
+    "PerTool": {
+      "desktop_app": 137,
+      "desktop_type": 101,
+      "desktop_press_key": 77,
+      "desktop_set_state": 105,
+      "desktop_inspect": 47,
+      "desktop_expect": 125,
+      "desktop_click": 98,
+      "desktop_wait": 99,
+      "desktop_export_test": 107,
+      "desktop_find": 82,
+      "desktop_scroll": 116,
+      "desktop_window": 84,
+      "desktop_screenshot": 70,
+      "desktop_logs": 67,
+      "desktop_snapshot": 72
+    }
+  },
+  "Scenarios": [
+    {
+      "Name": "snapshot-form",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 385,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 79.9,
+      "LatencyP95Ms": 82.6,
+      "SampleTranscript": [
+        {
+          "Tool": "desktop_snapshot",
+          "Tokens": 385,
+          "LatencyMs": 79.5,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [e1]\r\n  - menu [e2] #menuMain\r\n    - menuitem \u0022File\u0022 [e3] #miFile collapsed\r\n  - button \u0022Open modal\u0022 [e4] #btnOpenModal\r\n  - text \u0022Modal result: none\u0022 #lblModalResult\r\n  - button \u0022Open tool window\u0022 [e5] #btnOpenWindow\r\n  - button \u0022Write diagnostics\u0022 [e6] #btnTrace\r\n  - button \u0022Crash\u0022 [e7] #btnCrash\r\n  - tabs [e8] #tabs\r\n    - tab \u0022Form\u0022 [e9] #tabForm selected\r\n      - text \u0022Name:\u0022\r\n      - textbox \u0022Name\u0022 [e10] #txtName\r\n      - text \u0022Email:\u0022\r\n      - textbox \u0022Email\u0022 [e11] #txtEmail\r\n      - text \u0022Country:\u0022\r\n      - combobox \u0022Country\u0022 [e12] #cmbCountry collapsed\r\n      - checkbox \u0022Accept terms\u0022 [e13] #chkTerms unchecked\r\n      - text \u0022Plan:\u0022\r\n      - radio \u0022Free\u0022 [e14] #rbPlanFree checked\r\n      - radio \u0022Pro\u0022 [e15] #rbPlanPro unchecked\r\n      - text \u0022Quantity:\u0022\r\n      - slider \u0022Quantity\u0022 [e16] #sldQuantity value=1\r\n      - button \u0022Submit\u0022 [e17] #btnSubmit disabled\r\n      - button \u0022Reset\u0022 [e18] #btnReset\r\n    - tab \u0022Async\u0022 [e19] #tabAsync\r\n    - tab \u0022Grid\u0022 [e20] #tabGrid\r\n    - tab \u0022Tree\u0022 [e21] #tabTree\r\n    - tab \u0022Keyboard\u0022 [e22] #tabKeyboard\r\n    - tab \u0022Scroll\u0022 [e23] #tabScroll"
+        }
+      ]
+    },
+    {
+      "Name": "snapshot-grid",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 627,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 377.8,
+      "LatencyP95Ms": 388.5,
+      "SampleTranscript": [
+        {
+          "Tool": "desktop_snapshot",
+          "Tokens": 627,
+          "LatencyMs": 388.5,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [e1]\r\n  - menu [e2] #menuMain\r\n    - menuitem \u0022File\u0022 [e3] #miFile collapsed\r\n  - button \u0022Open modal\u0022 [e4] #btnOpenModal\r\n  - text \u0022Modal result: none\u0022 #lblModalResult\r\n  - button \u0022Open tool window\u0022 [e5] #btnOpenWindow\r\n  - button \u0022Write diagnostics\u0022 [e6] #btnTrace\r\n  - button \u0022Crash\u0022 [e7] #btnCrash\r\n  - tabs [e8] #tabs\r\n    - tab \u0022Form\u0022 [e9] #tabForm\r\n    - tab \u0022Async\u0022 [e10] #tabAsync\r\n    - tab \u0022Grid\u0022 [e11] #tabGrid selected\r\n      - grid \u0022Orders\u0022 [e12] #gridOrders rows=1000\r\n        - columns: Id | Customer | Amount\r\n        - row \u00221 | Customer 1 | 10.00\u0022 [e13]\r\n        - row \u00222 | Customer 2 | 20.00\u0022 [e14]\r\n        - row \u00223 | Customer 3 | 30.00\u0022 [e15]\r\n        - row \u00224 | Customer 4 | 40.00\u0022 [e16]\r\n        - row \u00225 | Customer 5 | 50.00\u0022 [e17]\r\n        - row \u00226 | Customer 6 | 60.00\u0022 [e18]\r\n        - row \u00227 | Customer 7 | 70.00\u0022 [e19]\r\n        - row \u00228 | Customer 8 | 80.00\u0022 [e20]\r\n        - row \u00229 | Customer 9 | 90.00\u0022 [e21]\r\n        - row \u002210 | Customer 10 | 100.00\u0022 [e22]\r\n        - row \u002211 | Customer 11 | 110.00\u0022 [e23]\r\n        - row \u002212 | Customer 12 | 120.00\u0022 [e24]\r\n        - row \u002213 | Customer 13 | 130.00\u0022 [e25]\r\n        - row \u002214 | Customer 14 | 140.00\u0022 [e26]\r\n        - row \u002215 | Customer 15 | 150.00\u0022 [e27]\r\n        - row \u002216 | Customer 16 | 160.00\u0022 [e28]\r\n        - row \u002217 | Customer 17 | 170.00\u0022 [e29]\r\n        - row \u002218 | Customer 18 | 180.00\u0022 [e30]\r\n        - row \u002219 | Customer 19 | 190.00\u0022 [e31]\r\n        - row \u002220 | Customer 20 | 200.00\u0022 [e32]\r\n        - ... 11 more items\r\n    - tab \u0022Tree\u0022 [e33] #tabTree\r\n    - tab \u0022Keyboard\u0022 [e34] #tabKeyboard\r\n    - tab \u0022Scroll\u0022 [e35] #tabScroll"
+        }
+      ]
+    },
+    {
+      "Name": "form-submit",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 549,
+      "MedianCalls": 6,
+      "LatencyP50Ms": 1832.1,
+      "LatencyP95Ms": 1870.9,
+      "SampleTranscript": [
+        {
+          "Tool": "desktop_snapshot",
+          "Tokens": 385,
+          "LatencyMs": 74.4,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [e1]\r\n  - menu [e2] #menuMain\r\n    - menuitem \u0022File\u0022 [e3] #miFile collapsed\r\n  - button \u0022Open modal\u0022 [e4] #btnOpenModal\r\n  - text \u0022Modal result: none\u0022 #lblModalResult\r\n  - button \u0022Open tool window\u0022 [e5] #btnOpenWindow\r\n  - button \u0022Write diagnostics\u0022 [e6] #btnTrace\r\n  - button \u0022Crash\u0022 [e7] #btnCrash\r\n  - tabs [e8] #tabs\r\n    - tab \u0022Form\u0022 [e9] #tabForm selected\r\n      - text \u0022Name:\u0022\r\n      - textbox \u0022Name\u0022 [e10] #txtName\r\n      - text \u0022Email:\u0022\r\n      - textbox \u0022Email\u0022 [e11] #txtEmail\r\n      - text \u0022Country:\u0022\r\n      - combobox \u0022Country\u0022 [e12] #cmbCountry collapsed\r\n      - checkbox \u0022Accept terms\u0022 [e13] #chkTerms unchecked\r\n      - text \u0022Plan:\u0022\r\n      - radio \u0022Free\u0022 [e14] #rbPlanFree checked\r\n      - radio \u0022Pro\u0022 [e15] #rbPlanPro unchecked\r\n      - text \u0022Quantity:\u0022\r\n      - slider \u0022Quantity\u0022 [e16] #sldQuantity value=1\r\n      - button \u0022Submit\u0022 [e17] #btnSubmit disabled\r\n      - button \u0022Reset\u0022 [e18] #btnReset\r\n    - tab \u0022Async\u0022 [e19] #tabAsync\r\n    - tab \u0022Grid\u0022 [e20] #tabGrid\r\n    - tab \u0022Tree\u0022 [e21] #tabTree\r\n    - tab \u0022Keyboard\u0022 [e22] #tabKeyboard\r\n    - tab \u0022Scroll\u0022 [e23] #tabScroll"
+        },
+        {
+          "Tool": "desktop_type",
+          "Tokens": 34,
+          "LatencyMs": 365.6,
+          "IsError": false,
+          "TextPreview": "set text of textbox \u0022Name\u0022 [e10] #txtName\r\n~ textbox \u0022Name\u0022 [e10] #txtName value=\u0022Ada Lovelace\u0022"
+        },
+        {
+          "Tool": "desktop_type",
+          "Tokens": 33,
+          "LatencyMs": 318.6,
+          "IsError": false,
+          "TextPreview": "set text of textbox \u0022Email\u0022 [e11] #txtEmail\r\n~ textbox \u0022Email\u0022 [e11] #txtEmail value=\u0022ada@example.com\u0022"
+        },
+        {
+          "Tool": "desktop_set_state",
+          "Tokens": 21,
+          "LatencyMs": 456.6,
+          "IsError": false,
+          "TextPreview": "selected \u0022Italy\u0022 in combobox \u0022Country\u0022 [e12] #cmbCountry\r\nno visible changes"
+        },
+        {
+          "Tool": "desktop_set_state",
+          "Tokens": 41,
+          "LatencyMs": 329.8,
+          "IsError": false,
+          "TextPreview": "checked checkbox \u0022Accept terms\u0022 [e13] #chkTerms\r\n~ checkbox \u0022Accept terms\u0022 [e13] #chkTerms checked\r\n~ button \u0022Submit\u0022 [e17] #btnSubmit"
+        },
+        {
+          "Tool": "desktop_click",
+          "Tokens": 35,
+          "LatencyMs": 322,
+          "IsError": false,
+          "TextPreview": "clicked button \u0022Submit\u0022 [e17] #btnSubmit\r\n\u002B text \u0022Submitted: Ada Lovelace \u003Cada@example.com\u003E Italy Free x1\u0022 #lblResult"
+        }
+      ]
+    },
+    {
+      "Name": "async-load",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 405,
+      "MedianCalls": 3,
+      "LatencyP50Ms": 1816.7,
+      "LatencyP95Ms": 1844.2,
+      "SampleTranscript": [
+        {
+          "Tool": "desktop_snapshot",
+          "Tokens": 281,
+          "LatencyMs": 65.4,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [e1]\r\n  - menu [e2] #menuMain\r\n    - menuitem \u0022File\u0022 [e3] #miFile collapsed\r\n  - button \u0022Open modal\u0022 [e4] #btnOpenModal\r\n  - text \u0022Modal result: none\u0022 #lblModalResult\r\n  - button \u0022Open tool window\u0022 [e5] #btnOpenWindow\r\n  - button \u0022Write diagnostics\u0022 [e6] #btnTrace\r\n  - button \u0022Crash\u0022 [e7] #btnCrash\r\n  - tabs [e8] #tabs\r\n    - tab \u0022Form\u0022 [e9] #tabForm\r\n    - tab \u0022Async\u0022 [e10] #tabAsync selected\r\n      - button \u0022Load data\u0022 [e11] #btnLoad\r\n      - text \u0022Idle\u0022 #lblStatus\r\n      - list \u0022Items\u0022 [e12] #lstItems\r\n      - button \u0022Enable later\u0022 [e13] #btnEnableLater\r\n      - button \u0022Later\u0022 [e14] #btnLater disabled\r\n    - tab \u0022Grid\u0022 [e15] #tabGrid\r\n    - tab \u0022Tree\u0022 [e16] #tabTree\r\n    - tab \u0022Keyboard\u0022 [e17] #tabKeyboard\r\n    - tab \u0022Scroll\u0022 [e18] #tabScroll"
+        },
+        {
+          "Tool": "desktop_click",
+          "Tokens": 47,
+          "LatencyMs": 295.6,
+          "IsError": false,
+          "TextPreview": "clicked button \u0022Load data\u0022 [e11] #btnLoad\r\n~ button \u0022Load data\u0022 [e11] #btnLoad disabled\r\n~ text \u0022Loading...\u0022 #lblStatus\r\nfocus: tabs [e8] #tabs"
+        },
+        {
+          "Tool": "desktop_wait",
+          "Tokens": 77,
+          "LatencyMs": 1457.4,
+          "IsError": false,
+          "TextPreview": "\u0022Loaded 3 items\u0022 appeared in text \u0022Loaded 3 items\u0022 #lblStatus after 1455 ms\r\n~ button \u0022Load data\u0022 [e11] #btnLoad\r\n~ text \u0022Loaded 3 items\u0022 #lblStatus\r\n\u002B item \u0022Alpha\u0022 [e19]\r\n\u002B item \u0022Beta\u0022 [e20]\r\n\u002B item \u0022Gamma\u0022 [e21]"
+        }
+      ]
+    },
+    {
+      "Name": "screenshot",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 1020,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 97.9,
+      "LatencyP95Ms": 109,
+      "SampleTranscript": [
+        {
+          "Tool": "desktop_screenshot",
+          "Tokens": 1020,
+          "LatencyMs": 109,
+          "IsError": false,
+          "TextPreview": "Screenshot of window \u0022Netwright Fixture (WPF)\u0022 [e1]: 1000x750\n[image 1000x750]"
+        }
+      ]
+    }
+  ]
+}

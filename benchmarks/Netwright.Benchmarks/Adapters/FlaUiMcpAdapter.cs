@@ -46,8 +46,8 @@ public sealed partial class FlaUiMcpAdapter : IServerAdapter
     public async Task<bool> FormSubmitAsync(McpSession session)
     {
         var snapshot = (await session.CallAsync("windows_snapshot", new { handle = _handle })).Text;
-        var nameRef = FindRef(snapshot, "edit", "Name");
-        var emailRef = FindRef(snapshot, "edit", "Email");
+        var nameRef = FindRef(snapshot, "textbox", "Name");
+        var emailRef = FindRef(snapshot, "textbox", "Email");
         var countryRef = FindRef(snapshot, "combobox", "Country");
         var termsRef = FindRef(snapshot, "checkbox", "Accept terms");
         if (nameRef is null || emailRef is null || countryRef is null || termsRef is null)
@@ -61,12 +61,13 @@ public sealed partial class FlaUiMcpAdapter : IServerAdapter
         // No selection tool: open the combo box, find the item in a new snapshot, click it.
         await session.CallAsync("windows_click", new { @ref = countryRef });
         var opened = (await session.CallAsync("windows_snapshot", new { handle = _handle })).Text;
-        if (FindRef(opened, "listitem", "Italy") is { } italyRef)
+        if ((FindRef(opened, "listitem", "Italy") ?? FindRef(opened, "option", "Italy") ?? FindRef(opened, "item", "Italy")) is { } italyRef)
         {
             await session.CallAsync("windows_click", new { @ref = italyRef });
         }
 
-        await session.CallAsync("windows_click", new { @ref = termsRef });
+        // FlaUI-MCP renumbers refs on every snapshot, so refs must come from the latest one.
+        await session.CallAsync("windows_click", new { @ref = FindRef(opened, "checkbox", "Accept terms") ?? termsRef });
 
         // Refs may have been reassigned by the intermediate snapshot.
         var ready = (await session.CallAsync("windows_snapshot", new { handle = _handle })).Text;

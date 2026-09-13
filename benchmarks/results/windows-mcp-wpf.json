@@ -1,0 +1,92 @@
+{
+  "Label": "Windows-MCP",
+  "Adapter": "Windows-MCP",
+  "Fixture": "wpf",
+  "Timestamp": "2026-09-13T13:11:13.477814+02:00",
+  "Machine": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD, 16 logical cores",
+  "OperatingSystem": "Microsoft Windows 10.0.26200",
+  "TokenEncoding": "o200k_base",
+  "Iterations": 5,
+  "ToolDefinitions": {
+    "ToolCount": 20,
+    "TotalTokens": 3984,
+    "PerTool": {
+      "App": 297,
+      "DisplayInventory": 58,
+      "PowerShell": 151,
+      "FileSystem": 428,
+      "Snapshot": 392,
+      "Screenshot": 202,
+      "Click": 202,
+      "Type": 232,
+      "Scroll": 199,
+      "Move": 238,
+      "Shortcut": 149,
+      "Wait": 80,
+      "WaitFor": 180,
+      "Scrape": 213,
+      "MultiSelect": 156,
+      "MultiEdit": 127,
+      "Clipboard": 109,
+      "Process": 196,
+      "Notification": 113,
+      "Registry": 262
+    }
+  },
+  "Scenarios": [
+    {
+      "Name": "snapshot-form",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 1956,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 332.1,
+      "LatencyP95Ms": 660.1,
+      "SampleTranscript": [
+        {
+          "Tool": "Snapshot",
+          "Tokens": 1956,
+          "LatencyMs": 660.1,
+          "IsError": false,
+          "TextPreview": "[not stored]"
+        }
+      ]
+    },
+    {
+      "Name": "snapshot-grid",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 1897,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 310.3,
+      "LatencyP95Ms": 311.9,
+      "SampleTranscript": [
+        {
+          "Tool": "Snapshot",
+          "Tokens": 1897,
+          "LatencyMs": 309.7,
+          "IsError": false,
+          "TextPreview": "[not stored]"
+        }
+      ]
+    },
+    {
+      "Name": "screenshot",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 1944,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 389,
+      "LatencyP95Ms": 1490.8,
+      "SampleTranscript": [
+        {
+          "Tool": "Screenshot",
+          "Tokens": 1944,
+          "LatencyMs": 389,
+          "IsError": false,
+          "TextPreview": "[not stored]"
+        }
+      ]
+    }
+  ]
+}

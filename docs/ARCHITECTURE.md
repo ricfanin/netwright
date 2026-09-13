@@ -1,357 +1,93 @@
-# WPF-MCP Architecture Guide
+# Netwright Architecture
 
-This document describes the technical architecture and design decisions of the WPF-MCP Server.
-
-## Overview
-
-WPF-MCP is a Model Context Protocol (MCP) server that bridges AI agents with WPF desktop applications through Windows UI Automation.
+Netwright lets an AI Agent see and operate .NET desktop apps through Windows UI Automation (UIA). The vocabulary used here (Target App, Snapshot, Ref, Selector, Actionable, Settled, Change Report, Foreground Action…) is defined in [`CONTEXT.md`](../CONTEXT.md). The reasons behind the big decisions are recorded in [`docs/adr`](adr).
 
 ```
-┌─────────────────────────────┐
-│   AI Agent (Claude)         │  Issues MCP tool calls
-├─────────────────────────────┤
-│   MCP Protocol Layer        │  Tool registration & JSON-RPC 2.0
-│   (ModelContextProtocol)    │  stdio transport
-├─────────────────────────────┤
-│   WPF Automation Layer      │  Element tree building
-│   (Tool & Service Classes)  │  Pattern execution
-├─────────────────────────────┤
-│   FlaUI.UIA3 Layer          │  COM-based UI Automation
-│   (Windows UI Automation)   │  Element discovery
-├─────────────────────────────┤
-│   WPF Application           │  Automation peers
-│                             │  UI Automation patterns
-└─────────────────────────────┘
+ Agent (Claude Code, Copilot, Cursor…)
+        │  MCP over stdio
+ ┌──────▼───────────────────────────────┐
+ │ Netwright (MCP server)               │  14 desktop_* tools: argument parsing,
+ │  DesktopTools                        │  compact text rendering, isError results
+ └──────┬───────────────────────────────┘
+        │  in-process API
+ ┌──────▼───────────────────────────────┐
+ │ Netwright.Engine                     │
+ │  DesktopSession ── TargetApp         │  lifecycle, allow list, crash reports
+ │   ├─ UiaTreeReader  (capture)        │  one cached UIA query per window
+ │   ├─ SnapshotRenderer / Refs         │  filtered text, stable Refs
+ │   ├─ SelectorParser / Matcher        │  #id, role "name", a >> b
+ │   ├─ ChangeReporter                  │  +/-/~ diff by RuntimeId
+ │   ├─ PatternCalls / ForegroundScope  │  background patterns, real input
+ │   └─ AppOutput / DebugOutputCapture  │  stdout, stderr, OutputDebugString
+ └──────┬───────────────────────────────┘
+        │  COM (UIAutomationCore), Win32
+ ┌──────▼───────────────────────────────┐
+ │ Target App (WPF, WinForms, WinUI …)  │  AutomationPeers / MSAA bridge
+ └──────────────────────────────────────┘
 ```
 
-## Technology Stack
+The Engine has no MCP dependency. The same Engine powers the testing library used by Test Exports (ADR 0004). It talks to UI Automation through the `Interop.UIAutomationClient` COM interop assembly and simulates input with `SendInput`. It has no FlaUI dependency (ADR 0006), so every assembly targets plain `net8.0`/`net10.0` and can ship as a dotnet tool.
 
-| Component | Technology | Version | Purpose |
-|-----------|------------|---------|---------|
-| Runtime | .NET | 8.0 (LTS) | Windows-specific features |
-| MCP SDK | ModelContextProtocol | 0.6.0-preview.1 | Official MCP framework |
-| UI Automation | FlaUI.Core + FlaUI.UIA3 | 5.0.0 | WPF automation abstraction |
-| Hosting | Microsoft.Extensions.Hosting | 8.0.0 | DI and service lifecycle |
-| Transport | stdio | - | JSON-RPC 2.0 over stdin/stdout |
-| Testing | xUnit + FluentAssertions | 2.7.0 / 6.12.0 | Unit testing |
+## Capturing the UI
 
-## Project Structure
+Crossing the process boundary is the cost that matters, so the Engine never walks the tree element by element:
 
-```
-src/WpfMcp.Server/
-├── Program.cs                    # Entry point & DI configuration
-├── WpfMcp.Server.csproj
-│
-├── Models/                       # Data transfer objects
-│   ├── ToolResponse.cs           # Generic response wrapper
-│   ├── ErrorCodes.cs             # Error code constants
-│   ├── SnapshotElement.cs        # Accessibility tree node
-│   └── ElementReference.cs       # Element metadata
-│
-├── Services/                     # Core business logic
-│   ├── IApplicationManager.cs    # App lifecycle interface
-│   ├── ApplicationManager.cs     # Implementation
-│   ├── IElementReferenceManager.cs
-│   └── ElementReferenceManager.cs
-│
-└── Tools/                        # MCP tool implementations
-    ├── WpfApplicationTools.cs    # Launch/attach/close
-    ├── WpfSnapshotTools.cs       # Element discovery
-    ├── WpfInteractionTools.cs    # Click/type/toggle
-    ├── WpfNavigationTools.cs     # Scroll/focus
-    ├── WpfWindowTools.cs         # Window management
-    └── WpfUtilityTools.cs        # Screenshot/wait
-```
+1. **Find windows with Win32.** `EnumWindows` lists the visible top-level windows of the Target App's processes. This covers child processes too, found through a Toolhelp snapshot of parent PIDs. Owned windows (dialogs, tool windows) are skipped because UIA shows them inside their owner. This replaced a UIA desktop search that cost ~90 ms per capture.
+2. **One cached query per window.** `ElementFromHandleBuildCache` with `TreeScope_Subtree` fetches the whole control-view subtree and the properties the Engine needs in a single call.
+3. **Few properties, inferred patterns.** Each cached property costs one provider call per element. Pattern availability is inferred from the pattern's own state property (read with `GetCachedPropertyValueEx(ignoreDefault)`), so the full capture needs 20 properties instead of ~40. Bounds, class name and framework are read live only for the element that needs them.
+4. **Offscreen elements filtered in the provider** (ADR 0005). A capture that misses a target retries once with offscreen elements included.
+5. **Light captures for polling.** Settle and wait loops use 12 properties and `AutomationElementMode_None`, which returns no live references and costs about half as much.
 
-## Core Components
+Measured on the Fixture Apps (median):
 
-### 1. ApplicationManager
+| Screen | Before optimisation | Now |
+|---|---:|---:|
+| WPF form (50 elements), full capture | 160 ms | 87 ms |
+| WPF form, light capture | – | 43 ms |
+| WinForms grid, 1000 non-virtualized rows | 8.2 s | 1.7 s |
 
-Manages the lifecycle of the target WPF application.
+The numbers come from `tests/Netwright.IntegrationTests/CapturePerformanceProbe.cs`, run with `--filter Category=Perf`.
 
-```csharp
-public interface IApplicationManager
-{
-    bool IsAttached { get; }
-    Window? MainWindow { get; }
+## From tree to text
 
-    Task<Window> LaunchApplicationAsync(string path, string[]? args, int timeoutMs);
-    Task<Window> AttachByNameAsync(string processName);
-    Task<Window> AttachByIdAsync(int processId);
-    Task CloseApplicationAsync(bool force);
+`UiTree` holds plain `UiNode`s: role, name, AutomationId, states, inferred patterns, RuntimeId key, and a live element reference used only to act. Everything after capture is pure and unit-tested.
 
-    IReadOnlyList<Window> GetAllWindows();
-    bool HasApplicationCrashed();
-}
-```
+- **Refs** (`RefRegistry`) are keyed by RuntimeId, so the same element keeps the same Ref across Snapshots. Virtualized lists recycle containers under the same RuntimeId; an item whose name changed counts as a different element and its old Ref is stale.
+- **SnapshotRenderer** keeps interactive elements, text and named containers. It collapses unnamed panes, drops scrollbars, title bars and the parts of composite controls, turns grid rows into `row "a | b | c"` for both WPF (DataItem rows) and WinForms (Custom rows with DataItem cells), and caps items and lines.
+- **Selectors** are parsed into steps and matched in memory against the captured tree. Snapshot and Selector therefore always agree on what exists. `SelectorBuilder` produces the shortest unique Selector for an element (AutomationId first); it is shown by `desktop_inspect` and recorded for Test Export.
+- **ChangeReporter** compares two trees by RuntimeId, restricted to visible, reportable elements. It emits the topmost added subtrees, removed elements, changed states and focus moves, within a line budget.
 
-**Responsibilities:**
-- Start new processes and wait for main window
-- Attach to existing processes
-- Track process health (crash detection)
-- Manage window collection
+## Acting
 
-**Design Decision:** Single application mode. Only one application can be attached at a time, simplifying state management and preventing cross-app reference confusion.
-
-### 2. ElementReferenceManager
-
-Manages element references within snapshot contexts.
-
-```csharp
-public interface IElementReferenceManager
-{
-    int ElementCount { get; }
-
-    void BeginNewSnapshot();
-    ElementReference RegisterElement(AutomationElement element);
-    AutomationElement? GetElement(string refId);
-    ElementReference? GetReference(string refId);
-    bool IsReferenceValid(string refId);
-    void Clear();
-}
-```
-
-**Reference Format:** `e1`, `e2`, `e3`, etc. (incrementing per snapshot)
-
-**Responsibilities:**
-- Assign short reference IDs to elements
-- Store element metadata (type, name, bounds)
-- Validate reference freshness
-- Manage snapshot boundaries
-
-**Design Decision:** Snapshot-scoped references. Each `wpf_snapshot` call starts a new context, invalidating all previous references. This prevents stale reference bugs and forces explicit refresh.
-
-### 3. Tool Classes
-
-Tools are organized by domain, each decorated with `[McpServerToolType]`:
-
-| Class | Domain | Tool Count |
-|-------|--------|------------|
-| WpfApplicationTools | App lifecycle | 3 |
-| WpfSnapshotTools | Element discovery | 3 |
-| WpfInteractionTools | UI manipulation | 7 |
-| WpfNavigationTools | Scroll & focus | 3 |
-| WpfWindowTools | Window management | 3 |
-| WpfUtilityTools | Screenshots, waits | 2 |
-
-**Tool Registration:**
-```csharp
-[McpServerToolType]
-public sealed class WpfInteractionTools
-{
-    [McpServerTool(Name = "wpf_click"), Description("Clicks an element")]
-    public string Click(
-        [Description("Human-readable description")] string element,
-        [Description("Element reference from snapshot")] string @ref,
-        [Description("Click type: single, double, right")] string click_type = "single")
-    {
-        // Implementation
-    }
-}
-```
-
-## Data Models
-
-### ToolResponse<T>
-
-All tools return a standardized response:
-
-```json
-{
-  "success": true,
-  "data": { /* tool-specific payload */ },
-  "error": null,
-  "metadata": {
-    "execution_time_ms": 42,
-    "warnings": [],
-    "snapshot_valid": true
-  }
-}
-```
-
-Error response:
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "code": "ELEMENT_NOT_FOUND",
-    "message": "Element with ref 'e5' not found",
-    "suggestion": "Call wpf_snapshot to refresh references",
-    "recoverable": true
-  },
-  "metadata": { ... }
-}
-```
-
-### SnapshotElement
-
-Represents a node in the accessibility tree:
-
-```csharp
-public class SnapshotElement
-{
-    public string Ref { get; set; }           // "e1"
-    public string ControlType { get; set; }   // "Button"
-    public string? Name { get; set; }         // "Save"
-    public string? AutomationId { get; set; } // "btnSave"
-    public string? Value { get; set; }        // Current value
-    public List<string> States { get; set; }  // ["enabled", "focused"]
-    public int Depth { get; set; }
-    public List<SnapshotElement> Children { get; set; }
-}
-```
-
-**YAML Serialization:**
-```yaml
-- window "Main Window" [ref=e1]
-  - button "Save" [ref=e2] [enabled]
-  - textbox "Username" [ref=e3] [value="john"] [focused]
-  - checkbox "Remember" [ref=e4] [unchecked]
-```
-
-### ErrorCodes
-
-Predefined error constants for consistent error handling:
-
-| Code | Description |
-|------|-------------|
-| `APP_NOT_ATTACHED` | No application connected |
-| `APP_CRASHED` | Process has exited |
-| `APP_NOT_RESPONDING` | UI thread blocked |
-| `ELEMENT_NOT_FOUND` | Reference doesn't exist |
-| `ELEMENT_STALE` | Reference outdated |
-| `ELEMENT_NOT_ENABLED` | Element is disabled |
-| `ELEMENT_NOT_VISIBLE` | Element is off-screen |
-| `ELEMENT_READ_ONLY` | Cannot modify element |
-| `PATTERN_NOT_SUPPORTED` | Automation pattern unavailable |
-| `TIMEOUT` | Operation exceeded timeout |
-| `VALUE_TOO_LONG` | Text exceeds 10KB limit |
-| `ITEM_NOT_FOUND` | Dropdown item not found |
-| `WINDOW_NOT_FOUND` | Window doesn't exist |
-| `FILE_NOT_FOUND` | Executable path invalid |
-| `LAUNCH_FAILED` | Failed to start process |
-| `INVALID_PARAMETER` | Bad input parameter |
-
-## Design Patterns
-
-### 1. Dual Parameter Design
-
-Interaction tools accept both human description and machine reference:
-
-```csharp
-wpf_click(
-    element: "Save button",  // For audit/logging
-    ref: "e5"                // For execution
-)
-```
-
-The `element` parameter is never validated - it's purely for logging and permission prompts. The `ref` is the authoritative identifier.
-
-### 2. Lazy Pattern Validation
-
-Tools check pattern support before use, with graceful fallbacks:
-
-```csharp
-if (element.Patterns.Invoke.IsSupported)
-{
-    element.Patterns.Invoke.Pattern.Invoke();
-}
-else
-{
-    // Fallback to mouse click
-    Mouse.Click(element.GetClickablePoint());
-}
-```
-
-### 3. No Automatic Retries
-
-The server deliberately does NOT auto-retry failed operations:
-
-- State changes between failure and retry are unpredictable
-- AI agents should make explicit retry decisions
-- Each error includes actionable recovery suggestions
-
-### 4. State Tracking
-
-Elements report multiple states automatically:
-
-| State | Detection Method |
-|-------|------------------|
-| `disabled` | `!IsEnabled` |
-| `focused` | `HasKeyboardFocus` |
-| `checked/unchecked` | TogglePattern state |
-| `selected` | SelectionItemPattern |
-| `expanded/collapsed` | ExpandCollapsePattern |
-| `readonly` | ValuePattern.IsReadOnly |
-| `modal` | WindowPattern.IsModal |
-
-## Entry Point
-
-`Program.cs` configures the MCP server:
-
-```csharp
-var builder = Host.CreateApplicationBuilder(args);
-
-// Register services
-builder.Services.AddSingleton<IApplicationManager, ApplicationManager>();
-builder.Services.AddSingleton<IElementReferenceManager, ElementReferenceManager>();
-
-// Register tool classes
-builder.Services.AddSingleton<WpfApplicationTools>();
-builder.Services.AddSingleton<WpfSnapshotTools>();
-// ... other tools
-
-// Configure MCP
-builder.Services.AddMcpServer(options =>
-{
-    options.ServerInfo = new() { Name = "wpf-mcp", Version = "1.0.0" };
-})
-.WithStdioServerTransport()
-.WithToolsFromAssembly(typeof(Program).Assembly);
-
-await builder.Build().RunAsync();
-```
-
-## Performance Targets
-
-| Operation | Elements | P95 Target | P99 Target |
-|-----------|----------|------------|------------|
-| `wpf_snapshot` | ≤100 | 200ms | 500ms |
-| `wpf_snapshot` | 100-500 | 500ms | 1000ms |
-| `wpf_snapshot` | 500-1000 | 1000ms | 2000ms |
-| `wpf_click` (Invoke) | - | 100ms | 200ms |
-| `wpf_click` (mouse) | - | 300ms | 500ms |
-| `wpf_type` | ≤100 chars | 500ms | 1000ms |
-| `wpf_set_value` | - | 100ms | 200ms |
-
-## Security Considerations
-
-1. **No Remote Access** - stdio transport only, local execution
-2. **Permission Model** - Human descriptions shown in permission prompts
-3. **No Credential Storage** - No passwords or secrets stored
-4. **Process Isolation** - Each attached app is separate process
-5. **Input Validation** - All parameters validated before use
-
-## Testing Strategy
+Every action runs through one pipeline in `DesktopSession.Actions`:
 
 ```
-tests/WpfMcp.Server.Tests/
-├── Models/
-│   ├── ToolResponseTests.cs      # Response serialization
-│   └── SnapshotElementTests.cs   # YAML generation
-└── Services/
-    └── ElementReferenceManagerTests.cs  # Reference lifecycle
+Locate ──► Perform ──► Settle ──► Change Report
 ```
 
-**Test Categories:**
-- Unit tests: Model serialization, service logic
-- Integration tests: Full tool execution (requires sample WPF app)
+- **Locate** captures repeatedly until the target exists and is Actionable (enabled, on screen; offscreen targets get `ScrollIntoView` once), or fails with `ELEMENT_NOT_FOUND`/`NOT_ACTIONABLE` after the action timeout. The capture it ends with is the "before" state.
+- **Perform** runs on a worker thread. UIA calls that open modal UI do not return until the dialog closes: WPF defers the click, but WinForms runs the handler inside the Invoke call. After `BlockingCallTimeoutMs` (1.5 s) the pipeline carries on and says so in a note.
+  - Background input uses patterns only (Invoke, Toggle, SelectionItem, ExpandCollapse, Value, RangeValue, Scroll, Window, and LegacyIAccessible's default action).
+  - Foreground Actions wrap the input in `ForegroundScope`. It records the foreground window and cursor, activates the Target App window (temporarily attaching to the foreground thread's input queue, the only reliable way Windows allows it), and restores both afterwards. Focus is left on the app if the action opened a new window or menu.
+- **Settle** polls light captures until two consecutive fingerprints match after a 150 ms quiet period (or 3 s pass), then takes one full capture as the "after" state (ADR 0002).
 
-## Future Enhancements
+All session operations are serialized with a semaphore: a Snapshot must never observe half of another action.
 
-1. **Additional Frameworks** - WinForms, UWP, WinUI 3 support
-2. **Recording Mode** - Capture user interactions as tool sequences
-3. **Visual Targeting** - Click by image/coordinate
-4. **Remote Sessions** - SSE transport for remote automation
-5. **Multi-App Support** - Manage multiple applications simultaneously
+## Diagnostics
+
+- **stdout/stderr** are redirected when Netwright launches the app. You cannot attach to the output of a process that is already running.
+- **OutputDebugString** (which `Trace.WriteLine` uses) is read from the session-wide `DBWIN_BUFFER` shared memory, as Sysinternals DebugView does, and filtered by the Target App's PIDs. It needs no privileges; it receives nothing while a debugger is attached to the app.
+- **Crash Reports.** When the process exits without being asked to, the Engine looks up event 1026 from the ".NET Runtime" provider in the Application event log. That event holds the exception type, message and stack for both .NET Framework and .NET 5+. If it is missing, the Engine falls back to the stderr tail. The report is queued and prepended to the next tool response.
+
+## Projects
+
+| Project | Target | Role |
+|---|---|---|
+| `src/Netwright.Engine` | net8.0; net10.0 (Windows-only) | Automation engine |
+| `src/Netwright` | net10.0, self-contained per RID (win-x64, win-arm64), ReadyToRun | MCP server, `dotnet tool` + NuGet `McpServer` package |
+| `src/Netwright.Testing` | net8.0; net10.0 (Windows-only) | Library that exported tests run on |
+| `tests/Netwright.Testing.Tests` | net10.0-windows | Test Export generation, including compiling the generated code with Roslyn |
+| `tests/Netwright.Engine.Tests` | net10.0-windows | Pure unit tests (selectors, rendering, diffs, parsers) |
+| `tests/Netwright.IntegrationTests` | net10.0-windows | Engine and MCP server against the Fixture Apps |
+| `tests/fixtures/*` | WPF net8, WinForms net8 + net48 | Fixture Apps implementing [FIXTURE-CONTRACT.md](../tests/fixtures/FIXTURE-CONTRACT.md) |
+| `benchmarks/Netwright.Benchmarks` | net10.0-windows | Token and latency benchmark against any MCP server |

@@ -54,6 +54,8 @@ public static class MarkdownReport
         if (runs.Any(r => r.Scenarios.Count < scenarioNames.Count))
         {
             sb.AppendLine("¹ The server's tools act at screen coordinates with the real mouse and keyboard, so scripted multi-step scenarios were not run against it.");
+            sb.AppendLine();
+            sb.AppendLine("Windows-MCP snapshots describe the whole desktop (interactive elements of visible windows with coordinates) rather than the app's tree, so their token counts are not directly comparable: the grid snapshot, for example, does not list the grid's rows.");
         }
 
         return sb.ToString();

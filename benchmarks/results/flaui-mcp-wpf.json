@@ -1,0 +1,211 @@
+{
+  "Label": "FlaUI-MCP",
+  "Adapter": "FlaUI-MCP",
+  "Fixture": "wpf",
+  "Timestamp": "2026-09-13T13:13:59.3474286+02:00",
+  "Machine": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD, 16 logical cores",
+  "OperatingSystem": "Microsoft Windows 10.0.26200",
+  "TokenEncoding": "o200k_base",
+  "Iterations": 5,
+  "ToolDefinitions": {
+    "ToolCount": 12,
+    "TotalTokens": 1418,
+    "PerTool": {
+      "windows_launch": 120,
+      "windows_snapshot": 91,
+      "windows_click": 127,
+      "windows_type": 122,
+      "windows_fill": 85,
+      "windows_get_text": 81,
+      "windows_send_keys": 242,
+      "windows_screenshot": 183,
+      "windows_list_windows": 44,
+      "windows_focus": 71,
+      "windows_close": 40,
+      "windows_batch": 212
+    }
+  },
+  "Scenarios": [
+    {
+      "Name": "snapshot-form",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 785,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 130.5,
+      "LatencyP95Ms": 156.7,
+      "SampleTranscript": [
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 785,
+          "LatencyMs": 150.5,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w1e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w1e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w1e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w1e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w1e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w1e6]\r\n    - button \u0022Chiudi\u0022 [ref=w1e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w1e8]\r\n    - menuitem \u0022File\u0022 [ref=w1e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w1e10]\r\n  - button \u0022Open modal\u0022 [ref=w1e11]\r\n    - text \u0022Open modal\u0022 [ref=w1e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w1e13]\r\n  - button \u0022Open tool window\u0022 [ref=w1e14]\r\n    - text \u0022Open tool window\u0022 [ref=w1e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w1e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w1e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w1e18]\r\n  - button \u0022Crash\u0022 [ref=w1e19]\r\n    - text \u0022Crash\u0022 [ref=w1e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w1e21]\r\n    - tab \u0022Form\u0022 [ref=w1e22] [selected]\r\n      - text \u0022Form\u0022 [ref=w1e23]\r\n      - text \u0022Name:\u0022 [ref=w1e24]\r\n      - textbox \u0022Name\u0022 [ref=w1e25]\r\n      - text \u0022Email:\u0022 [ref=w1e26]\r\n      - textbox \u0022Email\u0022 [ref=w1e27]\r\n      - text \u0022Country:\u0022 [ref=w1e28]\r\n      - combobox \u0022Country\u0022 [ref=w1e29] [collapsed]\r\n      - checkbox \u0022Accept terms\u0022 [ref=w1e30]\r\n        - text \u0022Accept terms\u0022 [ref=w1e31]\r\n      - text \u0022Plan:\u0022 [ref=w1e32]\r\n      - radio \u0022Free\u0022 [ref=w1e33] [selected]\r\n        - text \u0022Free\u0022 [ref=w1e34]\r\n      - radio \u0022Pro\u0022 [ref=w1e35]\r\n        - text \u0022Pro\u0022 [ref=w1e36]\r\n      - text \u0022Quantity:\u0022 [ref=w1e37]\r\n      - slider \u0022Quantity\u0022 [ref=w1e38]\r\n        - button \u0022[DecreaseLarge]\u0022 [ref=w1e39]\r\n        - button \u0022[IncreaseLarge]\u0022 [ref=w1e40]\r\n        - thumb \u0022[Thumb]\u0022 [ref=w1e41]\r\n      - button \u0022Submit\u0022 [ref=w1e42] [disabled]\r\n        - text \u0022Submit\u0022 [ref=w1e43] [disabled]\r\n      - button \u0022Reset\u0022 [ref=w1e44]\r\n        - text \u0022Reset\u0022 [ref=w1e45]\r\n      - text \u0022[lblResult]\u0022 [ref=w1e46]\r\n    - tab \u0022Async\u0022 [ref=w1e47]\r\n      - text \u0022Async\u0022 [ref=w1e48]\r\n    - tab \u0022Grid\u0022 [ref=w1e49]\r\n      - text \u0022Grid\u0022 [ref=w1e50]\r\n    - tab \u0022Tree\u0022 [ref=w1e51]\r\n      - text \u0022Tree\u0022 [ref=... [146 more chars]"
+        }
+      ]
+    },
+    {
+      "Name": "snapshot-grid",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 6234,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 775.7,
+      "LatencyP95Ms": 784.3,
+      "SampleTranscript": [
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 6234,
+          "LatencyMs": 784,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w6e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w6e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w6e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w6e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w6e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w6e6]\r\n    - button \u0022Chiudi\u0022 [ref=w6e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w6e8]\r\n    - menuitem \u0022File\u0022 [ref=w6e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w6e10]\r\n  - button \u0022Open modal\u0022 [ref=w6e11]\r\n    - text \u0022Open modal\u0022 [ref=w6e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w6e13]\r\n  - button \u0022Open tool window\u0022 [ref=w6e14]\r\n    - text \u0022Open tool window\u0022 [ref=w6e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w6e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w6e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w6e18]\r\n  - button \u0022Crash\u0022 [ref=w6e19]\r\n    - text \u0022Crash\u0022 [ref=w6e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w6e21]\r\n    - tab \u0022Form\u0022 [ref=w6e22]\r\n      - text \u0022Form\u0022 [ref=w6e23]\r\n    - tab \u0022Async\u0022 [ref=w6e24]\r\n      - text \u0022Async\u0022 [ref=w6e25]\r\n    - tab \u0022Grid\u0022 [ref=w6e26] [selected]\r\n      - text \u0022Grid\u0022 [ref=w6e27]\r\n      - grid \u0022Orders\u0022 [ref=w6e28]\r\n        - header \u0022[PART_ColumnHeadersPresenter]\u0022 [ref=w6e29]\r\n          - columnheader \u0022Id\u0022 [ref=w6e30]\r\n            - text \u0022Id\u0022 [ref=w6e31]\r\n            - thumb \u0022[PART_RightHeaderGripper]\u0022 [ref=w6e32]\r\n          - columnheader \u0022Customer\u0022 [ref=w6e33]\r\n            - text \u0022Customer\u0022 [ref=w6e34]\r\n            - thumb \u0022[PART_LeftHeaderGripper]\u0022 [ref=w6e35]\r\n            - thumb \u0022[PART_RightHeaderGripper]\u0022 [ref=w6e36]\r\n          - columnheader \u0022Amount\u0022 [ref=w6e37]\r\n            - text \u0022Amount\u0022 [ref=w6e38]\r\n            - thumb \u0022[PART_LeftHeaderGripper]\u0022 [ref=w6e39]\r\n            - thumb \u0022[PART_RightHeaderGripper]\u0022 [ref=w6e40]\r\n        - row \u0022Order { Id = 1, Customer = Customer 1, Amount = 10.00 }\u0022 [ref=w6e41]\r\n          - columnheader [ref=w6e42]\r\n            - thumb \u0022[PART_BottomHeaderGripper]\u0022 [ref=w6e43]\r\n          - custom \u00221\u0022 [ref=w6e44] [readonly]\r\n            - text \u00221\u0022 [ref=w6e45]\r\n          - custom \u0022Customer 1\u0022 [ref=w6e46] [re... [16968 more chars]"
+        }
+      ]
+    },
+    {
+      "Name": "form-submit",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 3469,
+      "MedianCalls": 10,
+      "LatencyP50Ms": 721.3,
+      "LatencyP95Ms": 749.1,
+      "SampleTranscript": [
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 785,
+          "LatencyMs": 123.8,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w11e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w11e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w11e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w11e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w11e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w11e6]\r\n    - button \u0022Chiudi\u0022 [ref=w11e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w11e8]\r\n    - menuitem \u0022File\u0022 [ref=w11e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w11e10]\r\n  - button \u0022Open modal\u0022 [ref=w11e11]\r\n    - text \u0022Open modal\u0022 [ref=w11e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w11e13]\r\n  - button \u0022Open tool window\u0022 [ref=w11e14]\r\n    - text \u0022Open tool window\u0022 [ref=w11e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w11e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w11e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w11e18]\r\n  - button \u0022Crash\u0022 [ref=w11e19]\r\n    - text \u0022Crash\u0022 [ref=w11e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w11e21]\r\n    - tab \u0022Form\u0022 [ref=w11e22] [selected]\r\n      - text \u0022Form\u0022 [ref=w11e23]\r\n      - text \u0022Name:\u0022 [ref=w11e24]\r\n      - textbox \u0022Name\u0022 [ref=w11e25]\r\n      - text \u0022Email:\u0022 [ref=w11e26]\r\n      - textbox \u0022Email\u0022 [ref=w11e27]\r\n      - text \u0022Country:\u0022 [ref=w11e28]\r\n      - combobox \u0022Country\u0022 [ref=w11e29] [collapsed]\r\n      - checkbox \u0022Accept terms\u0022 [ref=w11e30]\r\n        - text \u0022Accept terms\u0022 [ref=w11e31]\r\n      - text \u0022Plan:\u0022 [ref=w11e32]\r\n      - radio \u0022Free\u0022 [ref=w11e33] [selected]\r\n        - text \u0022Free\u0022 [ref=w11e34]\r\n      - radio \u0022Pro\u0022 [ref=w11e35]\r\n        - text \u0022Pro\u0022 [ref=w11e36]\r\n      - text \u0022Quantity:\u0022 [ref=w11e37]\r\n      - slider \u0022Quantity\u0022 [ref=w11e38]\r\n        - button \u0022[DecreaseLarge]\u0022 [ref=w11e39]\r\n        - button \u0022[IncreaseLarge]\u0022 [ref=w11e40]\r\n        - thumb \u0022[Thumb]\u0022 [ref=w11e41]\r\n      - button \u0022Submit\u0022 [ref=w11e42] [disabled]\r\n        - text \u0022Submit\u0022 [ref=w11e43] [disabled]\r\n      - button \u0022Reset\u0022 [ref=w11e44]\r\n        - text \u0022Reset\u0022 [ref=w11e45]\r\n      - text \u0022[lblResult]\u0022 [ref=w11e46]\r\n    - tab \u0022Async\u0022 [ref=w11e47]\r\n      - text \u0022Async\u0022 [ref=w11e48]\r\n    - tab \u0022Grid\u0022 [ref=w11e49]\r\n      - text \u0022Grid\u0022 [ref=w11e50]\r\n    -... [202 more chars]"
+        },
+        {
+          "Tool": "windows_fill",
+          "Tokens": 9,
+          "LatencyMs": 38.7,
+          "IsError": false,
+          "TextPreview": "Filled Name with \u0022Ada Lovelace\u0022"
+        },
+        {
+          "Tool": "windows_fill",
+          "Tokens": 8,
+          "LatencyMs": 16.9,
+          "IsError": false,
+          "TextPreview": "Filled Email with \u0022ada@example.com\u0022"
+        },
+        {
+          "Tool": "windows_click",
+          "Tokens": 2,
+          "LatencyMs": 23,
+          "IsError": false,
+          "TextPreview": "Clicked Country"
+        },
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 1077,
+          "LatencyMs": 275.7,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w11e1]\r\n  - window [ref=w11e2]\r\n    - listitem \u0022Italy\u0022 [ref=w11e3] [offscreen]\r\n      - text \u0022Italy\u0022 [ref=w11e4]\r\n    - listitem \u0022Germany\u0022 [ref=w11e5] [offscreen]\r\n      - text \u0022Germany\u0022 [ref=w11e6]\r\n    - listitem \u0022France\u0022 [ref=w11e7]\r\n      - text \u0022France\u0022 [ref=w11e8]\r\n    - listitem \u0022Spain\u0022 [ref=w11e9]\r\n      - text \u0022Spain\u0022 [ref=w11e10]\r\n    - listitem \u0022United States\u0022 [ref=w11e11]\r\n      - text \u0022United States\u0022 [ref=w11e12]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w11e13]\r\n    - menubar \u0022Sistema\u0022 [ref=w11e14]\r\n      - menuitem \u0022Sistema\u0022 [ref=w11e15] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w11e16]\r\n    - button \u0022Ingrandisci\u0022 [ref=w11e17]\r\n    - button \u0022Chiudi\u0022 [ref=w11e18]\r\n  - menu \u0022[menuMain]\u0022 [ref=w11e19]\r\n    - menuitem \u0022File\u0022 [ref=w11e20] [collapsed]\r\n      - text \u0022File\u0022 [ref=w11e21]\r\n  - button \u0022Open modal\u0022 [ref=w11e22]\r\n    - text \u0022Open modal\u0022 [ref=w11e23]\r\n  - text \u0022Modal result: none\u0022 [ref=w11e24]\r\n  - button \u0022Open tool window\u0022 [ref=w11e25]\r\n    - text \u0022Open tool window\u0022 [ref=w11e26]\r\n  - button \u0022Write diagnostics\u0022 [ref=w11e27]\r\n    - text \u0022Write diagnostics\u0022 [ref=w11e28]\r\n  - text \u0022[lblDiag]\u0022 [ref=w11e29]\r\n  - button \u0022Crash\u0022 [ref=w11e30]\r\n    - text \u0022Crash\u0022 [ref=w11e31]\r\n  - tablist \u0022[tabs]\u0022 [ref=w11e32]\r\n    - tab \u0022Form\u0022 [ref=w11e33] [selected]\r\n      - text \u0022Form\u0022 [ref=w11e34]\r\n      - text \u0022Name:\u0022 [ref=w11e35]\r\n      - textbox \u0022Name\u0022 [ref=w11e36]\r\n      - text \u0022Email:\u0022 [ref=w11e37]\r\n      - textbox \u0022Email\u0022 [ref=w11e38]\r\n      - text \u0022Country:\u0022 [ref=w11e39]\r\n      - combobox \u0022Country\u0022 [ref=w11e40] [expanded]\r\n        - listitem \u0022Italy\u0022 [ref=w11e41]\r\n          - text \u0022Italy\u0022 [ref=w11e42]\r\n        - listitem \u0022Germany\u0022 [ref=w11e43]\r\n          - text \u0022Germany\u0022 [ref=w11e44]\r\n        - listitem \u0022France\u0022 [ref=w11e45]\r\n          - text \u0022France\u0022 [ref=w11e46]\r\n        - listitem \u0022Spain\u0022 [ref=w11e47]\r\n          - text \u0022Spain\u0022 [ref=w11e48]\r\n        - listitem \u0022United States\u0022 [ref=w11e49]\r\n          - text \u0022United States\u0022 [ref=... [1054 more chars]"
+        },
+        {
+          "Tool": "windows_click",
+          "Tokens": 2,
+          "LatencyMs": 8.3,
+          "IsError": false,
+          "TextPreview": "Clicked Italy"
+        },
+        {
+          "Tool": "windows_click",
+          "Tokens": 6,
+          "LatencyMs": 23.7,
+          "IsError": false,
+          "TextPreview": "Toggled Accept terms to On"
+        },
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 782,
+          "LatencyMs": 123,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w11e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w11e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w11e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w11e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w11e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w11e6]\r\n    - button \u0022Chiudi\u0022 [ref=w11e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w11e8]\r\n    - menuitem \u0022File\u0022 [ref=w11e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w11e10]\r\n  - button \u0022Open modal\u0022 [ref=w11e11]\r\n    - text \u0022Open modal\u0022 [ref=w11e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w11e13]\r\n  - button \u0022Open tool window\u0022 [ref=w11e14]\r\n    - text \u0022Open tool window\u0022 [ref=w11e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w11e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w11e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w11e18]\r\n  - button \u0022Crash\u0022 [ref=w11e19]\r\n    - text \u0022Crash\u0022 [ref=w11e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w11e21]\r\n    - tab \u0022Form\u0022 [ref=w11e22] [selected]\r\n      - text \u0022Form\u0022 [ref=w11e23]\r\n      - text \u0022Name:\u0022 [ref=w11e24]\r\n      - textbox \u0022Name\u0022 [ref=w11e25]\r\n      - text \u0022Email:\u0022 [ref=w11e26]\r\n      - textbox \u0022Email\u0022 [ref=w11e27]\r\n      - text \u0022Country:\u0022 [ref=w11e28]\r\n      - combobox \u0022Country\u0022 [ref=w11e29] [collapsed]\r\n      - checkbox \u0022Accept terms\u0022 [ref=w11e30] [checked]\r\n        - text \u0022Accept terms\u0022 [ref=w11e31]\r\n      - text \u0022Plan:\u0022 [ref=w11e32]\r\n      - radio \u0022Free\u0022 [ref=w11e33] [selected]\r\n        - text \u0022Free\u0022 [ref=w11e34]\r\n      - radio \u0022Pro\u0022 [ref=w11e35]\r\n        - text \u0022Pro\u0022 [ref=w11e36]\r\n      - text \u0022Quantity:\u0022 [ref=w11e37]\r\n      - slider \u0022Quantity\u0022 [ref=w11e38]\r\n        - button \u0022[DecreaseLarge]\u0022 [ref=w11e39]\r\n        - button \u0022[IncreaseLarge]\u0022 [ref=w11e40]\r\n        - thumb \u0022[Thumb]\u0022 [ref=w11e41]\r\n      - button \u0022Submit\u0022 [ref=w11e42]\r\n        - text \u0022Submit\u0022 [ref=w11e43]\r\n      - button \u0022Reset\u0022 [ref=w11e44]\r\n        - text \u0022Reset\u0022 [ref=w11e45]\r\n      - text \u0022[lblResult]\u0022 [ref=w11e46]\r\n    - tab \u0022Async\u0022 [ref=w11e47]\r\n      - text \u0022Async\u0022 [ref=w11e48]\r\n    - tab \u0022Grid\u0022 [ref=w11e49]\r\n      - text \u0022Grid\u0022 [ref=w11e50]\r\n    - tab \u0022Tree\u0022 ... [190 more chars]"
+        },
+        {
+          "Tool": "windows_click",
+          "Tokens": 3,
+          "LatencyMs": 3.7,
+          "IsError": false,
+          "TextPreview": "Invoked Submit"
+        },
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 795,
+          "LatencyMs": 112.5,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w11e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w11e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w11e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w11e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w11e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w11e6]\r\n    - button \u0022Chiudi\u0022 [ref=w11e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w11e8]\r\n    - menuitem \u0022File\u0022 [ref=w11e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w11e10]\r\n  - button \u0022Open modal\u0022 [ref=w11e11]\r\n    - text \u0022Open modal\u0022 [ref=w11e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w11e13]\r\n  - button \u0022Open tool window\u0022 [ref=w11e14]\r\n    - text \u0022Open tool window\u0022 [ref=w11e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w11e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w11e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w11e18]\r\n  - button \u0022Crash\u0022 [ref=w11e19]\r\n    - text \u0022Crash\u0022 [ref=w11e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w11e21]\r\n    - tab \u0022Form\u0022 [ref=w11e22] [selected]\r\n      - text \u0022Form\u0022 [ref=w11e23]\r\n      - text \u0022Name:\u0022 [ref=w11e24]\r\n      - textbox \u0022Name\u0022 [ref=w11e25]\r\n      - text \u0022Email:\u0022 [ref=w11e26]\r\n      - textbox \u0022Email\u0022 [ref=w11e27]\r\n      - text \u0022Country:\u0022 [ref=w11e28]\r\n      - combobox \u0022Country\u0022 [ref=w11e29] [collapsed]\r\n      - checkbox \u0022Accept terms\u0022 [ref=w11e30] [checked]\r\n        - text \u0022Accept terms\u0022 [ref=w11e31]\r\n      - text \u0022Plan:\u0022 [ref=w11e32]\r\n      - radio \u0022Free\u0022 [ref=w11e33] [selected]\r\n        - text \u0022Free\u0022 [ref=w11e34]\r\n      - radio \u0022Pro\u0022 [ref=w11e35]\r\n        - text \u0022Pro\u0022 [ref=w11e36]\r\n      - text \u0022Quantity:\u0022 [ref=w11e37]\r\n      - slider \u0022Quantity\u0022 [ref=w11e38]\r\n        - button \u0022[DecreaseLarge]\u0022 [ref=w11e39]\r\n        - button \u0022[IncreaseLarge]\u0022 [ref=w11e40]\r\n        - thumb \u0022[Thumb]\u0022 [ref=w11e41]\r\n      - button \u0022Submit\u0022 [ref=w11e42]\r\n        - text \u0022Submit\u0022 [ref=w11e43]\r\n      - button \u0022Reset\u0022 [ref=w11e44]\r\n        - text \u0022Reset\u0022 [ref=w11e45]\r\n      - text \u0022Submitted: Ada Lovelace \u003Cada@example.com\u003E Italy Free x1\u0022 [ref=w11e46]\r\n    - tab \u0022Async\u0022 [ref=w11e47]\r\n      - text \u0022Async\u0022 [ref=w11e48]\r\n    - tab \u0022Grid\u0022 [ref=w11e49]\r\n      -... [234 more chars]"
+        }
+      ]
+    },
+    {
+      "Name": "async-load",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 2484,
+      "MedianCalls": 5,
+      "LatencyP50Ms": 329.2,
+      "LatencyP95Ms": 343.8,
+      "SampleTranscript": [
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 596,
+          "LatencyMs": 80.8,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w16e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w16e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w16e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w16e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w16e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w16e6]\r\n    - button \u0022Chiudi\u0022 [ref=w16e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w16e8]\r\n    - menuitem \u0022File\u0022 [ref=w16e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w16e10]\r\n  - button \u0022Open modal\u0022 [ref=w16e11]\r\n    - text \u0022Open modal\u0022 [ref=w16e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w16e13]\r\n  - button \u0022Open tool window\u0022 [ref=w16e14]\r\n    - text \u0022Open tool window\u0022 [ref=w16e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w16e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w16e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w16e18]\r\n  - button \u0022Crash\u0022 [ref=w16e19]\r\n    - text \u0022Crash\u0022 [ref=w16e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w16e21]\r\n    - tab \u0022Form\u0022 [ref=w16e22]\r\n      - text \u0022Form\u0022 [ref=w16e23]\r\n    - tab \u0022Async\u0022 [ref=w16e24] [selected]\r\n      - text \u0022Async\u0022 [ref=w16e25]\r\n      - button \u0022Load data\u0022 [ref=w16e26]\r\n        - text \u0022Load data\u0022 [ref=w16e27]\r\n      - text \u0022Idle\u0022 [ref=w16e28]\r\n      - list \u0022Items\u0022 [ref=w16e29]\r\n      - button \u0022Enable later\u0022 [ref=w16e30]\r\n        - text \u0022Enable later\u0022 [ref=w16e31]\r\n      - button \u0022Later\u0022 [ref=w16e32] [disabled]\r\n        - text \u0022Later\u0022 [ref=w16e33] [disabled]\r\n      - text \u0022[lblLater]\u0022 [ref=w16e34]\r\n    - tab \u0022Grid\u0022 [ref=w16e35]\r\n      - text \u0022Grid\u0022 [ref=w16e36]\r\n    - tab \u0022Tree\u0022 [ref=w16e37]\r\n      - text \u0022Tree\u0022 [ref=w16e38]\r\n    - tab \u0022Keyboard\u0022 [ref=w16e39]\r\n      - text \u0022Keyboard\u0022 [ref=w16e40]\r\n    - tab \u0022Scroll\u0022 [ref=w16e41]\r\n      - text \u0022Scroll\u0022 [ref=w16e42]\r\n"
+        },
+        {
+          "Tool": "windows_click",
+          "Tokens": 4,
+          "LatencyMs": 30.6,
+          "IsError": false,
+          "TextPreview": "Invoked Load data"
+        },
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 602,
+          "LatencyMs": 70.8,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w16e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w16e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w16e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w16e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w16e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w16e6]\r\n    - button \u0022Chiudi\u0022 [ref=w16e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w16e8]\r\n    - menuitem \u0022File\u0022 [ref=w16e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w16e10]\r\n  - button \u0022Open modal\u0022 [ref=w16e11]\r\n    - text \u0022Open modal\u0022 [ref=w16e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w16e13]\r\n  - button \u0022Open tool window\u0022 [ref=w16e14]\r\n    - text \u0022Open tool window\u0022 [ref=w16e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w16e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w16e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w16e18]\r\n  - button \u0022Crash\u0022 [ref=w16e19]\r\n    - text \u0022Crash\u0022 [ref=w16e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w16e21]\r\n    - tab \u0022Form\u0022 [ref=w16e22]\r\n      - text \u0022Form\u0022 [ref=w16e23]\r\n    - tab \u0022Async\u0022 [ref=w16e24] [selected]\r\n      - text \u0022Async\u0022 [ref=w16e25]\r\n      - button \u0022Load data\u0022 [ref=w16e26] [disabled]\r\n        - text \u0022Load data\u0022 [ref=w16e27] [disabled]\r\n      - text \u0022Loading...\u0022 [ref=w16e28]\r\n      - list \u0022Items\u0022 [ref=w16e29]\r\n      - button \u0022Enable later\u0022 [ref=w16e30]\r\n        - text \u0022Enable later\u0022 [ref=w16e31]\r\n      - button \u0022Later\u0022 [ref=w16e32] [disabled]\r\n        - text \u0022Later\u0022 [ref=w16e33] [disabled]\r\n      - text \u0022[lblLater]\u0022 [ref=w16e34]\r\n    - tab \u0022Grid\u0022 [ref=w16e35]\r\n      - text \u0022Grid\u0022 [ref=w16e36]\r\n    - tab \u0022Tree\u0022 [ref=w16e37]\r\n      - text \u0022Tree\u0022 [ref=w16e38]\r\n    - tab \u0022Keyboard\u0022 [ref=w16e39]\r\n      - text \u0022Keyboard\u0022 [ref=w16e40]\r\n    - tab \u0022Scroll\u0022 [ref=w16e41]\r\n      - text \u0022Scroll\u0022 [ref=w16e42]\r\n"
+        },
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 602,
+          "LatencyMs": 66,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w16e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w16e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w16e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w16e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w16e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w16e6]\r\n    - button \u0022Chiudi\u0022 [ref=w16e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w16e8]\r\n    - menuitem \u0022File\u0022 [ref=w16e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w16e10]\r\n  - button \u0022Open modal\u0022 [ref=w16e11]\r\n    - text \u0022Open modal\u0022 [ref=w16e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w16e13]\r\n  - button \u0022Open tool window\u0022 [ref=w16e14]\r\n    - text \u0022Open tool window\u0022 [ref=w16e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w16e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w16e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w16e18]\r\n  - button \u0022Crash\u0022 [ref=w16e19]\r\n    - text \u0022Crash\u0022 [ref=w16e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w16e21]\r\n    - tab \u0022Form\u0022 [ref=w16e22]\r\n      - text \u0022Form\u0022 [ref=w16e23]\r\n    - tab \u0022Async\u0022 [ref=w16e24] [selected]\r\n      - text \u0022Async\u0022 [ref=w16e25]\r\n      - button \u0022Load data\u0022 [ref=w16e26] [disabled]\r\n        - text \u0022Load data\u0022 [ref=w16e27] [disabled]\r\n      - text \u0022Loading...\u0022 [ref=w16e28]\r\n      - list \u0022Items\u0022 [ref=w16e29]\r\n      - button \u0022Enable later\u0022 [ref=w16e30]\r\n        - text \u0022Enable later\u0022 [ref=w16e31]\r\n      - button \u0022Later\u0022 [ref=w16e32] [disabled]\r\n        - text \u0022Later\u0022 [ref=w16e33] [disabled]\r\n      - text \u0022[lblLater]\u0022 [ref=w16e34]\r\n    - tab \u0022Grid\u0022 [ref=w16e35]\r\n      - text \u0022Grid\u0022 [ref=w16e36]\r\n    - tab \u0022Tree\u0022 [ref=w16e37]\r\n      - text \u0022Tree\u0022 [ref=w16e38]\r\n    - tab \u0022Keyboard\u0022 [ref=w16e39]\r\n      - text \u0022Keyboard\u0022 [ref=w16e40]\r\n    - tab \u0022Scroll\u0022 [ref=w16e41]\r\n      - text \u0022Scroll\u0022 [ref=w16e42]\r\n"
+        },
+        {
+          "Tool": "windows_snapshot",
+          "Tokens": 680,
+          "LatencyMs": 78.7,
+          "IsError": false,
+          "TextPreview": "- window \u0022Netwright Fixture (WPF)\u0022 [ref=w16e1]\r\n  - titlebar \u0022[TitleBar]\u0022 [ref=w16e2]\r\n    - menubar \u0022Sistema\u0022 [ref=w16e3]\r\n      - menuitem \u0022Sistema\u0022 [ref=w16e4] [collapsed]\r\n    - button \u0022Riduci a icona\u0022 [ref=w16e5]\r\n    - button \u0022Ingrandisci\u0022 [ref=w16e6]\r\n    - button \u0022Chiudi\u0022 [ref=w16e7]\r\n  - menu \u0022[menuMain]\u0022 [ref=w16e8]\r\n    - menuitem \u0022File\u0022 [ref=w16e9] [collapsed]\r\n      - text \u0022File\u0022 [ref=w16e10]\r\n  - button \u0022Open modal\u0022 [ref=w16e11]\r\n    - text \u0022Open modal\u0022 [ref=w16e12]\r\n  - text \u0022Modal result: none\u0022 [ref=w16e13]\r\n  - button \u0022Open tool window\u0022 [ref=w16e14]\r\n    - text \u0022Open tool window\u0022 [ref=w16e15]\r\n  - button \u0022Write diagnostics\u0022 [ref=w16e16]\r\n    - text \u0022Write diagnostics\u0022 [ref=w16e17]\r\n  - text \u0022[lblDiag]\u0022 [ref=w16e18]\r\n  - button \u0022Crash\u0022 [ref=w16e19]\r\n    - text \u0022Crash\u0022 [ref=w16e20]\r\n  - tablist \u0022[tabs]\u0022 [ref=w16e21]\r\n    - tab \u0022Form\u0022 [ref=w16e22]\r\n      - text \u0022Form\u0022 [ref=w16e23]\r\n    - tab \u0022Async\u0022 [ref=w16e24] [selected]\r\n      - text \u0022Async\u0022 [ref=w16e25]\r\n      - button \u0022Load data\u0022 [ref=w16e26]\r\n        - text \u0022Load data\u0022 [ref=w16e27]\r\n      - text \u0022Loaded 3 items\u0022 [ref=w16e28]\r\n      - list \u0022Items\u0022 [ref=w16e29]\r\n        - listitem \u0022Alpha\u0022 [ref=w16e30]\r\n          - text \u0022Alpha\u0022 [ref=w16e31]\r\n        - listitem \u0022Beta\u0022 [ref=w16e32]\r\n          - text \u0022Beta\u0022 [ref=w16e33]\r\n        - listitem \u0022Gamma\u0022 [ref=w16e34]\r\n          - text \u0022Gamma\u0022 [ref=w16e35]\r\n      - button \u0022Enable later\u0022 [ref=w16e36]\r\n        - text \u0022Enable later\u0022 [ref=w16e37]\r\n      - button \u0022Later\u0022 [ref=w16e38] [disabled]\r\n        - text \u0022Later\u0022 [ref=w16e39] [disabled]\r\n      - text \u0022[lblLater]\u0022 [ref=w16e40]\r\n    - tab \u0022Grid\u0022 [ref=w16e41]\r\n      - text \u0022Grid\u0022 [ref=w16e42]\r\n    - tab \u0022Tree\u0022 [ref=w16e43]\r\n      - text \u0022Tree\u0022 [ref=w16e44]\r\n    - tab \u0022Keyboard\u0022 [ref=w16e45]\r\n      - text \u0022Keyboard\u0022 [ref=w16e46]\r\n    - tab \u0022Scroll\u0022 [ref=w16e47]\r\n      - text \u0022Scroll\u0022 [ref=w16e48]\r\n"
+        }
+      ]
+    },
+    {
+      "Name": "screenshot",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 1000,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 25.3,
+      "LatencyP95Ms": 40,
+      "SampleTranscript": [
+        {
+          "Tool": "windows_screenshot",
+          "Tokens": 1000,
+          "LatencyMs": 40,
+          "IsError": false,
+          "TextPreview": "[image 1000x750]"
+        }
+      ]
+    }
+  ]
+}
