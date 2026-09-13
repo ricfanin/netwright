@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ricfanin/netwright",
+  "title": "Netwright",
+  "description": "Playwright-style automation of .NET desktop apps (WPF, WinForms, WinUI) for AI agents.",
+  "version": "2.0.0",
+  "repository": {
+    "url": "https://github.com/ricfanin/netwright",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "nuget",
+      "registryBaseUrl": "https://api.nuget.org",
+      "identifier": "Netwright",
+      "version": "2.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [],
+      "environmentVariables": [
+        {
+          "name": "NETWRIGHT_ALLOW",
+          "description": "Optional ';'-separated wildcard patterns of apps the agent may launch or attach to.",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

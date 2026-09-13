@@ -1,38 +1,30 @@
-# Install the tool locally for testing
+# Packs Netwright and installs it as a global dotnet tool from the local package.
 # Usage: .\scripts\install-local.ps1
 
-Write-Host "Installing WPF-MCP as global tool..." -ForegroundColor Cyan
+$ErrorActionPreference = 'Stop'
+Set-Location (Split-Path -Parent $PSScriptRoot)
 
-# Uninstall if already installed
-dotnet tool uninstall --global WpfMcp.Server 2>$null
+Write-Host 'Installing Netwright as a global tool...' -ForegroundColor Cyan
+dotnet tool uninstall --global Netwright 2>$null | Out-Null
 
-# Pack first
 & "$PSScriptRoot\pack.ps1"
-
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Pack failed, cannot install" -ForegroundColor Red
+    Write-Host 'Pack failed, cannot install.' -ForegroundColor Red
     exit 1
 }
 
-# Install from local package
-dotnet tool install --global --add-source ./nupkg WpfMcp.Server
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host ""
-    Write-Host "Installation successful!" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "You can now use 'wpf-mcp' command globally." -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "Add to your MCP client config:" -ForegroundColor Gray
-    Write-Host '  {' -ForegroundColor White
-    Write-Host '    "mcpServers": {' -ForegroundColor White
-    Write-Host '      "wpf-mcp": {' -ForegroundColor White
-    Write-Host '        "command": "wpf-mcp",' -ForegroundColor White
-    Write-Host '        "args": []' -ForegroundColor White
-    Write-Host '      }' -ForegroundColor White
-    Write-Host '    }' -ForegroundColor White
-    Write-Host '  }' -ForegroundColor White
-} else {
-    Write-Host "Installation failed!" -ForegroundColor Red
+dotnet tool install --global --add-source ./artifacts/nupkg Netwright --prerelease
+if ($LASTEXITCODE -ne 0) {
+    Write-Host 'Installation failed.' -ForegroundColor Red
     exit 1
 }
+
+Write-Host ''
+Write-Host "Installed. Add this to your MCP client configuration:" -ForegroundColor Green
+Write-Host @'
+{
+  "mcpServers": {
+    "netwright": { "command": "netwright" }
+  }
+}
+'@

@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- dotnet tools cannot target a -windows TFM (NETSDK1146); Windows-only APIs are guarded by SupportedOSPlatform. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Netwright</RootNamespace>
+    <AssemblyName>netwright</AssemblyName>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- dotnet tool + MCP server package (installable with `dnx Netwright`) -->
+    <PackageId>Netwright</PackageId>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>netwright</ToolCommandName>
+    <PackageType>McpServer</PackageType>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <ToolPackageRuntimeIdentifiers>win-x64;win-arm64</ToolPackageRuntimeIdentifiers>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <Title>Netwright</Title>
+    <Description>Playwright-style automation for .NET desktop apps. An MCP server that lets AI agents see and operate WPF, WinForms and WinUI apps: compact snapshots with stable refs, selectors, background actions that don't steal focus, change reports, expectations, app output and crash reports.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include=".mcp\server.json" Pack="true" PackagePath="/.mcp/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Netwright.Engine\Netwright.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute">
+      <_Parameter1>windows</_Parameter1>
+    </AssemblyAttribute>
+    <InternalsVisibleTo Include="Netwright.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "wpf-mcp": {
+    "netwright": {
       "command": "dotnet",
-      "args": ["run", "--project", "./src/WpfMcp.Server", "--configuration", "Release"]
+      "args": ["run", "--project", "./src/Netwright", "--configuration", "Release"]
     }
   }
 }

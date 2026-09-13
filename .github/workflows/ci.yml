@@ -2,58 +2,68 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Build
+        run: dotnet build Netwright.slnx -c Release
 
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
+      - name: Unit tests
+        run: |
+          dotnet test tests/Netwright.Engine.Tests -c Release --no-build
+          dotnet test tests/Netwright.Testing.Tests -c Release --no-build
 
-    - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+      - name: Pack
+        run: |
+          dotnet pack src/Netwright -c Release -o artifacts/nupkg
+          dotnet pack src/Netwright.Engine -c Release -o artifacts/nupkg
+          dotnet pack src/Netwright.Testing -c Release -o artifacts/nupkg
 
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v4
-      if: github.event_name == 'push'
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/nupkg/*.nupkg
 
-  pack:
+  # Hosted runners are not guaranteed to provide an interactive desktop for UI Automation.
+  # This job is a spike: it must not block merges until it has proven reliable.
+  integration:
     runs-on: windows-latest
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
+    continue-on-error: true
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          dotnet-version: '8.0.x'
 
-    - name: Pack NuGet
-      run: dotnet pack src/WpfMcp.Server/WpfMcp.Server.csproj --configuration Release --output ./artifacts
+      - name: Build fixtures and tests
+        run: |
+          dotnet build tests/fixtures/Netwright.Fixtures.Wpf -c Release
+          dotnet build tests/fixtures/Netwright.Fixtures.WinForms -c Release
+          dotnet publish src/Netwright -c Release -r win-x64 -o artifacts/netwright
+          dotnet build tests/Netwright.IntegrationTests -c Release
 
-    - name: Upload NuGet artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: nuget-package
-        path: ./artifacts/*.nupkg
+      - name: Integration tests
+        run: dotnet test tests/Netwright.IntegrationTests -c Release --no-build --filter "Category!=Perf&Category!=Build" --logger "trx;LogFileName=integration.trx"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-results
+          path: tests/Netwright.IntegrationTests/TestResults/*.trx

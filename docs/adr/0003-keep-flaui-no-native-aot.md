@@ -1,3 +1,7 @@
+---
+status: superseded by ADR 0006
+---
+
 # Keep FlaUI; no Native AOT
 
 Native AOT would give faster startup and a smaller package. However, FlaUI.UIA3 relies on built-in COM interop, which NativeAOT does not support (FlaUI issue #672 has been open with no response since 2025).
