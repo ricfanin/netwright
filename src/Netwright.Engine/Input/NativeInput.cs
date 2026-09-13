@@ -116,7 +116,8 @@ internal static class Keyboard
     /// <summary>Presses keys in order and releases them in reverse, e.g. Ctrl+Shift+S.</summary>
     public static void TypeSimultaneously(params VirtualKeyShort[] keys)
     {
-        var inputs = keys.Select(k => Key(k, 0)).Concat(keys.Reverse().Select(k => Key(k, KeyUp))).ToArray();
+        // Enumerable.Reverse explicitly: on arrays, keys.Reverse() can bind to the in-place span overload.
+        var inputs = keys.Select(k => Key(k, 0)).Concat(Enumerable.Reverse(keys).Select(k => Key(k, KeyUp))).ToArray();
         NativeInput.Send(inputs);
     }
 
