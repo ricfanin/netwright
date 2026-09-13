@@ -31,7 +31,9 @@ public sealed class McpSession : IAsyncDisposable
             EnvironmentVariables = server.Environment,
         });
 
-        var client = await McpClient.CreateAsync(transport, cancellationToken: cancellationToken);
+        // Some servers only speak the stateless 2026-07-28 protocol and reject the initialize handshake.
+        var options = server.ProtocolVersion is null ? null : new McpClientOptions { ProtocolVersion = server.ProtocolVersion };
+        var client = await McpClient.CreateAsync(transport, options, cancellationToken: cancellationToken);
         return new McpSession(client);
     }
 
@@ -53,6 +55,12 @@ public sealed class McpSession : IAsyncDisposable
         }
 
         return new ToolDefinitionStats(perTool.Count, perTool.Sum(t => t.Tokens), perTool.ToDictionary(t => t.Name, t => t.Tokens));
+    }
+
+    public async Task<IReadOnlyList<string>> ToolDefinitionsJsonAsync(CancellationToken cancellationToken = default)
+    {
+        var tools = await _client.ListToolsAsync(cancellationToken: cancellationToken);
+        return tools.Select(t => JsonSerializer.Serialize(new { name = t.ProtocolTool.Name, description = t.ProtocolTool.Description, input_schema = t.ProtocolTool.InputSchema })).ToList();
     }
 
     public async Task<IReadOnlyList<string>> ListToolNamesAsync(CancellationToken cancellationToken = default)

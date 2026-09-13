@@ -40,6 +40,7 @@ public static class MarkdownReport
                 var result = run.Scenarios.FirstOrDefault(s => s.Name == scenario);
                 if (result is null)
                 {
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"| {run.Label} | {run.Fixture} | not measured¹ | | | | |");
                     continue;
                 }
 
@@ -48,6 +49,11 @@ public static class MarkdownReport
             }
 
             sb.AppendLine();
+        }
+
+        if (runs.Any(r => r.Scenarios.Count < scenarioNames.Count))
+        {
+            sb.AppendLine("¹ The server's tools act at screen coordinates with the real mouse and keyboard, so scripted multi-step scenarios were not run against it.");
         }
 
         return sb.ToString();

@@ -9,6 +9,15 @@ public interface IServerAdapter
 {
     string Name { get; }
 
+    /// <summary>
+    /// When true, response texts are not stored in result files. Use it for servers whose output
+    /// includes the whole desktop (other windows of the machine running the Benchmark).
+    /// </summary>
+    bool RedactTranscripts => false;
+
+    /// <summary>Scenarios the server cannot perform with its tools are skipped rather than counted as failures.</summary>
+    bool Supports(string scenario) => true;
+
     /// <summary>One-time session setup, not recorded.</summary>
     Task InitializeAsync(McpSession session);
 

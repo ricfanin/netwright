@@ -20,6 +20,8 @@ switch (args[0])
 {
     case "run":
         return await RunAsync(args[1..]);
+    case "tools":
+        return await ToolsAsync(args[1..]);
     case "report":
         return Report(args[1..]);
     default:
@@ -34,6 +36,9 @@ async Task<int> RunAsync(string[] options)
     IServerAdapter adapter = adapterName switch
     {
         "v1" => new V1Adapter(),
+        "v2" => new V2Adapter(),
+        "flaui-mcp" => new FlaUiMcpAdapter(),
+        "windows-mcp" => new WindowsMcpAdapter(),
         _ => throw new ArgumentException($"Unknown adapter '{adapterName}'."),
     };
 
@@ -44,7 +49,7 @@ async Task<int> RunAsync(string[] options)
         return 1;
     }
 
-    var server = new ServerDefinition(parsed.Required("label"), parsed.Required("command"), parsed.All("arg"));
+    var server = new ServerDefinition(parsed.Required("label"), parsed.Required("command"), parsed.All("arg"), ProtocolVersion: parsed.Optional("protocol"));
     var iterations = int.Parse(parsed.Optional("iterations") ?? "5", System.Globalization.CultureInfo.InvariantCulture);
     var only = parsed.Optional("scenarios")?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -74,6 +79,27 @@ async Task<int> RunAsync(string[] options)
     await File.WriteAllTextAsync(outPath, JsonSerializer.Serialize(run, jsonOptions));
     Console.WriteLine($"Wrote {outPath}");
     return scenarios.All(s => s.Successes == s.Iterations) ? 0 : 1;
+}
+
+// tools --command <exe> [--arg <value>]...  : prints each tool with its token cost and schema, to write adapters.
+async Task<int> ToolsAsync(string[] options)
+{
+    var parsed = Options.Parse(options);
+    var server = new ServerDefinition("probe", parsed.Required("command"), parsed.All("arg"), ProtocolVersion: parsed.Optional("protocol"));
+    await using var session = await McpSession.StartAsync(server);
+    var stats = await session.MeasureToolDefinitionsAsync();
+    Console.WriteLine($"{stats.ToolCount} tools, {stats.TotalTokens} tokens");
+    foreach (var (name, tokens) in stats.PerTool)
+    {
+        Console.WriteLine($"- {name} ({tokens} tokens)");
+    }
+
+    foreach (var definition in await session.ToolDefinitionsJsonAsync())
+    {
+        Console.WriteLine(definition);
+    }
+
+    return 0;
 }
 
 int Report(string[] options)

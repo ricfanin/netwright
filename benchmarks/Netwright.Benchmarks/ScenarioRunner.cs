@@ -22,7 +22,7 @@ public sealed class ScenarioRunner(IServerAdapter adapter, McpSession session, s
     {
         var results = new List<ScenarioResult>();
 
-        foreach (var scenario in AllScenarios.Where(s => only is null || only.Contains(s.Name)))
+        foreach (var scenario in AllScenarios.Where(s => (only is null || only.Contains(s.Name)) && adapter.Supports(s.Name)))
         {
             Console.WriteLine($"  scenario {scenario.Name}");
             var tokens = new List<double>();
@@ -60,7 +60,7 @@ public sealed class ScenarioRunner(IServerAdapter adapter, McpSession session, s
                 latencies.Add(recorded.Sum(c => c.LatencyMs));
                 if (i == 0)
                 {
-                    sample = recorded.Select(c => new CallSample(c.Tool, c.ResponseTokens, Math.Round(c.LatencyMs, 1), c.IsError, Preview(c.Text))).ToList();
+                    sample = recorded.Select(c => new CallSample(c.Tool, c.ResponseTokens, Math.Round(c.LatencyMs, 1), c.IsError, adapter.RedactTranscripts ? "[not stored]" : Preview(c.Text))).ToList();
                 }
 
                 Console.WriteLine($"    iteration {i + 1}: {(success ? "ok" : "FAILED")}, {recorded.Count} calls, {recorded.Sum(c => c.ResponseTokens)} tokens, {recorded.Sum(c => c.LatencyMs):F0} ms");

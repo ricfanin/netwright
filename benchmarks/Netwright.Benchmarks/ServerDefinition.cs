@@ -6,4 +6,5 @@ public sealed record ServerDefinition(
     string Command,
     IList<string> Arguments,
     string? WorkingDirectory = null,
-    Dictionary<string, string?>? Environment = null);
+    Dictionary<string, string?>? Environment = null,
+    string? ProtocolVersion = null);
