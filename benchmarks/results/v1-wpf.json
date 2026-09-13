@@ -1,0 +1,223 @@
+{
+  "Label": "WPF-MCP 1.0",
+  "Adapter": "WPF-MCP 1.x",
+  "Fixture": "wpf",
+  "Timestamp": "2026-09-13T11:37:40.440965+02:00",
+  "Machine": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD, 16 logical cores",
+  "OperatingSystem": "Microsoft Windows 10.0.26200",
+  "TokenEncoding": "o200k_base",
+  "Iterations": 5,
+  "ToolDefinitions": {
+    "ToolCount": 24,
+    "TotalTokens": 2023,
+    "PerTool": {
+      "wpf_scroll_into_view": 65,
+      "wpf_console_messages": 97,
+      "wpf_press_key": 140,
+      "wpf_expand_collapse": 87,
+      "wpf_toggle": 86,
+      "wpf_wait_for": 105,
+      "wpf_get_element_properties": 47,
+      "wpf_scroll": 109,
+      "wpf_select": 123,
+      "wpf_type": 117,
+      "wpf_window_action": 82,
+      "wpf_close_application": 48,
+      "wpf_focus": 60,
+      "wpf_set_background_mode": 62,
+      "wpf_click": 114,
+      "wpf_snapshot": 99,
+      "wpf_list_windows": 30,
+      "wpf_launch_application": 112,
+      "wpf_get_background_mode": 31,
+      "wpf_switch_window": 69,
+      "wpf_set_value": 76,
+      "wpf_take_screenshot": 73,
+      "wpf_find_element": 112,
+      "wpf_attach_application": 79
+    }
+  },
+  "Scenarios": [
+    {
+      "Name": "snapshot-form",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 1023,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 168.9,
+      "LatencyP95Ms": 276.2,
+      "SampleTranscript": [
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 1023,
+          "LatencyMs": 276.2,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:56,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n      - text \\u0022Name:\\u0022 [ref=e24]\\r\\n      - edit \\u0022Name\\u0022 [ref=e25]\\r\\n      - text \\u0022Email:\\u0022 [ref=e26]\\r\\n      - edit \\u0022Email\\u0022 [ref=e27]\\r\\n      - text \\u0022Country:\\u0022 [ref=e28]\\r\\n      - combobox \\u0022Country\\u0022 [ref=e29]\\r\\n      - checkbox \\u0022Accept terms\\u0022 [ref=e30]\\r\\n        - text \\u0022Accept terms\\u0022 [ref=e31]\\r\\n      - text \\u0022Plan:\\u0022 [ref=e32]\\r\\n      - radiobutton \\u0022Free\\u0022 [ref=e33]\\r\\n        - text \\u0022Free\\u0022 [ref=e34]\\r\\n      - radiobutton \\u0022Pro\\u0022 [ref=e35]\\r\\n        - text \\u0022Pro\\u0022 [ref=e36]\\r\\n      - text \\u0022Quantity:\\u0022 [ref=e37]\\r\\n      - slider \\u0022Quantity\\u0022 [ref=e38]\\r\\n        - button [ref=e39]\\r\\n        - button [ref=e40]\\r\\n        - thumb [ref=e41]\\r\\n      - button \\u0022Submit\\u0022 [ref=e42] [disabled]\\r\\n        - text \\u0022Submit\\u0022 [ref=e43] [disabled]\\r\\n      - button \\u0022Rese... [614 more chars]"
+        }
+      ]
+    },
+    {
+      "Name": "snapshot-grid",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 3988,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 881.9,
+      "LatencyP95Ms": 1110.1,
+      "SampleTranscript": [
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 3989,
+          "LatencyMs": 1110.1,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:193,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n    - tabitem \\u0022Async\\u0022 [ref=e24]\\r\\n      - text \\u0022Async\\u0022 [ref=e25]\\r\\n    - tabitem \\u0022Grid\\u0022 [ref=e26]\\r\\n      - text \\u0022Grid\\u0022 [ref=e27]\\r\\n      - datagrid \\u0022Orders\\u0022 [ref=e28]\\r\\n        - header [ref=e29]\\r\\n          - headeritem \\u0022Id\\u0022 [ref=e30]\\r\\n          - headeritem \\u0022Customer\\u0022 [ref=e31]\\r\\n          - headeritem \\u0022Amount\\u0022 [ref=e32]\\r\\n        - dataitem \\u0022Order { Id = 1, Customer = Customer 1, Amount = 10.00 }\\u0022 [ref=e33]\\r\\n          - headeritem [ref=e34]\\r\\n          - custom \\u00221\\u0022 [ref=e35]\\r\\n          - custom \\u0022Customer 1\\u0022 [ref=e36]\\r\\n          - custom \\u002210.00\\u0022 [ref=e37]\\r\\n        - dataitem \\u0022Order { Id = 2, Customer = Customer 2, Amount = 20.00 }\\u0022 [ref=e38]\\r\\n          - headeritem [ref=e39]\\r\\n          - custom \\u00222\\u0022 [ref=e40]\\r\\n          - custom \\u0022Customer 2\\u0022 [ref=e41]\\... [8948 more chars]"
+        }
+      ]
+    },
+    {
+      "Name": "form-submit",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 2463,
+      "MedianCalls": 10,
+      "LatencyP50Ms": 534.1,
+      "LatencyP95Ms": 688.7,
+      "SampleTranscript": [
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 1023,
+          "LatencyMs": 169,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:56,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n      - text \\u0022Name:\\u0022 [ref=e24]\\r\\n      - edit \\u0022Name\\u0022 [ref=e25]\\r\\n      - text \\u0022Email:\\u0022 [ref=e26]\\r\\n      - edit \\u0022Email\\u0022 [ref=e27]\\r\\n      - text \\u0022Country:\\u0022 [ref=e28]\\r\\n      - combobox \\u0022Country\\u0022 [ref=e29]\\r\\n      - checkbox \\u0022Accept terms\\u0022 [ref=e30]\\r\\n        - text \\u0022Accept terms\\u0022 [ref=e31]\\r\\n      - text \\u0022Plan:\\u0022 [ref=e32]\\r\\n      - radiobutton \\u0022Free\\u0022 [ref=e33]\\r\\n        - text \\u0022Free\\u0022 [ref=e34]\\r\\n      - radiobutton \\u0022Pro\\u0022 [ref=e35]\\r\\n        - text \\u0022Pro\\u0022 [ref=e36]\\r\\n      - text \\u0022Quantity:\\u0022 [ref=e37]\\r\\n      - slider \\u0022Quantity\\u0022 [ref=e38]\\r\\n        - button [ref=e39]\\r\\n        - button [ref=e40]\\r\\n        - thumb [ref=e41]\\r\\n      - button \\u0022Submit\\u0022 [ref=e42] [disabled]\\r\\n        - text \\u0022Submit\\u0022 [ref=e43] [disabled]\\r\\n      - button \\u0022Rese... [614 more chars]"
+        },
+        {
+          "Tool": "wpf_type",
+          "Tokens": 48,
+          "LatencyMs": 108.5,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022typed\u0022:true,\u0022element_description\u0022:\u0022Name field\u0022,\u0022text_length\u0022:12,\u0022cleared_first\u0022:true},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:105,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_type",
+          "Tokens": 48,
+          "LatencyMs": 27,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022typed\u0022:true,\u0022element_description\u0022:\u0022Email field\u0022,\u0022text_length\u0022:15,\u0022cleared_first\u0022:true},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:26,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_select",
+          "Tokens": 63,
+          "LatencyMs": 5.5,
+          "IsError": true,
+          "TextPreview": "{\u0022success\u0022:false,\u0022data\u0022:null,\u0022error\u0022:{\u0022code\u0022:\u0022ITEM_NOT_FOUND\u0022,\u0022message\u0022:\u0022Item \\u0027Italy\\u0027 not found in the selection control\u0022,\u0022suggestion\u0022:\u0022Available items: \u0022,\u0022recoverable\u0022:true},\u0022metadata\u0022:{\u0022execution_time_ms\u0022:0,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_expand_collapse",
+          "Tokens": 50,
+          "LatencyMs": 131,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022action_performed\u0022:\u0022expand\u0022,\u0022element_description\u0022:\u0022Country combo\u0022,\u0022previous_state\u0022:\u0022collapsed\u0022,\u0022new_state\u0022:\u0022expanded\u0022},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:128,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_select",
+          "Tokens": 43,
+          "LatencyMs": 39.2,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022selected\u0022:true,\u0022element_description\u0022:\u0022Country combo\u0022,\u0022selected_item\u0022:\u0022Italy\u0022},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:37,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_expand_collapse",
+          "Tokens": 50,
+          "LatencyMs": 15.5,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022action_performed\u0022:\u0022collapse\u0022,\u0022element_description\u0022:\u0022Country combo\u0022,\u0022previous_state\u0022:\u0022expanded\u0022,\u0022new_state\u0022:\u0022collapsed\u0022},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:14,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_toggle",
+          "Tokens": 49,
+          "LatencyMs": 16.6,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022toggled\u0022:true,\u0022element_description\u0022:\u0022Accept terms\u0022,\u0022previous_state\u0022:\u0022off\u0022,\u0022new_state\u0022:\u0022on\u0022},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:14,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_click",
+          "Tokens": 43,
+          "LatencyMs": 8.3,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022clicked\u0022:true,\u0022element_description\u0022:\u0022Submit button\u0022,\u0022click_type\u0022:\u0022single\u0022},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:6,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 1046,
+          "LatencyMs": 168.1,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:56,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n      - text \\u0022Name:\\u0022 [ref=e24]\\r\\n      - edit \\u0022Name\\u0022 [ref=e25]\\r\\n      - text \\u0022Email:\\u0022 [ref=e26]\\r\\n      - edit \\u0022Email\\u0022 [ref=e27]\\r\\n      - text \\u0022Country:\\u0022 [ref=e28]\\r\\n      - combobox \\u0022Country\\u0022 [ref=e29]\\r\\n      - checkbox \\u0022Accept terms\\u0022 [ref=e30]\\r\\n        - text \\u0022Accept terms\\u0022 [ref=e31]\\r\\n      - text \\u0022Plan:\\u0022 [ref=e32]\\r\\n      - radiobutton \\u0022Free\\u0022 [ref=e33]\\r\\n        - text \\u0022Free\\u0022 [ref=e34]\\r\\n      - radiobutton \\u0022Pro\\u0022 [ref=e35]\\r\\n        - text \\u0022Pro\\u0022 [ref=e36]\\r\\n      - text \\u0022Quantity:\\u0022 [ref=e37]\\r\\n      - slider \\u0022Quantity\\u0022 [ref=e38]\\r\\n        - button [ref=e39]\\r\\n        - button [ref=e40]\\r\\n        - thumb [ref=e41]\\r\\n      - button \\u0022Submit\\u0022 [ref=e42] [focused]\\r\\n        - text \\u0022Submit\\u0022 [ref=e43]\\r\\n      - button \\u0022Reset\\u0022 [ref... [680 more chars]"
+        }
+      ]
+    },
+    {
+      "Name": "async-load",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 3337,
+      "MedianCalls": 5,
+      "LatencyP50Ms": 398.3,
+      "LatencyP95Ms": 467.2,
+      "SampleTranscript": [
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 789,
+          "LatencyMs": 107.5,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:42,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n    - tabitem \\u0022Async\\u0022 [ref=e24]\\r\\n      - text \\u0022Async\\u0022 [ref=e25]\\r\\n      - button \\u0022Load data\\u0022 [ref=e26]\\r\\n        - text \\u0022Load data\\u0022 [ref=e27]\\r\\n      - text \\u0022Idle\\u0022 [ref=e28]\\r\\n      - list \\u0022Items\\u0022 [ref=e29]\\r\\n      - button \\u0022Enable later\\u0022 [ref=e30]\\r\\n        - text \\u0022Enable later\\u0022 [ref=e31]\\r\\n      - button \\u0022Later\\u0022 [ref=e32] [disabled]\\r\\n        - text \\u0022Later\\u0022 [ref=e33] [disabled]\\r\\n      - text [ref=e34]\\r\\n    - tabitem \\u0022Grid\\u0022 [ref=e35]\\r\\n      - text \\u0022Grid\\u0022 [ref=e36]\\r\\n    - tabitem \\u0022Tree\\u0022 [ref=e37]\\r\\n      - text \\u0022Tree\\u0022 [ref=e38]\\r\\n    - tabitem \\u0022Keyboard\\u0022 [ref=e39]\\r\\n      - text \\u0022Keyboard\\u0022 [ref=e40]\\r\\n    - tabitem \\u0022Scroll\\u0022 [ref=e41]\\r\\n      - text \\u0022Scroll\\u0022 [ref=e42]\u0022},\u0022metadata\u0022:{\u0022execution_time_ms\u0022:106,\u0022warnings\u0022:[],\u0022snapshot... [14 more chars]"
+        },
+        {
+          "Tool": "wpf_click",
+          "Tokens": 44,
+          "LatencyMs": 32,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022clicked\u0022:true,\u0022element_description\u0022:\u0022Load data button\u0022,\u0022click_type\u0022:\u0022single\u0022},\u0022error\u0022:null,\u0022metadata\u0022:{\u0022execution_time_ms\u0022:31,\u0022warnings\u0022:[],\u0022snapshot_valid\u0022:null}}"
+        },
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 799,
+          "LatencyMs": 88.9,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:42,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21] [focused]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n    - tabitem \\u0022Async\\u0022 [ref=e24]\\r\\n      - text \\u0022Async\\u0022 [ref=e25]\\r\\n      - button \\u0022Load data\\u0022 [ref=e26] [disabled]\\r\\n        - text \\u0022Load data\\u0022 [ref=e27] [disabled]\\r\\n      - text \\u0022Loading...\\u0022 [ref=e28]\\r\\n      - list \\u0022Items\\u0022 [ref=e29]\\r\\n      - button \\u0022Enable later\\u0022 [ref=e30]\\r\\n        - text \\u0022Enable later\\u0022 [ref=e31]\\r\\n      - button \\u0022Later\\u0022 [ref=e32] [disabled]\\r\\n        - text \\u0022Later\\u0022 [ref=e33] [disabled]\\r\\n      - text [ref=e34]\\r\\n    - tabitem \\u0022Grid\\u0022 [ref=e35]\\r\\n      - text \\u0022Grid\\u0022 [ref=e36]\\r\\n    - tabitem \\u0022Tree\\u0022 [ref=e37]\\r\\n      - text \\u0022Tree\\u0022 [ref=e38]\\r\\n    - tabitem \\u0022Keyboard\\u0022 [ref=e39]\\r\\n      - text \\u0022Keyboard\\u0022 [ref=e40]\\r\\n    - tabitem \\u0022Scroll\\u0022 [ref=e41]\\r\\n      - text \\u0022Scroll\\u0022 [ref=e42]\u0022},\u0022metadata\u0022:{\u0022executio... [51 more chars]"
+        },
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 799,
+          "LatencyMs": 79.5,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:42,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21] [focused]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n    - tabitem \\u0022Async\\u0022 [ref=e24]\\r\\n      - text \\u0022Async\\u0022 [ref=e25]\\r\\n      - button \\u0022Load data\\u0022 [ref=e26] [disabled]\\r\\n        - text \\u0022Load data\\u0022 [ref=e27] [disabled]\\r\\n      - text \\u0022Loading...\\u0022 [ref=e28]\\r\\n      - list \\u0022Items\\u0022 [ref=e29]\\r\\n      - button \\u0022Enable later\\u0022 [ref=e30]\\r\\n        - text \\u0022Enable later\\u0022 [ref=e31]\\r\\n      - button \\u0022Later\\u0022 [ref=e32] [disabled]\\r\\n        - text \\u0022Later\\u0022 [ref=e33] [disabled]\\r\\n      - text [ref=e34]\\r\\n    - tabitem \\u0022Grid\\u0022 [ref=e35]\\r\\n      - text \\u0022Grid\\u0022 [ref=e36]\\r\\n    - tabitem \\u0022Tree\\u0022 [ref=e37]\\r\\n      - text \\u0022Tree\\u0022 [ref=e38]\\r\\n    - tabitem \\u0022Keyboard\\u0022 [ref=e39]\\r\\n      - text \\u0022Keyboard\\u0022 [ref=e40]\\r\\n    - tabitem \\u0022Scroll\\u0022 [ref=e41]\\r\\n      - text \\u0022Scroll\\u0022 [ref=e42]\u0022},\u0022metadata\u0022:{\u0022executio... [51 more chars]"
+        },
+        {
+          "Tool": "wpf_snapshot",
+          "Tokens": 906,
+          "LatencyMs": 90.5,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022element_count\u0022:48,\u0022snapshot\u0022:\u0022- window \\u0022Netwright Fixture (WPF)\\u0022 [ref=e1]\\r\\n  - titlebar [ref=e2]\\r\\n    - menubar \\u0022Sistema\\u0022 [ref=e3]\\r\\n      - menuitem \\u0022Sistema\\u0022 [ref=e4]\\r\\n    - button \\u0022Riduci a icona\\u0022 [ref=e5]\\r\\n    - button \\u0022Ingrandisci\\u0022 [ref=e6]\\r\\n    - button \\u0022Chiudi\\u0022 [ref=e7]\\r\\n  - menu [ref=e8]\\r\\n    - menuitem \\u0022File\\u0022 [ref=e9]\\r\\n      - text \\u0022File\\u0022 [ref=e10]\\r\\n  - button \\u0022Open modal\\u0022 [ref=e11]\\r\\n    - text \\u0022Open modal\\u0022 [ref=e12]\\r\\n  - text \\u0022Modal result: none\\u0022 [ref=e13]\\r\\n  - button \\u0022Open tool window\\u0022 [ref=e14]\\r\\n    - text \\u0022Open tool window\\u0022 [ref=e15]\\r\\n  - button \\u0022Write diagnostics\\u0022 [ref=e16]\\r\\n    - text \\u0022Write diagnostics\\u0022 [ref=e17]\\r\\n  - text [ref=e18]\\r\\n  - button \\u0022Crash\\u0022 [ref=e19]\\r\\n    - text \\u0022Crash\\u0022 [ref=e20]\\r\\n  - tab [ref=e21] [focused]\\r\\n    - tabitem \\u0022Form\\u0022 [ref=e22]\\r\\n      - text \\u0022Form\\u0022 [ref=e23]\\r\\n    - tabitem \\u0022Async\\u0022 [ref=e24]\\r\\n      - text \\u0022Async\\u0022 [ref=e25]\\r\\n      - button \\u0022Load data\\u0022 [ref=e26]\\r\\n        - text \\u0022Load data\\u0022 [ref=e27]\\r\\n      - text \\u0022Loaded 3 items\\u0022 [ref=e28]\\r\\n      - list \\u0022Items\\u0022 [ref=e29]\\r\\n        - listitem \\u0022Alpha\\u0022 [ref=e30]\\r\\n          - text \\u0022Alpha\\u0022 [ref=e31]\\r\\n        - listitem \\u0022Beta\\u0022 [ref=e32]\\r\\n          - text \\u0022Beta\\u0022 [ref=e33]\\r\\n        - listitem \\u0022Gamma\\u0022 [ref=e34]\\r\\n          - text \\u0022Gamma\\u0022 [ref=e35]\\r\\n      - button \\u0022Enable later\\u0022 [ref=e36]\\r\\n        - text \\u0022Enable later\\u0022 [ref=e37]\\r\\n      - button \\u0022Later\\u0022 [ref=e38] [disabled]\\r\\n        - text \\u0022Later\\u0022 [ref=e39] [disabled]\\r\\n      - text [ref=e40]\\r\\n    - tabitem \\u0022Grid\\u0022 [ref=e41]\\r\\n      - text \\u0022Grid\\u0022 [ref=e42]\\r\\n    - tabitem \\u002... [325 more chars]"
+        }
+      ]
+    },
+    {
+      "Name": "screenshot",
+      "Iterations": 5,
+      "Successes": 5,
+      "MedianTokens": 25073,
+      "MedianCalls": 1,
+      "LatencyP50Ms": 31.5,
+      "LatencyP95Ms": 135.3,
+      "SampleTranscript": [
+        {
+          "Tool": "wpf_take_screenshot",
+          "Tokens": 25073,
+          "LatencyMs": 135.3,
+          "IsError": false,
+          "TextPreview": "{\u0022success\u0022:true,\u0022data\u0022:{\u0022format\u0022:\u0022png\u0022,\u0022width\u0022:1000,\u0022height\u0022:750,\u0022base64_length\u0022:35440,\u0022image_data\u0022:\u0022iVBORw0KGgoAAAANSUhEUgAAA\\u002BgAAALuCAYAAAA9jTxNAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAGdoSURBVHhe7d0JmCNnYSf8TjaQAPmA2Ezfd48BY47M2gkNnsMz4\\u002BGOw\\u002BEkmHV2Sdjvy9IfsOYIicHYGHOYQIiNPRgbAphrSbgWbK7BB8awm2AO8yWQeIgBn/jEBrKBbLJ5v\\u002BetVkml0ttqqUeqUff8fs/z97SqSqWS1F3WX/WqNPSoRz86tMsjH/Woerb8\\u002B38fHn/sseG4nTvDE57whPDkpzwlPPnJTxY5pLNr9\\u002B5w7NatfUlcf3laVdmxY0c4/vjjw9Zt25qmb9u\\u002BPWwrTNu6dWv2GPTqcYi3t2vXruy2U9m5a1fLNrVL3K6dO3e2TD/QbK89PuX7veO447Jp9e3duTObFhOvEx\\u002B/uP0x8XJM3KfG5Yr3M04v32a3yddZnt7LxPsRbyPev/K8bhMft/hY5Jfz7c8fi3gb\\u002BW3lvwNxmW6f33w98fbi81Ge3y7x7yL1\\u002B9nN72Qx8XrF7VnpcYzbmfrdKv\\u002BerLS\\u002B\\u002BHea/84WrxfXm08rryd/bPO/7/J97ibxeY23udbHqcrEbY3bXJ7e7\\u002BSPU3n6WhMf77i/zJ\\u002BD\\u002BFx2\\u002B/veafL/X6z0\\u002B7tSjsv/prvY3\\u002BX/zyn/znaT/G\\u002Bh/PfT7TLFrOX/g/nfaru/i9Q\\u002BLv6erGX/tVLyfW27deb/z8pvu/z3XV4\\u002B5kCfp/Weg/o6qs0\\u002BO/4/rLxN7bI7Po\\u002B7drVMP9Dkf2Nx/cXp8e8iTsu3N9528XXU9pVeR5X\\u002B39zp32675OssT\\u002B8kj11cDL\\u002B6ZUt4\\u002BJFHhsnJybBpeDiZkdHRsPmII8LU9HQYHhnJMlQu5KliHvO4xz0u/MYJJ4R3vetd4covfCHccMMN4Sc/\\u002BYmIiIiIiIiI1PK9738/fP7znw8XXHBB9mbkQx/2sJZynmdmdjZL24JeLufx3YNXvvKVYf/\\u002B/S03LiIiIiIiIiKtue6668JLXvKSbDR6uZzHTE5NZUfRxycm0gW9XM7jkfPTTjut5YZEREREREREZPW8\\u002BMUvTh5Jj8U8FvSx8fHVC3ps\\u002BXFYuyPnIiIiIiIiImtLPJIeh7tPlD6Tnhf0\\u002BHn0loJePnoeTwgXP3NeXrmIiIiIiIiIdJ74mfSHP/zhySHusaDHyysW9KMe\\u002BcjsjHhXXnlly4pFREREREREpPPEE8fFs7sXC/r0zExW0PPL9YJeLucxe57wBGdrFxERERERETnAxLO7x69gKxb0\\u002BYWFrKR3VNDjdzCXV1rOX3/lq2HfZVd0nb/\\u002ByjXhRz/6Ucv6RERERERERDZi4vekFwv6wubNrQU9Vc47Legf/e\\u002BXhq9e\\u002B63w1Wv/doV8K3ztm8v55Oe\\u002BGD752auyfPAvPxZuvPHGlvWJiIiIiIiIbMRkBX3TpqyMT01PZwU9niiuXtDLJ4YrFvQndVDQr7zqS\\u002BFn//zP4ac/6zxx\\u002Bc9fcVX4zne\\u002B07I\\u002BERERERERWV\\u002BJn68\\u002B77zzwlvf\\u002BtZk4ry4TPl6Bzvvfve7w/42vTTOi8uUp681W7duDQ/ZtCmMjo1l5TymeET9gAv6F6/\\u002Bcvj7/TeFs//8ivDGd18e/uTiy8Kb3v/58Kf/bV/4... [37275 more chars]"
+        }
+      ]
+    }
+  ]
+}

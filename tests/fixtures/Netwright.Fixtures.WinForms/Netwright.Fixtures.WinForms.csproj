@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- net48 represents legacy .NET Framework WinForms apps (MSAA/UIA proxy path); net8.0-windows the modern UIA provider path. -->
+    <TargetFrameworks>net8.0-windows;net48</TargetFrameworks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Netwright.Fixtures.WinForms</AssemblyName>
+    <RootNamespace>Netwright.Fixtures.WinForms</RootNamespace>
+  </PropertyGroup>
+
+</Project>

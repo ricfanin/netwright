@@ -1,0 +1,9 @@
+<Project>
+  <!-- Fixture Apps are intentionally isolated from the repository-wide build settings. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
