@@ -3,7 +3,7 @@
   "name": "io.github.ricfanin/netwright",
   "title": "Netwright",
   "description": "Playwright-style automation of .NET desktop apps (WPF, WinForms, WinUI) for AI agents.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "repository": {
     "url": "https://github.com/ricfanin/netwright",
     "source": "github"
@@ -13,7 +13,7 @@
       "registryType": "nuget",
       "registryBaseUrl": "https://api.nuget.org/v3/index.json",
       "identifier": "Netwright",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "transport": {
         "type": "stdio"
       },

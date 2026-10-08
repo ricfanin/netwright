@@ -8,7 +8,7 @@
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <!-- CA1707: MCP tool parameters use snake_case. CA1031: automation code must survive arbitrary provider failures. -->
     <NoWarn>$(NoWarn);CA1707;CA1031;CA1848;CA2254</NoWarn>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Authors>Riccardo</Authors>
     <Copyright>Copyright (c) Riccardo</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

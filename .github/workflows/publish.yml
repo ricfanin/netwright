@@ -1,7 +1,8 @@
 name: Publish
 
 # Publishes the NuGet packages with nuget.org Trusted Publishing (no stored API key),
-# then registers the server in the MCP Registry through GitHub OIDC.
+# registers the server in the MCP Registry through GitHub OIDC, then creates the GitHub
+# Release from the version's CHANGELOG.md section, which is what notifies the repository's followers.
 # Run it by pushing a tag like v2.0.0, or manually from the Actions tab.
 
 on:
@@ -11,7 +12,7 @@ on:
 
 permissions:
   id-token: write   # OIDC token for NuGet Trusted Publishing and the MCP Registry
-  contents: read
+  contents: write   # create the GitHub Release
 
 jobs:
   publish:
@@ -98,3 +99,22 @@ jobs:
             Start-Sleep -Seconds 60
           }
           throw 'MCP Registry publish failed'
+
+      - name: Create the GitHub Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          # The section of CHANGELOG.md between "## <version>" and the next "## " heading.
+          $lines = Get-Content CHANGELOG.md
+          $start = [Array]::IndexOf($lines, "## $version")
+          if ($start -lt 0) { throw "CHANGELOG.md has no '## $version' section." }
+          $notes = $lines | Select-Object -Skip ($start + 1) | ForEach-Object -Begin { $done = $false } -Process {
+            if ($_ -like '## *') { $done = $true }
+            if (-not $done) { $_ }
+          }
+          ($notes -join "`n").Trim() | Set-Content release-notes.md
+          gh release create "v$version" --title "Netwright $version" --notes-file release-notes.md --verify-tag
+          if ($LASTEXITCODE -ne 0) { throw 'Creating the GitHub Release failed' }
