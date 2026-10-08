@@ -39,7 +39,7 @@ clicked button "Save" [e7] #btnSave
   - Snapshots are filtered to what an agent needs: unnamed layout panes are collapsed, and grids are summarized row by row.
   - Actions answer with a **Change Report** of what appeared, disappeared or changed, so the agent rarely needs another snapshot.
   - Refs (`e12`) stay valid across snapshots.
-- **Stays out of your way.** Actions run in the **background** through UI Automation patterns, so you keep working while the agent tests. Key presses and right-clicks are explicit, briefly take focus, and give it back.
+- **Stays out of your way.** Actions run in the **background**: in apps Netwright launches, a small companion performs them inside the app, so it never takes the foreground and bound fields commit like a real edit. You keep working while the agent tests. Key presses and right-clicks are explicit, briefly take focus, and give it back.
 - **Reliable by default.**
   - Every action waits until its target is enabled and on screen.
   - It then waits for the UI to settle, so async screens don't need sleeps.

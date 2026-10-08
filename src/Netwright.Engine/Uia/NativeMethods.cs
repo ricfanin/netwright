@@ -58,6 +58,12 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsWindowVisible(nint hwnd);
 
+    /// <summary>True when DWM hides the window (DWMWA_CLOAKED), as the Companion does for a hidden app.</summary>
+    public static bool IsCloaked(nint hwnd) => DwmGetWindowAttribute(hwnd, 14, out var cloaked, sizeof(int)) == 0 && cloaked != 0;
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmGetWindowAttribute(nint hwnd, int attribute, out int value, int size);
+
     [DllImport("user32.dll")]
     public static extern nint GetWindow(nint hwnd, uint uCmd);
 

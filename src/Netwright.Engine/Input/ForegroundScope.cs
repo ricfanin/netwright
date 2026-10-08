@@ -4,21 +4,35 @@ namespace Netwright.Engine.Input;
 
 /// <summary>
 /// Temporarily brings a Target App window to the foreground for a Foreground Action, then gives
-/// focus and the mouse cursor back to wherever the User left them.
+/// focus and the mouse cursor back to wherever the User left them. As a guard around a Background
+/// Action it only gives the foreground back if the Target App took it.
 /// </summary>
 internal sealed class ForegroundScope : IDisposable
 {
     private readonly nint _previousWindow;
     private readonly NativeMethods.Point _previousCursor;
     private readonly bool _hadCursor;
+    private readonly Func<nint, bool>? _restoreOnlyFrom;
     private bool _disposed;
 
-    private ForegroundScope(nint previousWindow, NativeMethods.Point previousCursor, bool hadCursor)
+    private ForegroundScope(nint previousWindow, NativeMethods.Point previousCursor, bool hadCursor, Func<nint, bool>? restoreOnlyFrom = null)
     {
         _previousWindow = previousWindow;
         _previousCursor = previousCursor;
         _hadCursor = hadCursor;
+        _restoreOnlyFrom = restoreOnlyFrom;
     }
+
+    /// <summary>True when disposing gave the foreground back to the User's window.</summary>
+    public bool Restored { get; private set; }
+
+    /// <summary>
+    /// Watches a Background Action. Cross-process UI Automation calls let the Target App take the
+    /// foreground (ADR 0007), so on dispose the foreground goes back to the User's window, but only if
+    /// a window for which <paramref name="ownedByTargetApp"/> is true took it. The cursor is never moved.
+    /// </summary>
+    public static ForegroundScope Guard(Func<nint, bool> ownedByTargetApp) =>
+        new(NativeMethods.GetForegroundWindow(), default, hadCursor: false, ownedByTargetApp);
 
     public static ForegroundScope Enter(nint targetWindow)
     {
@@ -63,9 +77,17 @@ internal sealed class ForegroundScope : IDisposable
             NativeMethods.SetCursorPos(_previousCursor.X, _previousCursor.Y);
         }
 
-        if (!_keepFocus && _previousWindow != 0 && NativeMethods.IsWindow(_previousWindow) && NativeMethods.GetForegroundWindow() != _previousWindow)
+        GiveBack();
+    }
+
+    /// <summary>Gives the foreground back to the User's window now; safe to call repeatedly.</summary>
+    public void GiveBack()
+    {
+        var current = NativeMethods.GetForegroundWindow();
+        if (!_keepFocus && _previousWindow != 0 && NativeMethods.IsWindow(_previousWindow) && current != _previousWindow
+            && (_restoreOnlyFrom is null || _restoreOnlyFrom(current)))
         {
-            Activate(_previousWindow);
+            Restored |= Activate(_previousWindow);
         }
     }
 

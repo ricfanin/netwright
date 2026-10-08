@@ -55,7 +55,8 @@ internal sealed class UiaTreeReader
 
     /// <summary>
     /// Visible top-level windows of the given processes in z-order, excluding windows owned by
-    /// another window of the app: UI Automation shows those inside their owner.
+    /// another window of the app: UI Automation shows those inside their owner. A cloaked owned window
+    /// (a hidden app, ADR 0008) is kept, because UI Automation leaves cloaked windows out of the tree.
     /// </summary>
     public static List<nint> TopLevelWindowHandles(IReadOnlyCollection<int> processIds)
     {
@@ -76,7 +77,7 @@ internal sealed class UiaTreeReader
                     ownedByApp = processIds.Contains((int)ownerPid) && NativeMethods.IsWindowVisible(owner);
                 }
 
-                if (!ownedByApp)
+                if (!ownedByApp || NativeMethods.IsCloaked(hwnd))
                 {
                     handles.Add(hwnd);
                 }

@@ -26,6 +26,7 @@ public class CheckoutTests
 - **Selectors:** `#automationId`, `role "name"`, `role ~"partial"`, `parent >> child`, `:nth(2)`.
 - **Auto-waiting:** actions wait until the element is enabled and on screen, then wait until the UI settles.
 - **Background by default:** tests do not take your mouse or keyboard. `PressKeyAsync`, `RightClickAsync` and `DoubleClickAsync` briefly take focus and then restore it.
+- **Hidden by default:** apps on .NET 8 or later run with invisible windows, so a test run never covers your screen. Start with `DesktopApp.StartAsync(new LaunchRequest { Path = ..., Visible = true })` to watch.
 - **Retrying expectations:** `ToHaveTextAsync`, `ToBeEnabledAsync`, `ToHaveCountAsync`… throw `ExpectationFailedException` with what was actually found.
 - **Framework-agnostic:** works with xUnit, NUnit and MSTest.
 

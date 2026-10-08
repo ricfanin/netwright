@@ -138,7 +138,8 @@ Every successful action and expectation is recorded with a stable Selector. Afte
 | Attach finds the process but the Snapshot is empty | The app runs elevated. Start the MCP client elevated or run the app normally |
 | `NEEDS_FOREGROUND` on a click | The element has no click pattern (custom-drawn control); retry with `foreground=true`, or give it an AutomationPeer |
 | No `debug` lines in `desktop_logs` | A debugger (Visual Studio) or DebugView is attached and receives OutputDebugString first |
-| `desktop_type` sets the text but the view model isn't updated | WPF bindings with `UpdateSourceTrigger=LostFocus` only update when focus moves. Use `foreground=true`, or `UpdateSourceTrigger=PropertyChanged` |
+| `desktop_type` sets the text but the view model isn't updated | Bindings that update when focus leaves the field are committed only in apps Netwright launched on .NET 8 or later, where the Netwright Companion runs. For attached or .NET Framework apps use `foreground=true`, or `UpdateSourceTrigger=PropertyChanged` |
+| The result says the Target App took the foreground | The app was attached or has no Netwright Companion (.NET Framework, .NET before 8, WinUI), so the action went through cross-process UI Automation. Netwright gave the foreground back; launch the app with Netwright to avoid it |
 | Snapshot of a huge grid is slow | Non-virtualized controls expose every row. Enable virtualization, or target rows with Selectors |
 
 ## Security

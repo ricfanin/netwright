@@ -44,6 +44,8 @@ Rules:
 | `btnSubmit` | Button | `Submit` | **Disabled until `chkTerms` is checked.** Sets `lblResult` |
 | `btnReset` | Button | `Reset` | Clears all fields, unchecks terms, selects Free, sets quantity to 1, and sets `lblResult` to `` |
 | `lblResult` | Label | `` | After Submit: `Submitted: {name} <{email}> {country} {Free\|Pro} x{quantity}` |
+| `txtBound` | TextBox | Name `Bound` | **WPF and WinForms only.** Two-way bound to a view model `Value` with the framework's default update mode, which writes to the source only when focus leaves the field (WPF `LostFocus`, WinForms `OnValidation`) |
+| `lblBound` | Label/TextBlock | `Bound: ` | Shows `Bound: {Value}` from the view model, so it changes only once `txtBound` is committed |
 
 **Tab "Async"** (`tabAsync`)
 

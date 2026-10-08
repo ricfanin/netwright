@@ -32,6 +32,15 @@ internal sealed class TargetApp : IDisposable
 
     public bool LaunchedBySession { get; }
 
+    /// <summary>
+    /// True while the Companion is expected to answer: the session launched the app with the startup
+    /// hook (ADR 0007) and no request has failed yet.
+    /// </summary>
+    public bool HasCompanion { get; set; }
+
+    /// <summary>True when the Companion keeps the app's windows cloaked (ADR 0008).</summary>
+    public bool Hidden { get; init; }
+
     /// <summary>Set when the Agent asked to close the app, so its exit is not reported as a crash.</summary>
     public bool CloseRequested { get; set; }
 

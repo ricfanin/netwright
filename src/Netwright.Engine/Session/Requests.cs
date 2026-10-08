@@ -46,6 +46,12 @@ public sealed record LaunchRequest
     public string? Framework { get; init; }
 
     public int TimeoutMs { get; init; } = 30000;
+
+    /// <summary>
+    /// Show the Target App's windows. By default an app launched with the Companion runs hidden: its
+    /// windows are cloaked, so they never appear on screen while UI Automation still operates them (ADR 0008).
+    /// </summary>
+    public bool Visible { get; init; }
 }
 
 public sealed record AttachRequest
@@ -65,7 +71,8 @@ public sealed record AppStatus(
     bool LaunchedBySession,
     string Framework,
     IReadOnlyList<string> WindowLines,
-    string? DebugCaptureWarning);
+    string? DebugCaptureWarning,
+    bool Hidden = false);
 
 public enum MouseButtonKind
 {

@@ -104,6 +104,15 @@
                     <TextBlock x:Name="lblResult" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3"
                                AutomationProperties.AutomationId="lblResult"
                                Style="{StaticResource ValueLabel}" Text="" />
+
+                    <!-- Default TextBox.Text binding: updates the view model only when focus leaves the field. -->
+                    <TextBlock Grid.Row="8" Grid.Column="0" Style="{StaticResource FieldCaption}" Text="Bound:" VerticalAlignment="Top" />
+                    <TextBox x:Name="txtBound" Grid.Row="8" Grid.Column="1" Margin="4" VerticalAlignment="Top"
+                             AutomationProperties.AutomationId="txtBound" AutomationProperties.Name="Bound"
+                             Text="{Binding Value}" />
+                    <TextBlock x:Name="lblBound" Grid.Row="8" Grid.Column="2" VerticalAlignment="Top"
+                               AutomationProperties.AutomationId="lblBound"
+                               Style="{StaticResource ValueLabel}" Text="{Binding Value, StringFormat='Bound: {0}'}" />
                 </Grid>
             </TabItem>
 

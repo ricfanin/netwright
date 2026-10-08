@@ -51,7 +51,7 @@ A Selector that matches several elements fails with `AMBIGUOUS_SELECTOR` and lis
 **Actions.** `click`, `type`, `set_state`, `press_key`, `scroll` and `window` all follow the same steps:
 
 1. Wait (up to `--action-timeout`, 5 s by default) for the target to exist and be **Actionable**, meaning enabled and on screen. Offscreen elements are scrolled into view.
-2. Perform the action in the **Background** through UI Automation patterns, without taking focus, mouse or keyboard from the user.
+2. Perform the action in the **Background** through UI Automation patterns, without taking focus, mouse or keyboard from the user. In apps Netwright launched (.NET 8 or later, WPF and WinForms), the Netwright Companion performs them inside the app. In other apps the app may take the foreground for a moment; Netwright gives it back and says so in the result.
 3. Wait until the UI is **Settled**, meaning it has stopped changing (up to `--settle-timeout`, 3 s by default).
 4. Return a **Change Report**:
 
@@ -84,12 +84,16 @@ Launch, attach to, close, or inspect the Target App. A session has one Target Ap
 | `framework` | launch: target framework of a multi-targeted project |
 | `process` | attach: process id, process name, or part of a window title |
 | `force` | close: kill instead of asking the app to close |
+| `visible` | launch: show the app's windows (hidden by default) |
 
 ```
 > desktop_app action=launch project=src/MyApp/MyApp.csproj
 Launched MyApp.exe (pid 18244, WPF, launched by Netwright)
 - window "My App" [e1]
+note: the app runs hidden; launch with visible=true to watch it.
 ```
+
+Apps launched by Netwright run **hidden** (ADR 0008): their windows never appear on screen, yet snapshots, actions and screenshots work as usual. A Foreground Action shows the window only while it runs. Pass `visible: true` to watch the app. .NET Framework apps and apps on .NET before 8 are always visible.
 
 A non-forced close that does not finish within 5 s (for example because of a "save changes?" prompt) fails with `TIMEOUT` and leaves the app running. Apps launched by Netwright are killed when the server stops; attached apps are left running.
 
@@ -132,7 +136,7 @@ In the background a left click uses the first supported option: Invoke, Toggle, 
 | `submit` | press Enter afterwards (needs `foreground`) |
 | `foreground` | type real keystrokes (for apps that validate on key events) |
 
-In the background the text is set through the Value pattern.
+In the background the text is set through the Value pattern. Bindings that update only when focus leaves the field (WPF `LostFocus`, WinForms `OnValidation`) are committed by the Netwright Companion in apps Netwright launched. Otherwise the result notes it once per session; use `foreground: true` if the app reads the value from such a binding.
 
 ## desktop_set_state
 

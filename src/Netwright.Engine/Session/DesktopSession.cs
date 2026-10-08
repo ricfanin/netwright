@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Interop.UIAutomationClient;
+using Netwright.Engine.Companion;
 using Netwright.Engine.Diagnostics;
 using Netwright.Engine.Model;
 using Netwright.Engine.Refs;
@@ -28,6 +29,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
     private TargetApp? _app;
     private DebugOutputCapture? _debugCapture;
     private string? _debugWarning;
+    private bool _bindingNoteShown;
     private Task<string>? _pendingNotice;
     private bool _disposed;
 
@@ -103,6 +105,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 RedirectStandardError = true,
                 WorkingDirectory = request.WorkingDirectory ?? System.IO.Path.GetDirectoryName(allowPath) ?? Environment.CurrentDirectory,
             };
+            var companion = CompanionClient.AddTo(startInfo, hidden: !request.Visible);
 
             Process process;
             try
@@ -114,7 +117,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 throw new NetwrightException(ErrorCodes.LaunchFailed, $"Could not start {fileName}: {ex.Message}", null, ex);
             }
 
-            var app = new TargetApp(process, allowPath, launchedBySession: true);
+            var app = new TargetApp(process, allowPath, launchedBySession: true) { HasCompanion = companion, Hidden = companion && !request.Visible };
             process.EnableRaisingEvents = true;
             process.OutputDataReceived += (_, e) => { if (e.Data is not null) _output.Add(OutputStreams.Stdout, e.Data); };
             process.ErrorDataReceived += (_, e) => { if (e.Data is not null) _output.Add(OutputStreams.Stderr, e.Data); };
@@ -430,7 +433,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
             var other => other,
         };
 
-        return new AppStatus(app.RootProcessId, app.ExecutablePath, app.LaunchedBySession, framework, lines, _debugWarning);
+        return new AppStatus(app.RootProcessId, app.ExecutablePath, app.LaunchedBySession, framework, lines, _debugWarning, app.Hidden);
     }
 
     private static string LiveFrameworkId(UiNode node)

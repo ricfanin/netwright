@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Netwright.Companion/Netwright.Companion.csproj" />
     <Project Path="src/Netwright.Engine/Netwright.Engine.csproj" />
     <Project Path="src/Netwright/Netwright.csproj" />
     <Project Path="src/Netwright.Testing/Netwright.Testing.csproj" />

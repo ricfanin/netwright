@@ -18,11 +18,13 @@ Netwright lets an AI Agent see and operate .NET desktop apps through Windows UI 
  │   ├─ SelectorParser / Matcher        │  #id, role "name", a >> b
  │   ├─ ChangeReporter                  │  +/-/~ diff by RuntimeId
  │   ├─ PatternCalls / ForegroundScope  │  background patterns, real input
+ │   ├─ CompanionClient                 │  in-process actions (ADR 0007)
  │   └─ AppOutput / DebugOutputCapture  │  stdout, stderr, OutputDebugString
  └──────┬───────────────────────────────┘
         │  COM (UIAutomationCore), Win32
  ┌──────▼───────────────────────────────┐
  │ Target App (WPF, WinForms, WinUI …)  │  AutomationPeers / MSAA bridge
+ │  └─ Netwright.Companion (if launched)│  named pipe, loaded by startup hook
  └──────────────────────────────────────┘
 ```
 
@@ -67,7 +69,8 @@ Locate ──► Perform ──► Settle ──► Change Report
 
 - **Locate** captures repeatedly until the target exists and is Actionable (enabled, on screen; offscreen targets get `ScrollIntoView` once), or fails with `ELEMENT_NOT_FOUND`/`NOT_ACTIONABLE` after the action timeout. The capture it ends with is the "before" state.
 - **Perform** runs on a worker thread. UIA calls that open modal UI do not return until the dialog closes: WPF defers the click, but WinForms runs the handler inside the Invoke call. After `BlockingCallTimeoutMs` (1.5 s) the pipeline carries on and says so in a note.
-  - Background input uses patterns only (Invoke, Toggle, SelectionItem, ExpandCollapse, Value, RangeValue, Scroll, Window, and LegacyIAccessible's default action).
+  - Background input uses patterns only (Invoke, Toggle, SelectionItem, ExpandCollapse, Value, RangeValue, Scroll, Window, and LegacyIAccessible's default action). In apps Netwright launched, the Companion runs them in-process, because the same calls made cross-process hand the app the foreground, and it commits focus-bound bindings after setting text (ADR 0007). Without a Companion, a `ForegroundScope` guard gives the foreground back if the app took it.
+  - Apps Netwright launched run hidden (ADR 0008): the Companion keeps their windows invisible, and a Foreground Action shows the window only while it runs.
   - Foreground Actions wrap the input in `ForegroundScope`. It records the foreground window and cursor, activates the Target App window (temporarily attaching to the foreground thread's input queue, the only reliable way Windows allows it), and restores both afterwards. Focus is left on the app if the action opened a new window or menu.
 - **Settle** polls light captures until two consecutive fingerprints match after a 150 ms quiet period (or 3 s pass), then takes one full capture as the "after" state (ADR 0002).
 

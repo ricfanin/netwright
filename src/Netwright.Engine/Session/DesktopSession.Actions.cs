@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using Interop.UIAutomationClient;
+using Netwright.Engine.Companion;
 using Netwright.Engine.Input;
 using Netwright.Engine.Model;
 using Netwright.Engine.Selectors;
@@ -12,6 +14,9 @@ namespace Netwright.Engine.Session;
 
 public sealed partial class DesktopSession
 {
+    /// <summary>Bound on each Companion request (connect, then answer); the Companion answers in milliseconds.</summary>
+    private const int CompanionTimeoutMs = 1000;
+
     [Flags]
     private enum Actionability
     {
@@ -26,6 +31,12 @@ public sealed partial class DesktopSession
         public UiNode Node { get; } = node;
 
         public UiTree Before { get; } = before;
+
+        /// <summary>Handle of the top-level window that contains the element.</summary>
+        public nint WindowHandle { get; init; }
+
+        /// <summary>Set by the action to add a note to its outcome.</summary>
+        public string? Note { get; set; }
 
         private int _abandoned;
 
@@ -94,17 +105,17 @@ public sealed partial class DesktopSession
             if (node.Has(UiPatterns.Invoke))
             {
                 context.Summary = $"clicked {line}";
-                PatternCalls.Invoke(node);
+                Perform(node, "invoke", null, () => PatternCalls.Invoke(node));
             }
             else if (node.Has(UiPatterns.Toggle))
             {
                 context.Summary = $"toggled {line}";
-                PatternCalls.Toggle(node);
+                Perform(node, "toggle", null, () => PatternCalls.Toggle(node));
             }
             else if (node.Has(UiPatterns.SelectionItem))
             {
                 context.Summary = $"selected {line}";
-                PatternCalls.Select(node);
+                Perform(node, "select", null, () => PatternCalls.Select(node));
             }
             else if (node.Has(UiPatterns.ExpandCollapse))
             {
@@ -112,11 +123,11 @@ public sealed partial class DesktopSession
                 context.Summary = $"{(expanded ? "collapsed" : "expanded")} {line}";
                 if (expanded)
                 {
-                    PatternCalls.Collapse(node);
+                    Perform(node, "collapse", null, () => PatternCalls.Collapse(node));
                 }
                 else
                 {
-                    PatternCalls.Expand(node);
+                    Perform(node, "expand", null, () => PatternCalls.Expand(node));
                 }
             }
             else if (node.Has(UiPatterns.LegacyIAccessible) && PatternCalls.DefaultAction(node).Length > 0)
@@ -185,7 +196,7 @@ public sealed partial class DesktopSession
 
             var value = request.Clear ? request.Text : (node.Value ?? "") + request.Text;
             context.Summary = $"set text of {line}";
-            PatternCalls.SetValue(node, value);
+            SetText(context, node, value);
         }, "type", recordArgs: [("text", request.Text), ("clear", request.Clear ? null : "false"), ("submit", request.Submit ? "true" : null), ("foreground", request.Foreground ? "true" : null)], cancellationToken);
     }
 
@@ -210,13 +221,13 @@ public sealed partial class DesktopSession
                     context.Summary = $"{(wantChecked ? "checked" : "unchecked")} {line}";
                     for (var i = 0; i < 3 && (PatternCalls.CurrentToggleState(node) == ToggleState.ToggleState_On) != wantChecked; i++)
                     {
-                        PatternCalls.Toggle(node);
+                        Perform(node, "toggle", null, () => PatternCalls.Toggle(node));
                     }
                 }
                 else if (node.Has(UiPatterns.SelectionItem) && wantChecked)
                 {
                     context.Summary = $"checked {line}";
-                    PatternCalls.Select(node);
+                    Perform(node, "select", null, () => PatternCalls.Select(node));
                 }
                 else
                 {
@@ -228,11 +239,11 @@ public sealed partial class DesktopSession
                 context.Summary = $"{(wantSelected ? "selected" : "deselected")} {line}";
                 if (wantSelected)
                 {
-                    PatternCalls.Select(node);
+                    Perform(node, "select", null, () => PatternCalls.Select(node));
                 }
                 else
                 {
-                    PatternCalls.RemoveFromSelection(node);
+                    Perform(node, "deselect", null, () => PatternCalls.RemoveFromSelection(node));
                 }
             }
             else if (request.Expanded is { } wantExpanded)
@@ -240,11 +251,11 @@ public sealed partial class DesktopSession
                 context.Summary = $"{(wantExpanded ? "expanded" : "collapsed")} {line}";
                 if (wantExpanded)
                 {
-                    PatternCalls.Expand(node);
+                    Perform(node, "expand", null, () => PatternCalls.Expand(node));
                 }
                 else
                 {
-                    PatternCalls.Collapse(node);
+                    Perform(node, "collapse", null, () => PatternCalls.Collapse(node));
                 }
             }
             else if (request.Value is { } value)
@@ -257,12 +268,12 @@ public sealed partial class DesktopSession
                     }
 
                     context.Summary = $"set {line} to {value}";
-                    PatternCalls.SetRangeValue(node, number);
+                    Perform(node, "setrange", number.ToString("R", CultureInfo.InvariantCulture), () => PatternCalls.SetRangeValue(node, number));
                 }
                 else
                 {
                     context.Summary = $"set {line} to \"{Truncate(value, 60)}\"";
-                    PatternCalls.SetValue(node, value);
+                    SetText(context, node, value);
                 }
             }
             else
@@ -451,7 +462,6 @@ public sealed partial class DesktopSession
         {
             var stopwatch = Stopwatch.StartNew();
             var (node, before) = await locate().ConfigureAwait(false);
-            var context = new ActionContext(node, before);
             string? note = null;
             var recordedSelector = recordSelector ? SelectorBuilder.Build(node, before).ToString() : null;
 
@@ -461,7 +471,26 @@ public sealed partial class DesktopSession
                 windowHandle = root.WindowHandle;
             }
 
-            ForegroundScope? scope = foreground ? ForegroundScope.Enter(windowHandle) : null;
+            var context = new ActionContext(node, before) { WindowHandle = windowHandle };
+
+            // A hidden app is shown only for the length of a Foreground Action: real input must reach a
+            // window the User can see, never an invisible one (ADR 0008).
+            var revealed = foreground && Reveal(windowHandle, revealed: true);
+            ForegroundScope scope;
+            try
+            {
+                scope = foreground ? ForegroundScope.Enter(windowHandle) : ForegroundScope.Guard(OwnedByTargetApp);
+            }
+            catch
+            {
+                if (revealed)
+                {
+                    Reveal(windowHandle, revealed: false);
+                }
+
+                throw;
+            }
+
             try
             {
                 var work = Task.Run(() => perform(context), cancellationToken);
@@ -469,6 +498,10 @@ public sealed partial class DesktopSession
                 if (finished == work)
                 {
                     await work.ConfigureAwait(false);
+                    if (context.Note is { } actionNote)
+                    {
+                        note = Append(note, actionNote);
+                    }
                 }
                 else
                 {
@@ -481,13 +514,27 @@ public sealed partial class DesktopSession
                     }
                 }
 
+                if (!foreground)
+                {
+                    scope.GiveBack();
+                }
+
                 var (after, settled) = await SettleAsync(cancellationToken).ConfigureAwait(false);
-                if (scope is not null && (keepFocus || after.Windows.Any(w => before.Find(w.Key) is null)))
+                if (foreground && !revealed && (keepFocus || after.Windows.Any(w => before.Find(w.Key) is null)))
                 {
                     scope.KeepFocus();
                     if (!keepFocus)
                     {
                         note = Append(note, "Focus stays on the Target App because the action opened a window or menu.");
+                    }
+                }
+                else if (!foreground)
+                {
+                    // Some UI stacks activate the window asynchronously, after the call returned.
+                    scope.GiveBack();
+                    if (scope.Restored)
+                    {
+                        note = Append(note, "The Target App took the foreground during the action; Netwright gave it back to your window.");
                     }
                 }
 
@@ -502,9 +549,22 @@ public sealed partial class DesktopSession
             }
             finally
             {
-                scope?.Dispose();
+                scope.Dispose();
+                if (revealed)
+                {
+                    Reveal(windowHandle, revealed: false);
+                }
             }
         }, cancellationToken);
+
+    /// <summary>Shows or hides again a window of a hidden Target App; false when the app is not hidden.</summary>
+    private bool Reveal(nint window, bool revealed) =>
+        window != 0 && _app is { Hidden: true, HasCompanion: true }
+        && NativeMethods.GetWindowThreadProcessId(window, out var processId) != 0
+        && CompanionClient.SetRevealed((int)processId, window, revealed, CompanionTimeoutMs);
+
+    private bool OwnedByTargetApp(nint window) =>
+        window != 0 && NativeMethods.GetWindowThreadProcessId(window, out var processId) != 0 && _app?.Owns((int)processId) == true;
 
     /// <summary>
     /// Waits until the target exists and is Actionable, scrolling it into view once if it is offscreen.
@@ -655,13 +715,21 @@ public sealed partial class DesktopSession
     {
         var owner = context.Node;
         var line = Line(owner);
+
+        // In-process selection needs no drop-down, so nothing opens and nothing can take the foreground.
+        if (Perform(owner, "selectitem", itemName, viaUiAutomation: null) is not null)
+        {
+            context.Summary = $"selected \"{itemName}\" in {line}";
+            return;
+        }
+
         var items = Items(owner);
         var expandedByUs = false;
 
         var match = FindItem(items, itemName);
         if (match is null && owner.Has(UiPatterns.ExpandCollapse) && owner.Expand == ExpandValue.Collapsed)
         {
-            PatternCalls.Expand(owner);
+            Perform(owner, "expand", null, () => PatternCalls.Expand(owner));
             expandedByUs = true;
 
             // Items are generated asynchronously when the drop-down opens, and some frameworks expose
@@ -702,11 +770,11 @@ public sealed partial class DesktopSession
         context.Summary = $"selected \"{match.Name}\" in {line}";
         if (match.Has(UiPatterns.SelectionItem))
         {
-            PatternCalls.Select(match);
+            Perform(match, "select", null, () => PatternCalls.Select(match));
         }
         else if (match.Has(UiPatterns.Invoke))
         {
-            PatternCalls.Invoke(match);
+            Perform(match, "invoke", null, () => PatternCalls.Invoke(match));
         }
         else
         {
@@ -735,13 +803,13 @@ public sealed partial class DesktopSession
         return partial.Count == 1 ? partial[0] : null;
     }
 
-    private static void TryCollapse(UiNode node)
+    private void TryCollapse(UiNode node)
     {
         try
         {
             if (PatternCalls.CurrentExpandState(node) != ExpandCollapseState.ExpandCollapseState_Collapsed)
             {
-                PatternCalls.Collapse(node);
+                Perform(node, "collapse", null, () => PatternCalls.Collapse(node));
             }
         }
         catch (NetwrightException)
@@ -769,6 +837,121 @@ public sealed partial class DesktopSession
         "Retry with foreground: true. Netwright briefly takes focus and the mouse, then gives them back to the User.");
 
     private static string? Lower(bool? value) => value?.ToString().ToLowerInvariant();
+
+    /// <summary>
+    /// Runs a pattern inside the Target App through the Companion when it can, because the same call
+    /// made cross-process lets the app take the foreground (ADR 0007). Falls back to UI Automation when
+    /// there is no Companion or it does not handle the element. Returns the Companion's <c>ok</c>
+    /// answer, or null after a fallback.
+    /// </summary>
+    private string? Perform(UiNode node, string action, string? argument, Action? viaUiAutomation)
+    {
+        if (_app is { HasCompanion: true } app && ProcessOf(node) is { } processId)
+        {
+            var answer = CompanionClient.Act(processId, action, node.Key, ElementHandle(node), argument, CompanionTimeoutMs);
+            if (answer is null)
+            {
+                app.HasCompanion = false;
+            }
+            else if (answer.StartsWith("ok", StringComparison.Ordinal))
+            {
+                return answer;
+            }
+        }
+
+        viaUiAutomation?.Invoke();
+        return null;
+    }
+
+    /// <summary>
+    /// Sets the text of an element. Text set without the keyboard never moves focus, so bindings that
+    /// update when focus leaves the field (WPF LostFocus, WinForms OnValidation) are committed too.
+    /// </summary>
+    private void SetText(ActionContext context, UiNode node, string value)
+    {
+        var answer = Perform(node, "setvalue", value, () => PatternCalls.SetValue(node, value));
+        if (answer is null)
+        {
+            CommitBindings(context);
+        }
+        else if (CompanionClient.TryParseCount(answer, out var count))
+        {
+            ReportCommitted(context, count);
+        }
+    }
+
+    /// <summary>
+    /// Asks the Companion to commit the bindings of a field whose text was set through UI Automation;
+    /// when it cannot, the Agent is told once per session.
+    /// </summary>
+    private void CommitBindings(ActionContext context)
+    {
+        var app = _app;
+        var (result, count) = (CommitResult.Unreachable, 0);
+        if (app is { HasCompanion: true } && ProcessOf(context.Node) is { } processId)
+        {
+            (result, count) = CompanionClient.CommitBindings(processId, context.WindowHandle, ElementHandle(context.Node), CompanionTimeoutMs);
+        }
+
+        if (result == CommitResult.Committed)
+        {
+            ReportCommitted(context, count);
+            return;
+        }
+
+        if (result == CommitResult.Unreachable && app is not null)
+        {
+            app.HasCompanion = false;
+        }
+
+        if (!_bindingNoteShown)
+        {
+            _bindingNoteShown = true;
+            var reason = result == CommitResult.Unsupported
+                ? "the Netwright Companion does not support this UI framework yet"
+                : app is { LaunchedBySession: false }
+                    ? "the app was attached, and only apps launched by Netwright load the Netwright Companion"
+                    : "the Netwright Companion is not running in the app (it needs .NET 8 or later)";
+            context.Note = $"Bindings that update when focus leaves a field may not be committed, because {reason}. If the app reads the value from such a binding, type with foreground=true.";
+        }
+    }
+
+    private static void ReportCommitted(ActionContext context, int count)
+    {
+        if (count > 0)
+        {
+            context.Summary += count == 1 ? " and committed its binding" : string.Create(CultureInfo.InvariantCulture, $" and committed {count} bindings");
+        }
+    }
+
+    /// <summary>
+    /// The process that owns the element. It may be a child process of the Target App, which loads its
+    /// own Companion.
+    /// </summary>
+    private static int? ProcessOf(UiNode node)
+    {
+        try
+        {
+            return node.Native?.CurrentProcessId;
+        }
+        catch (COMException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>The element's own window handle (WinForms controls have one; WPF elements do not).</summary>
+    private static nint ElementHandle(UiNode node)
+    {
+        try
+        {
+            return node.Native?.CurrentNativeWindowHandle ?? 0;
+        }
+        catch (COMException)
+        {
+            return 0;
+        }
+    }
 
     private static string? Append(string? note, string addition) => note is null ? addition : note + " " + addition;
 }

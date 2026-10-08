@@ -17,6 +17,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        txtBound.DataContext = lblBound.DataContext = new BoundModel();
+
         cmbCountry.ItemsSource = Countries;
         cmbCountry.SelectedIndex = -1;
 

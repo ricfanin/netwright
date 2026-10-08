@@ -1,0 +1,8 @@
+<Project>
+  <!-- Copies the Companion (ADR 0007) into the output of every project that uses the Engine, directly or
+       through Netwright.Testing, because the Engine looks for it next to the running application. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\tools\companion\Netwright.Companion.dll" Link="Netwright.Companion.dll"
+          CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+</Project>

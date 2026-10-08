@@ -8,13 +8,26 @@
     <PackageId>Netwright.Engine</PackageId>
     <Description>Automation engine behind Netwright: UI Automation snapshots, stable refs, selectors, actionability and settle waits, and change reports for .NET desktop apps.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- NU5100: the Companion assembly is packed under tools/ on purpose; consumers must not reference it. -->
+    <NoWarn>$(NoWarn);CS1591;NU5100</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Interop.UIAutomationClient" Version="10.19041.0" />
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.12" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.12" />
+  </ItemGroup>
+
+  <!--
+    The Companion (ADR 0007) is loaded by Target Apps, never by the Engine: build it first and ship it next to
+    the Engine in every output. In the package it sits in tools/, and buildTransitive copies it into the output
+    of consuming projects, including those that only reference Netwright.Testing.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Netwright.Companion\Netwright.Companion.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=net8.0-windows" />
+    <None Include="..\Netwright.Companion\bin\$(Configuration)\net8.0-windows\Netwright.Companion.dll" Link="Netwright.Companion.dll" Visible="false"
+          CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="tools/companion/Netwright.Companion.dll" />
+    <None Include="buildTransitive\Netwright.Engine.targets" Pack="true" PackagePath="buildTransitive/Netwright.Engine.targets" />
   </ItemGroup>
 
   <ItemGroup>

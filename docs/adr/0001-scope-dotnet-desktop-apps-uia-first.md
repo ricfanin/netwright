@@ -1,3 +1,7 @@
+---
+status: accepted (amended by ADR 0007: Background actions run in-process through the Companion)
+---
+
 # Scope: .NET desktop apps, UI Automation first, out-of-process
 
 The project started as a WPF-only MCP server. We broadened it to every .NET desktop UI technology, on both .NET and .NET Framework, and we will rebrand it. Direct competitors either target all of Windows (Windows-MCP, Terminator) or already use the same FlaUI stack (FlaUI-MCP), so being "the .NET one" is the niche where we can win.

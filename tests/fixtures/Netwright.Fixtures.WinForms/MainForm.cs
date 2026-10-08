@@ -304,6 +304,25 @@ namespace Netwright.Fixtures.WinForms
 
             ConfigureLabel(_lblResult, "lblResult", string.Empty, new Point(FieldLeft, y), 600);
             page.Controls.Add(_lblResult);
+            y += 36;
+
+            // Default binding mode (OnValidation): writes to the data source only when focus leaves the field.
+            var bound = new BoundModel();
+            AddCaption(page, "Bound", y);
+            var txtBound = new TextBox
+            {
+                Name = "txtBound",
+                AccessibleName = "Bound",
+                Location = new Point(FieldLeft, y),
+                Size = new Size(260, 24),
+            };
+            txtBound.DataBindings.Add("Text", bound, nameof(BoundModel.Value));
+            page.Controls.Add(txtBound);
+
+            var lblBound = new Label();
+            ConfigureLabel(lblBound, "lblBound", "Bound: ", new Point(FieldLeft + 280, y), 300);
+            bound.PropertyChanged += (s, e) => lblBound.Text = "Bound: " + bound.Value;
+            page.Controls.Add(lblBound);
 
             return page;
         }

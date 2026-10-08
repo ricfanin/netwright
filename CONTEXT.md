@@ -36,6 +36,14 @@ _Avoid_: compatibility level, support level
 The default way of operating a Target App: without taking focus, mouse, or keyboard away from the User.
 _Avoid_: headless, silent mode, invisible mode
 
+**Companion**:
+The small assembly that Target Apps launched by Netwright load through a .NET startup hook, so the Engine can perform Background actions in-process: there they neither give the app the foreground nor leave focus-bound bindings uncommitted (ADR 0007).
+_Avoid_: agent, injector, plugin
+
+**Hidden App**:
+A Target App launched by Netwright whose windows the Companion keeps invisible: never on screen, yet fully operable and capturable. It is the default for launched apps (ADR 0008).
+_Avoid_: headless, invisible mode, background app
+
 **Foreground Action**:
 A single tool call the Agent explicitly marks as allowed to take focus and input, after which focus is returned to where the User left it.
 _Avoid_: foreground mode, fallback

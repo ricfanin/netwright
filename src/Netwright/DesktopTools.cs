@@ -33,13 +33,14 @@ public sealed class DesktopTools(DesktopSession session)
         [Description("For multi-targeted projects")] string? framework = null,
         string? process = null,
         [Description("Kill on close")] bool force = false,
+        [Description("Show the launched app's windows (hidden by default)")] bool visible = false,
         CancellationToken cancellationToken = default) =>
         RunAsync(async () =>
         {
             switch (Normalize(action))
             {
                 case "launch":
-                    var launched = await session.LaunchAsync(new LaunchRequest { Path = path, Project = project, Arguments = args ?? [], Framework = framework }, cancellationToken);
+                    var launched = await session.LaunchAsync(new LaunchRequest { Path = path, Project = project, Arguments = args ?? [], Framework = framework, Visible = visible }, cancellationToken);
                     return Reply.Text(StatusText(launched, "Launched"));
                 case "attach":
                     var attached = await session.AttachAsync(AttachRequestFor(process), cancellationToken);
@@ -347,6 +348,11 @@ public sealed class DesktopTools(DesktopSession session)
         if (status.WindowLines.Count == 0)
         {
             sb.AppendLine().Append("No windows yet.");
+        }
+
+        if (status.Hidden)
+        {
+            sb.AppendLine().Append("note: the app runs hidden; launch with visible=true to watch it.");
         }
 
         if (status.DebugCaptureWarning is not null)
