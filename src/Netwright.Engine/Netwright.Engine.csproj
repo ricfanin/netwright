@@ -24,7 +24,10 @@
     of consuming projects, including those that only reference Netwright.Testing.
   -->
   <ItemGroup>
-    <ProjectReference Include="..\Netwright.Companion\Netwright.Companion.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetTargetFramework="TargetFramework=net8.0-windows" />
+    <!-- TargetFramework and the RID are undefined so this is the same project instance the solution builds:
+         two instances would compile into the same obj\ folder in parallel and collide. -->
+    <ProjectReference Include="..\Netwright.Companion\Netwright.Companion.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true"
+                      UndefineProperties="TargetFramework;RuntimeIdentifier;SelfContained" />
     <None Include="..\Netwright.Companion\bin\$(Configuration)\net8.0-windows\Netwright.Companion.dll" Link="Netwright.Companion.dll" Visible="false"
           CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="tools/companion/Netwright.Companion.dll" />
     <None Include="buildTransitive\Netwright.Engine.targets" Pack="true" PackagePath="buildTransitive/Netwright.Engine.targets" />
