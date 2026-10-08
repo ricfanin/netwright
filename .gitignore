@@ -93,3 +93,6 @@ $RECYCLE.BIN/
 
 # Local build outputs (baseline builds, packages, benchmark scratch)
 artifacts/
+
+# Local planning notes (wayfinder maps, research)
+.scratch/
