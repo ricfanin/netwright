@@ -6,9 +6,9 @@
 [![NuGet](https://img.shields.io/nuget/v/Netwright.svg)](https://www.nuget.org/packages/Netwright)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[![Netwright demo: an agent fills and submits an order in a WPF app that runs hidden, then exports the regression test](docs/media/netwright-demo.jpg)](docs/media/netwright-demo.mp4)
+[![Netwright demo: an agent fills and submits an order in a WPF app that runs hidden, then exports the regression test](docs/media/netwright-demo.gif)](docs/media/netwright-demo.mp4)
 
-▶ [Watch the 24-second demo](docs/media/netwright-demo.mp4)
+▶ [Watch it with sound](docs/media/netwright-demo.mp4)
 
 > Formerly **WPF-MCP**. Version 2.0 is a rewrite; see [Migrating from WPF-MCP 1.x](#migrating-from-wpf-mcp-1x).
 
