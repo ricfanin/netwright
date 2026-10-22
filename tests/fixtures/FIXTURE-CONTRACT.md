@@ -57,6 +57,8 @@ Rules:
 | `btnEnableLater` | Button | `Enable later` | After **1000 ms**, enables `btnLater` |
 | `btnLater` | Button | `Later` | Disabled initially. When clicked, sets `lblLater` to `Later clicked` |
 | `lblLater` | Label | `` | |
+| `chkSlow` | CheckBox | `Slow work` | **WPF and WinForms only.** When checked, blocks the UI thread for **3000 ms** (`Thread.Sleep`) without opening a window, then sets `lblSlow` to `Slow work done`. A check box, because WPF runs a toggle inside the UI Automation call but defers a button click |
+| `lblSlow` | Label | `` | **WPF and WinForms only.** |
 
 **Tab "Grid"** (`tabGrid`)
 

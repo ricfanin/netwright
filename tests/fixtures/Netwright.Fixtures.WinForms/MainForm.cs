@@ -43,6 +43,8 @@ namespace Netwright.Fixtures.WinForms
         private readonly ListBox _lstItems = new ListBox();
         private readonly Button _btnLater = new Button();
         private readonly Label _lblLater = new Label();
+        private readonly CheckBox _chkSlow = new CheckBox();
+        private readonly Label _lblSlow = new Label();
 
         // Tree tab
         private readonly Label _lblSelectedNode = new Label();
@@ -397,6 +399,17 @@ namespace Netwright.Fixtures.WinForms
 
             ConfigureLabel(_lblLater, "lblLater", string.Empty, new Point(Margin8 + 240, y + 6), 250);
             page.Controls.Add(_lblLater);
+            y += 40;
+
+            _chkSlow.Name = "chkSlow";
+            _chkSlow.Text = "Slow work";
+            _chkSlow.Location = new Point(Margin8, y);
+            _chkSlow.Size = new Size(110, 24);
+            _chkSlow.CheckedChanged += OnSlowCheckedChanged;
+            page.Controls.Add(_chkSlow);
+
+            ConfigureLabel(_lblSlow, "lblSlow", string.Empty, new Point(Margin8 + 120, y + 4), 250);
+            page.Controls.Add(_lblSlow);
 
             return page;
         }
@@ -421,6 +434,18 @@ namespace Netwright.Fixtures.WinForms
         {
             await Task.Delay(1000);
             _btnLater.Enabled = true;
+        }
+
+        private void OnSlowCheckedChanged(object? sender, EventArgs e)
+        {
+            if (!_chkSlow.Checked)
+            {
+                return;
+            }
+
+            // Blocks the UI thread on purpose: a slow handler that opens no window.
+            System.Threading.Thread.Sleep(3000);
+            _lblSlow.Text = "Slow work done";
         }
 
         // ------------------------------------------------------------------ Grid tab

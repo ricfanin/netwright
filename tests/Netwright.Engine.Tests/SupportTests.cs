@@ -1,5 +1,6 @@
 using Netwright.Engine.Diagnostics;
 using Netwright.Engine.Input;
+using Netwright.Engine.Model;
 using Netwright.Engine.Refs;
 using Netwright.Engine.Session;
 using Netwright.Engine.Uia;
@@ -241,5 +242,36 @@ public class PatternCallsTests
         Assert.False(PatternCalls.IsFocusRefusal(PatternCalls.Translate(new System.Runtime.InteropServices.COMException(), node)));
         Assert.False(PatternCalls.IsFocusRefusal(PatternCalls.Translate(new TimeoutException(), node)));
         Assert.False(PatternCalls.IsFocusRefusal(new NetwrightException(ErrorCodes.NotSupported, "no inner exception")));
+    }
+}
+
+public class BlockedCallNoteTests
+{
+    private static UiNode Win(string title, string key, params UiNode[] children) =>
+        Node(ControlTypeIds.Window, title, patterns: UiPatterns.Window, key: key, children: children);
+
+    [Fact]
+    public void Names_the_dialog_only_when_a_window_opened()
+    {
+        var before = Tree(Win("Main", "w", Button("Delete", key: "del")));
+        var withDialog = Tree(Win("Main", "w", Button("Delete", key: "del"), Win("Confirm", "dlg", Button("Yes"))));
+
+        var note = DesktopSession.BlockedCallNote(before, withDialog, returned: false, 1600, n => $"window \"{n.Name}\"");
+
+        Assert.Contains("opened a modal dialog: window \"Confirm\"", note, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false, "has not returned after 1600 ms")]
+    [InlineData(true, "was busy for 1600 ms")]
+    public void Reports_a_busy_ui_thread_when_no_window_opened(bool returned, string expected)
+    {
+        var before = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var after = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.BlockedCallNote(before, after, returned, 1600, n => n.Name);
+
+        Assert.Contains(expected, note, StringComparison.Ordinal);
+        Assert.DoesNotContain("dialog", note, StringComparison.Ordinal);
     }
 }

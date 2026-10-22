@@ -157,6 +157,21 @@ public sealed partial class SessionTests(ITestOutputHelper output)
 
     [Theory]
     [MemberData(nameof(Kinds))]
+    public async Task A_slow_handler_is_reported_as_busy_not_as_a_dialog(FixtureKind kind)
+    {
+        await using var session = await Fixtures.LaunchAsync(kind, "Async");
+
+        var clicked = await session.ClickAsync("#chkSlow");
+        output.WriteLine($"{clicked.Summary} | note: {clicked.Note}");
+
+        Assert.NotNull(clicked.Note);
+        Assert.DoesNotContain("dialog", clicked.Note, StringComparison.Ordinal);
+        Assert.Contains("busy", clicked.Note, StringComparison.Ordinal);
+        await session.WaitAsync(new WaitRequest { Text = "Slow work done", TimeoutMs = 10000 });
+    }
+
+    [Theory]
+    [MemberData(nameof(Kinds))]
     public async Task Tree_items_can_be_expanded_and_selected(FixtureKind kind)
     {
         await using var session = await Fixtures.LaunchAsync(kind, "Tree");
