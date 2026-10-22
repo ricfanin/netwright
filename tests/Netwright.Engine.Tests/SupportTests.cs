@@ -243,3 +243,19 @@ public class PatternCallsTests
         Assert.False(PatternCalls.IsFocusRefusal(new NetwrightException(ErrorCodes.NotSupported, "no inner exception")));
     }
 }
+
+public class StartupHookTests
+{
+    private const string CompanionPath = @"C:\tools\Netwright.Companion.dll";
+
+    [Theory]
+    [InlineData(null, CompanionPath)]
+    [InlineData("", CompanionPath)]
+    [InlineData(@"C:\hooks\Mine.dll", @"C:\hooks\Mine.dll;" + CompanionPath)]
+    [InlineData(@"C:\hooks\A.dll;;C:\hooks\B.dll;", @"C:\hooks\A.dll;C:\hooks\B.dll;" + CompanionPath)]
+    [InlineData(@"c:\TOOLS\netwright.companion.dll;C:\hooks\Mine.dll", @"C:\hooks\Mine.dll;" + CompanionPath)]
+    public void Keeps_existing_hooks_and_adds_the_companion_once(string? existing, string expected)
+    {
+        Assert.Equal(expected, Netwright.Engine.Companion.CompanionClient.MergeStartupHooks(existing, CompanionPath));
+    }
+}

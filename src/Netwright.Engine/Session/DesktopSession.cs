@@ -60,6 +60,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
         ExclusiveAsync(async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
+            ValidateEnvironment(request.EnvironmentVariables);
             string fileName;
             string arguments;
             string allowPath;
@@ -105,6 +106,11 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 RedirectStandardError = true,
                 WorkingDirectory = request.WorkingDirectory ?? System.IO.Path.GetDirectoryName(allowPath) ?? Environment.CurrentDirectory,
             };
+            foreach (var (name, value) in request.EnvironmentVariables)
+            {
+                startInfo.Environment[name] = value;
+            }
+
             var companion = CompanionClient.AddTo(startInfo, hidden: !request.Visible);
 
             Process process;
@@ -131,7 +137,8 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 ("path", request.Path),
                 ("project", request.Project),
                 ("framework", request.Framework),
-                ("arguments", request.Arguments.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, request.Arguments) : null));
+                ("arguments", request.Arguments.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, request.Arguments) : null),
+                ("environment", request.EnvironmentVariables.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, request.EnvironmentVariables.Select(v => v.Key + "=" + v.Value)) : null));
 
             await WaitForFirstWindowAsync(app, request.TimeoutMs, cancellationToken).ConfigureAwait(false);
             return BuildStatus(app);
@@ -579,6 +586,23 @@ public sealed partial class DesktopSession : IAsyncDisposable
         catch (InvalidOperationException)
         {
             return true;
+        }
+    }
+
+    private static void ValidateEnvironment(IReadOnlyDictionary<string, string> variables)
+    {
+        foreach (var name in variables.Keys)
+        {
+            if (string.IsNullOrWhiteSpace(name) || name.Contains('=', StringComparison.Ordinal) || name.Contains('\0', StringComparison.Ordinal))
+            {
+                throw NetwrightException.InvalidArgument($"'{name}' is not a valid environment variable name.");
+            }
+
+            // Netwright would overwrite it anyway; refusing it says so instead of ignoring it silently.
+            if (CompanionClient.IsHiddenVariable(name))
+            {
+                throw NetwrightException.InvalidArgument($"{name} cannot be set: it follows visible.", "Leave it out of env and pass visible=true to show the app.");
+            }
         }
     }
 

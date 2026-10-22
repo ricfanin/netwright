@@ -185,6 +185,21 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.Contains("#txtName", Assert.Single(result.Content.OfType<TextContentBlock>()).Text, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Launch_passes_environment_variables_from_a_json_object()
+    {
+        await Call("desktop_app", new
+        {
+            action = "launch",
+            path = Fixtures.ExecutablePath(FixtureKind.Wpf),
+            args = new[] { "--no-activate" },
+            env = new Dictionary<string, string> { ["NETWRIGHT_FIXTURE_ENV"] = "over mcp" },
+        });
+
+        var expect = await Call("desktop_expect", new { target = "#lblEnv", assertion = "text", expected = "Env: over mcp" });
+        Assert.StartsWith("pass:", expect, StringComparison.Ordinal);
+    }
+
     private async Task<string> Call(string tool, object? arguments = null, bool expectError = false)
     {
         var args = arguments is null

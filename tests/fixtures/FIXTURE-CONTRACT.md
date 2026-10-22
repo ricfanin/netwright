@@ -26,6 +26,7 @@ Rules:
 | `btnOpenWindow` | Button | `Open tool window` | Opens a non-modal window, titled `Tool Window`, containing a TextBox `txtToolNote` and a Button `btnToolClose` "Close" |
 | `btnTrace` | Button | `Write diagnostics` | Writes `fixture-trace: hello` via `System.Diagnostics.Trace.WriteLine`, `fixture-stdout: hello` via `Console.Out.WriteLine` (then flushes), and `fixture-stderr: hello` via `Console.Error.WriteLine`. Then sets `lblDiag` to `Diagnostics written` |
 | `lblDiag` | Label | `` (empty) | |
+| `lblEnv` | Label/TextBlock | `Env: {value}` | **WPF only.** Shows the value of the environment variable `NETWRIGHT_FIXTURE_ENV` at startup; collapsed (absent from the tree) when it is not set |
 | `btnCrash` | Button | `Crash` | Throws `new InvalidOperationException("Fixture crash requested")` on the UI thread, **unhandled** (the process must terminate) |
 
 ### Tabs: TabControl `tabs`

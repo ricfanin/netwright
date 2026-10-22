@@ -51,6 +51,14 @@ public sealed record LaunchRequest
     public int TimeoutMs { get; init; } = 30000;
 
     /// <summary>
+    /// Environment variables set for the Target App on top of the inherited environment, for apps that
+    /// change their UI Automation tree by environment (DevExpress <c>DX.UITESTINGENABLED=1</c>). They are
+    /// applied before the Companion is added: <c>DOTNET_STARTUP_HOOKS</c> keeps its hooks and the Companion
+    /// is appended, and <c>NETWRIGHT_HIDDEN</c> is refused because <see cref="Visible"/> owns it.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> EnvironmentVariables { get; init; } = new Dictionary<string, string>();
+
+    /// <summary>
     /// Show the Target App's windows. By default an app launched with the Companion runs hidden: its
     /// windows are cloaked, so they never appear on screen while UI Automation still operates them (ADR 0008).
     /// </summary>

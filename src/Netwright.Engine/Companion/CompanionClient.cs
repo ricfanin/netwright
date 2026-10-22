@@ -32,6 +32,9 @@ internal static class CompanionClient
     /// <summary>Must match <c>Netwright.Companion.HiddenWindows.Variable</c>.</summary>
     private const string HiddenVariable = "NETWRIGHT_HIDDEN";
 
+    /// <summary>True for the variable that carries the <c>visible</c> choice to the Companion; the launch owns it.</summary>
+    public static bool IsHiddenVariable(string name) => string.Equals(name, HiddenVariable, StringComparison.OrdinalIgnoreCase);
+
     /// <summary>Full path of the Companion assembly shipped next to the Engine, or null if it is missing.</summary>
     public static string? AssemblyPath { get; } = Locate();
 
@@ -60,9 +63,19 @@ internal static class CompanionClient
         }
 
         var existing = startInfo.Environment.TryGetValue(StartupHooksVariable, out var value) ? value : null;
-        startInfo.Environment[StartupHooksVariable] = string.IsNullOrEmpty(existing) ? AssemblyPath : existing + Path.PathSeparator + AssemblyPath;
+        startInfo.Environment[StartupHooksVariable] = MergeStartupHooks(existing, AssemblyPath);
         return true;
     }
+
+    /// <summary>
+    /// Appends the Companion to the startup hooks already set (inherited or passed in the launch
+    /// environment), dropping empty entries and an earlier copy of the Companion so it loads once.
+    /// </summary>
+    internal static string MergeStartupHooks(string? existing, string companionPath) =>
+        string.Join(Path.PathSeparator, (existing ?? "")
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+            .Where(hook => !string.Equals(hook, companionPath, StringComparison.OrdinalIgnoreCase))
+            .Append(companionPath));
 
     /// <summary>
     /// Asks the Companion in <paramref name="processId"/> to write pending binding values of the

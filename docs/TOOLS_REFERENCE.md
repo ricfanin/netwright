@@ -86,6 +86,7 @@ Launch, attach to, close, or inspect the Target App. A session has one Target Ap
 | `process` | attach: process id, process name, or part of a window title |
 | `force` | close: kill instead of asking the app to close |
 | `visible` | launch: show the app's windows (hidden by default) |
+| `env` | launch: environment variables for the app on top of the server's environment, e.g. `{"DX.UITESTINGENABLED": "1"}`. `DOTNET_STARTUP_HOOKS` keeps your hooks and the Companion is added after them; `NETWRIGHT_HIDDEN` cannot be set, use `visible` |
 
 ```
 > desktop_app action=launch project=src/MyApp/MyApp.csproj
