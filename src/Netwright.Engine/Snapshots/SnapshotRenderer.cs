@@ -96,8 +96,9 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
             return false;
         }
 
-        // Cells are summarized into their row, column headers into one line.
-        return node.Parent is null || (!IsGridRow(node.Parent) && !IsHeaderRow(node.Parent));
+        // Cells are summarized into their row, column headers into one line. A cell that is a control
+        // of its own keeps its line, like the other controls of a row.
+        return node.Parent is null || (!IsGridRow(node.Parent) && !IsHeaderRow(node.Parent)) || (IsGridRow(node.Parent) && IsRowAction(node));
     }
 
     /// <param name="node">The element.</param>
@@ -162,6 +163,11 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
             if (IsGridRow(node))
             {
                 WriteLine(node, depth, state, prefix, RowSummary(node), roleOverride: "row");
+                foreach (var action in RowActions(node))
+                {
+                    RenderNode(action, depth + 1, node.Name, state, prefix);
+                }
+
                 return;
             }
 
@@ -439,6 +445,49 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         !IsHeaderRow(node) &&
         ((IsGridContainer(node.Parent) && node.ControlTypeId is ControlTypeIds.DataItem or ControlTypeIds.Custom or ControlTypeIds.ListItem) ||
          (node.ControlTypeId == ControlTypeIds.DataItem && !IsGridContainer(node.Parent?.Parent)));
+
+    /// <summary>
+    /// The controls inside a row that act on their own, outermost first. The row's summary line would
+    /// hide them, and clicking the row only selects it, so they get lines with their own Refs.
+    /// </summary>
+    private IEnumerable<UiNode> RowActions(UiNode node)
+    {
+        foreach (var child in node.Children)
+        {
+            if (!options.IncludeOffscreen && child.IsOffscreen)
+            {
+                continue;
+            }
+
+            if (IsRowAction(child))
+            {
+                yield return child;
+            }
+            else if (!IsGridContainer(child))
+            {
+                foreach (var nested in RowActions(child))
+                {
+                    yield return nested;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// An element inside a row that can be invoked, toggled or edited. A grid's own cells stay in the
+    /// row summary (an editable WPF cell has Invoke and Value), unless the cell is a control itself,
+    /// like the button and check box cells of a WinForms DataGridView.
+    /// </summary>
+    internal static bool IsRowAction(UiNode node)
+    {
+        if (!node.Has(UiPatterns.Invoke) && !node.Has(UiPatterns.Toggle) && !(node.Has(UiPatterns.Value) && !node.ValueIsReadOnly))
+        {
+            return false;
+        }
+
+        var isCell = node.Parent is { } row && IsGridRow(row) && IsGridContainer(row.Parent);
+        return !isCell || node.ControlTypeId is ControlTypeIds.Button or ControlTypeIds.CheckBox or ControlTypeIds.RadioButton or ControlTypeIds.Hyperlink;
+    }
 
     private static string RowSummary(UiNode row)
     {

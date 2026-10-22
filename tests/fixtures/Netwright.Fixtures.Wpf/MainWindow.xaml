@@ -130,6 +130,22 @@
                         <Button x:Name="btnLater" AutomationProperties.AutomationId="btnLater" Content="Later" IsEnabled="False" Click="BtnLater_Click" />
                         <TextBlock x:Name="lblLater" AutomationProperties.AutomationId="lblLater" Style="{StaticResource ValueLabel}" Text="" />
                     </StackPanel>
+                    <!-- A button bar built from an items control: UI Automation shows each item as a DataItem holding one button. -->
+                    <StackPanel Orientation="Horizontal">
+                        <ItemsControl x:Name="barActions" AutomationProperties.AutomationId="barActions" AutomationProperties.Name="Actions">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding}" AutomationProperties.AutomationId="{Binding StringFormat=btnAction{0}}" Click="BarAction_Click" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="lblAction" AutomationProperties.AutomationId="lblAction" Style="{StaticResource ValueLabel}" Text="Action: none" />
+                    </StackPanel>
                 </StackPanel>
             </TabItem>
 
