@@ -140,13 +140,6 @@ public partial class MainWindow : Window
 
     private void BtnLater_Click(object sender, RoutedEventArgs e) => lblLater.Text = "Later clicked";
 
-    private void ChkSlow_Checked(object sender, RoutedEventArgs e)
-    {
-        // Blocks the UI thread on purpose: a slow handler that opens no window.
-        Thread.Sleep(3000);
-        lblSlow.Text = "Slow work done";
-    }
-
     // ---- Tree ----
 
     private void TreeFolders_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -179,6 +172,13 @@ public partial class MainWindow : Window
     private void PnlMouse_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
         lblMouse.Text = "Mouse: right";
+    }
+
+    private void ChkSlow_Checked(object sender, RoutedEventArgs e)
+    {
+        // Blocks the UI thread on purpose: a slow handler that opens no window.
+        Thread.Sleep(3000);
+        lblSlow.Text = "Slow work done";
     }
 
     private sealed record Order(int Id, string Customer, string Amount);

@@ -130,11 +130,6 @@
                         <Button x:Name="btnLater" AutomationProperties.AutomationId="btnLater" Content="Later" IsEnabled="False" Click="BtnLater_Click" />
                         <TextBlock x:Name="lblLater" AutomationProperties.AutomationId="lblLater" Style="{StaticResource ValueLabel}" Text="" />
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <!-- A check box toggles synchronously inside the UI Automation call, unlike a button, whose click WPF defers. -->
-                        <CheckBox x:Name="chkSlow" AutomationProperties.AutomationId="chkSlow" Content="Slow work" Margin="4" VerticalAlignment="Center" Checked="ChkSlow_Checked" />
-                        <TextBlock x:Name="lblSlow" AutomationProperties.AutomationId="lblSlow" Style="{StaticResource ValueLabel}" Text="" />
-                    </StackPanel>
                 </StackPanel>
             </TabItem>
 
@@ -186,6 +181,11 @@
                                        MouseLeftButtonDown="PnlMouse_MouseLeftButtonDown"
                                        MouseRightButtonDown="PnlMouse_MouseRightButtonDown" />
                     <TextBlock x:Name="lblMouse" AutomationProperties.AutomationId="lblMouse" Style="{StaticResource ValueLabel}" Text="Mouse: none" />
+                    <StackPanel Orientation="Horizontal">
+                        <!-- A check box toggles synchronously inside the UI Automation call, unlike a button, whose click WPF defers. -->
+                        <CheckBox x:Name="chkSlow" AutomationProperties.AutomationId="chkSlow" Content="Slow work" Margin="4" VerticalAlignment="Center" Checked="ChkSlow_Checked" />
+                        <TextBlock x:Name="lblSlow" AutomationProperties.AutomationId="lblSlow" Style="{StaticResource ValueLabel}" Text="" />
+                    </StackPanel>
                 </StackPanel>
             </TabItem>
 

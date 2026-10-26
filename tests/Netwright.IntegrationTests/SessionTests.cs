@@ -159,7 +159,7 @@ public sealed partial class SessionTests(ITestOutputHelper output)
     [MemberData(nameof(Kinds))]
     public async Task A_slow_handler_is_reported_as_busy_not_as_a_dialog(FixtureKind kind)
     {
-        await using var session = await Fixtures.LaunchAsync(kind, "Async");
+        await using var session = await Fixtures.LaunchAsync(kind, "Keyboard");
 
         var clicked = await session.ClickAsync("#chkSlow");
         output.WriteLine($"{clicked.Summary} | note: {clicked.Note}");
