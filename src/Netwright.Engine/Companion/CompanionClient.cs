@@ -69,11 +69,12 @@ internal static class CompanionClient
 
     /// <summary>
     /// Appends the Companion to the startup hooks already set (inherited or passed in the launch
-    /// environment), dropping empty entries and an earlier copy of the Companion so it loads once.
+    /// environment), trimming entries and dropping empty ones and an earlier copy of the Companion so it
+    /// loads once.
     /// </summary>
     internal static string MergeStartupHooks(string? existing, string companionPath) =>
         string.Join(Path.PathSeparator, (existing ?? "")
-            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(hook => !string.Equals(hook, companionPath, StringComparison.OrdinalIgnoreCase))
             .Append(companionPath));
 
