@@ -98,7 +98,7 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
 
         // Cells are summarized into their row, column headers into one line. A cell that is a control
         // of its own keeps its line, like the other controls of a row.
-        return node.Parent is null || (!IsGridRow(node.Parent) && !IsHeaderRow(node.Parent)) || (IsGridRow(node.Parent) && IsRowAction(node));
+        return node.Parent is not { } parent || (IsGridRow(parent) ? IsRowAction(node) : !IsHeaderRow(parent));
     }
 
     /// <param name="node">The element.</param>
