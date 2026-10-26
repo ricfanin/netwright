@@ -206,6 +206,31 @@ public sealed partial class SessionTests(ITestOutputHelper output)
 
     [Theory]
     [MemberData(nameof(Kinds))]
+    public async Task A_depth_limited_full_snapshot_can_be_explored_top_down(FixtureKind kind)
+    {
+        await using var session = await Fixtures.LaunchAsync(kind, "Grid");
+        var whole = new Engine.Snapshots.SnapshotOptions { Full = true, MaxLines = 2000, MaxItemsPerContainer = int.MaxValue };
+        var options = whole with { MaxDepth = 1 };
+
+        var top = (await session.SnapshotAsync(null, options)).Text;
+        output.WriteLine(top);
+        var cut = Regex.Match(top, @"\.\.\. (?<n>\d+) more elements? below \(root=(?<ref>e\d+)\)");
+        Assert.True(cut.Success, top);
+        var all = (await session.SnapshotAsync(null, whole)).Text;
+        Assert.True(Elements(top).Count() < Elements(all).Count(), "depth=1 should show fewer elements than the whole full Snapshot");
+
+        var deeper = (await session.SnapshotAsync(cut.Groups["ref"].Value, options)).Text;
+        output.WriteLine(deeper);
+        var shown = Elements(top).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains(Elements(deeper), e => !shown.Contains(e));
+
+        // Element lines without indentation; summary lines ("... 3 more elements below") are left out.
+        static IEnumerable<string> Elements(string snapshot) =>
+            snapshot.Split('\n').Select(l => l.Trim()).Where(l => l.StartsWith("- ", StringComparison.Ordinal) && !l.StartsWith("- ...", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [MemberData(nameof(Kinds))]
     public async Task Screenshots_render_the_window(FixtureKind kind)
     {
         await using var session = await Fixtures.LaunchAsync(kind);

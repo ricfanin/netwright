@@ -96,6 +96,9 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         var badEnum = await Call("desktop_click", new { target = "#btnReset", button = "sideways" }, expectError: true);
         Assert.Contains("INVALID_ARGUMENT", badEnum, StringComparison.Ordinal);
 
+        var badDepth = await Call("desktop_snapshot", new { depth = -1 }, expectError: true);
+        Assert.StartsWith("error INVALID_ARGUMENT:", badDepth, StringComparison.Ordinal);
+
         var disabled = await Call("desktop_click", new { target = "#btnSubmit" }, expectError: true);
         Assert.StartsWith("error NOT_ACTIONABLE:", disabled, StringComparison.Ordinal);
     }

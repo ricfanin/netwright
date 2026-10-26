@@ -177,6 +177,121 @@ public class SnapshotRendererTests
     }
 
     [Fact]
+    public void Depth_limit_counts_what_it_cuts_off_with_a_ref_to_continue()
+    {
+        var panel = Node(ControlTypeIds.Pane, "Orders", patterns: UiPatterns.Scroll, children:
+        [
+            Node(ControlTypeIds.Group, "Filter", children: [TextBox("Customer"), Button("Apply")]),
+            Button("Refresh"),
+        ]);
+        var window = Window("Main", panel, Button("Close"));
+
+        var text = Renderer(new SnapshotOptions { MaxDepth = 1 }).Render([window]).Text;
+
+        Assert.Equal(
+            """
+            - window "Main" [e1]
+              - pane "Orders" [e2]
+                - ... 4 more elements below (root=e2)
+              - button "Close" [e3]
+            """.ReplaceLineEndings(),
+            text.ReplaceLineEndings());
+        Assert.DoesNotContain("Apply", Renderer(new SnapshotOptions { MaxDepth = 0 }).Render([window]).Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Depth_limit_counts_the_elements_the_view_would_show()
+    {
+        UiNode Build() => Window("Main", Node(ControlTypeIds.Group, "Orders", children: [Button("Apply"), Node(ControlTypeIds.Image)]));
+
+        // A full Snapshot shows the unnamed image; the filtered view leaves it out.
+        Assert.Contains("... 2 more elements below", Renderer(new SnapshotOptions { Full = true, MaxDepth = 1 }).Render([Build()]).Text, StringComparison.Ordinal);
+        Assert.Contains("... 1 more element below", Renderer(new SnapshotOptions { MaxDepth = 1 }).Render([Build()]).Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Depth_limit_gives_a_ref_to_text_and_skips_the_parts_of_composite_controls()
+    {
+        var terms = Node(ControlTypeIds.Text, "Read the terms", children: [Node(ControlTypeIds.Hyperlink, "terms", patterns: UiPatterns.Invoke)]);
+        var slider = Node(ControlTypeIds.Slider, "Volume", patterns: UiPatterns.RangeValue, children: [Node(ControlTypeIds.Thumb, "Thumb"), Button("Increase")]);
+
+        var full = Renderer(new SnapshotOptions { Full = true, MaxDepth = 1 }).Render([Window("Main", terms)]).Text;
+        var filtered = Renderer(new SnapshotOptions { MaxDepth = 1 }).Render([Window("Main", slider)]).Text;
+
+        Assert.Contains("... 1 more element below (root=e2)", full, StringComparison.Ordinal);
+        Assert.Contains("slider \"Volume\"", filtered, StringComparison.Ordinal);
+        Assert.DoesNotContain("below", filtered, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Collapsed_layout_panes_do_not_add_a_level()
+    {
+        UiNode Build() => Window("Main", Pane(Pane(Button("Save"), Node(ControlTypeIds.Group, "Details", children: [Button("Edit")]))));
+
+        var filtered = Renderer(new SnapshotOptions { MaxDepth = 1 }).Render([Build()]).Text;
+        var full = Renderer(new SnapshotOptions { Full = true, MaxDepth = 1 }).Render([Build()]).Text;
+
+        Assert.Equal(
+            """
+            - window "Main" [e1]
+              - button "Save" [e2]
+              - group "Details" [e3]
+                - ... 1 more element below (root=e3)
+            """.ReplaceLineEndings(),
+            filtered.ReplaceLineEndings());
+
+        // A full Snapshot shows the panes, so they are levels there.
+        Assert.Contains("... 4 more elements below (root=e2)", full, StringComparison.Ordinal);
+        Assert.DoesNotContain("Save", full, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_negative_depth_is_an_invalid_argument()
+    {
+        var ex = Assert.Throws<NetwrightException>(() => Renderer(new SnapshotOptions { MaxDepth = -1 }).Render([Window("Main")]));
+
+        Assert.Equal(ErrorCodes.InvalidArgument, ex.Code);
+    }
+
+    [Fact]
+    public void Depth_limit_on_a_combo_box_counts_only_its_items()
+    {
+        var combo = Node(ControlTypeIds.ComboBox, "Country", patterns: UiPatterns.ExpandCollapse, children:
+        [
+            Node(ControlTypeIds.Edit, "Country", patterns: UiPatterns.Value),
+            Node(ControlTypeIds.Button, "Open", patterns: UiPatterns.Invoke),
+            Node(ControlTypeIds.List, children: [.. new[] { "Italy", "Germany", "France" }.Select(n => Node(ControlTypeIds.ListItem, n, patterns: UiPatterns.SelectionItem))]),
+        ]);
+        var window = Window("Main", combo);
+
+        var cut = Renderer(new SnapshotOptions { MaxDepth = 1 }).Render([window]).Text;
+        var below = Renderer().Render([combo]).Text;
+
+        // The filtered view shows the combo box's items, not its edit, button and list.
+        Assert.Contains("... 3 more elements below (root=e2)", cut, StringComparison.Ordinal);
+        Assert.Equal(1 + 3, below.ReplaceLineEndings("\n").Split('\n').Length);
+    }
+
+    [Fact]
+    public void Depth_limit_on_a_grid_counts_the_rows_the_item_limit_shows()
+    {
+        var rows = Enumerable.Range(1, 30)
+            .Select(i => Node(ControlTypeIds.DataItem, $"Row {i}", patterns: UiPatterns.SelectionItem, children: [Node(ControlTypeIds.Custom, value: $"Customer {i}", patterns: UiPatterns.Value)]))
+            .ToArray();
+        var header = Node(ControlTypeIds.Header, children: [Node(ControlTypeIds.HeaderItem, "Customer")]);
+        var grid = Node(ControlTypeIds.DataGrid, "Orders", patterns: UiPatterns.Grid, rows: 30, children: [header, .. rows]);
+        var options = new SnapshotOptions { MaxItemsPerContainer = 5 };
+
+        var cut = Renderer(options with { MaxDepth = 1 }).Render([Window("Main", grid)]).Text;
+        var below = Renderer(options).Render([grid]).Text;
+
+        // root=e2 lists the columns line and 5 rows, then "... 25 more items"; the cells are part of their row.
+        Assert.Contains("... 6 more elements below (root=e2)", cut, StringComparison.Ordinal);
+        Assert.Contains("... 25 more items", below, StringComparison.Ordinal);
+        Assert.Equal(1 + 6 + 1, below.ReplaceLineEndings("\n").Split('\n').Length);
+    }
+
+    [Fact]
     public void Full_mode_keeps_layout_elements()
     {
         var window = Window("Main", Pane(Node(ControlTypeIds.ScrollBar, "Vertical"), Button("Go")));
@@ -185,6 +300,17 @@ public class SnapshotRendererTests
 
         Assert.Contains("- pane", text, StringComparison.Ordinal);
         Assert.Contains("scrollbar \"Vertical\"", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Full_mode_counts_every_element_past_the_line_budget()
+    {
+        var window = Window("Main", Button("Go"), Pane(Node(ControlTypeIds.Image), Node(ControlTypeIds.Image)));
+
+        var result = Renderer(new SnapshotOptions { Full = true, MaxLines = 2 }).Render([window]);
+
+        // The pane and both unnamed images are lines in a full Snapshot, so all three count.
+        Assert.Contains("3 more elements not shown", result.Text, StringComparison.Ordinal);
     }
 
     [Fact]

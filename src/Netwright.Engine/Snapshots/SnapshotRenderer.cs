@@ -17,6 +17,13 @@ public sealed record SnapshotOptions
 
     /// <summary>Items shown per list, grid or tree before the rest is summarized.</summary>
     public int MaxItemsPerContainer { get; init; } = 20;
+
+    /// <summary>
+    /// Levels rendered below the roots (0: the roots only). A node at the limit gets one line counting
+    /// the elements below it, with its Ref, so the Agent can continue with <c>root=</c>. Null renders all levels.
+    /// Applies to Snapshots only; Change Reports ignore it.
+    /// </summary>
+    public int? MaxDepth { get; init; }
 }
 
 public sealed record RenderResult(string Text, int Lines, int OmittedElements);
@@ -35,7 +42,12 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
 
     public RenderResult Render(IEnumerable<UiNode> roots)
     {
-        var state = new RenderState { MaxLines = options.MaxLines };
+        if (options.MaxDepth < 0)
+        {
+            throw NetwrightException.InvalidArgument("depth must be 0 or more.");
+        }
+
+        var state = new RenderState { MaxLines = options.MaxLines, MaxDepth = options.MaxDepth };
         foreach (var root in roots)
         {
             RenderNode(root, 0, parentName: null, state, prefix: "- ");
@@ -51,7 +63,10 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         return new RenderResult(state.Builder.ToString().TrimEnd(), state.Lines, state.Omitted);
     }
 
-    /// <summary>Renders a subtree with a custom line marker (used by Change Reports).</summary>
+    /// <summary>
+    /// Renders a subtree with a custom line marker (used by Change Reports). <see cref="SnapshotOptions.MaxDepth"/>
+    /// does not apply: a Change Report shows the whole added subtree.
+    /// </summary>
     internal int RenderInto(StringBuilder builder, UiNode root, string marker, int indent, int maxLines, string? parentName)
     {
         var state = new RenderState { Builder = builder, MaxLines = maxLines };
@@ -131,8 +146,12 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
                 var columns = node.Children.Select(c => c.Name).Where(n => n.Length > 0).ToList();
                 if (columns.Count > 0)
                 {
-                    Indent(state.Builder, depth);
-                    state.Builder.Append(prefix).Append("columns: ").AppendJoin(" | ", columns.Select(c => Truncate(c, 40))).AppendLine();
+                    if (!state.Counting)
+                    {
+                        Indent(state.Builder, depth);
+                        state.Builder.Append(prefix).Append("columns: ").AppendJoin(" | ", columns.Select(c => Truncate(c, 40))).AppendLine();
+                    }
+
                     state.Lines++;
                 }
 
@@ -153,24 +172,33 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         }
 
         WriteLine(node, depth, state, prefix);
-        if (!options.Full)
+
+        // The parts of composite controls (slider thumbs, spinner buttons, combo box edit and
+        // drop-down button) are implementation detail; the control's own line already has its state.
+        if (!options.Full && node.ControlTypeId is ControlTypeIds.Slider or ControlTypeIds.Spinner or ControlTypeIds.ProgressBar or ControlTypeIds.ScrollBar)
         {
-            // The parts of composite controls (slider thumbs, spinner buttons, combo box edit and
-            // drop-down button) are implementation detail; the control's own line already has its state.
-            if (node.ControlTypeId is ControlTypeIds.Slider or ControlTypeIds.Spinner or ControlTypeIds.ProgressBar or ControlTypeIds.ScrollBar)
+            return;
+        }
+
+        if (state.MaxDepth is { } maxDepth && depth >= maxDepth)
+        {
+            WriteCutOff(node, depth, state, prefix);
+            return;
+        }
+
+        RenderBelow(node, depth, state, prefix);
+    }
+
+    private void RenderBelow(UiNode node, int depth, RenderState state, string prefix)
+    {
+        if (!options.Full && node.ControlTypeId == ControlTypeIds.ComboBox)
+        {
+            foreach (var item in node.Descendants().Where(d => d.ControlTypeId == ControlTypeIds.ListItem && (options.IncludeOffscreen || !d.IsOffscreen)).Take(options.MaxItemsPerContainer))
             {
-                return;
+                RenderNode(item, depth + 1, node.Name, state, prefix);
             }
 
-            if (node.ControlTypeId == ControlTypeIds.ComboBox)
-            {
-                foreach (var item in node.Descendants().Where(d => d.ControlTypeId == ControlTypeIds.ListItem && (options.IncludeOffscreen || !d.IsOffscreen)).Take(options.MaxItemsPerContainer))
-                {
-                    RenderNode(item, depth + 1, node.Name, state, prefix);
-                }
-
-                return;
-            }
+            return;
         }
 
         RenderChildren(node, depth + 1, node.Name, state, prefix);
@@ -209,7 +237,7 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
             RenderNode(child, depth, parentName, state, childPrefix);
         }
 
-        if (hiddenItems > 0 || offscreen > 0)
+        if ((hiddenItems > 0 || offscreen > 0) && !state.Counting)
         {
             var parts = new List<string>();
             if (hiddenItems > 0)
@@ -228,8 +256,36 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         }
     }
 
+    /// <summary>
+    /// Counts what a depth limit leaves out below <paramref name="node"/>: the elements a Snapshot with
+    /// <c>root=</c> this node would list, with the same item limits and collapsing. The line always carries
+    /// the node's Ref, even for text that gets none on its own line, so the Agent can continue from it.
+    /// </summary>
+    private void WriteCutOff(UiNode node, int depth, RenderState state, string prefix)
+    {
+        var counter = new RenderState { Counting = true };
+        RenderBelow(node, depth, counter, prefix);
+        var hidden = counter.Lines;
+        if (hidden == 0)
+        {
+            return;
+        }
+
+        Indent(state.Builder, depth + 1);
+        state.Builder.Append(prefix).Append(CultureInfo.InvariantCulture,
+            $"... {hidden} more {(hidden == 1 ? "element" : "elements")} below (root={refs.GetOrAssign(node)})");
+        state.Builder.AppendLine();
+        state.Lines++;
+    }
+
     private void WriteLine(UiNode node, int depth, RenderState state, string prefix, string? nameOverride = null, string? roleOverride = null)
     {
+        if (state.Counting)
+        {
+            state.Lines++;
+            return;
+        }
+
         Indent(state.Builder, depth);
         state.Builder.Append(prefix);
         AppendLineBody(state.Builder, node, ShouldHaveRef(node), nameOverride, roleOverride: roleOverride);
@@ -409,8 +465,9 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         return cell.Descendants().FirstOrDefault(d => d.Name.Length > 0)?.Name ?? "";
     }
 
+    /// <summary>Elements the current view would show: every one in a full Snapshot, the reportable ones otherwise.</summary>
     private int CountVisible(UiNode node) =>
-        node.DescendantsAndSelf().Count(n => (options.IncludeOffscreen || !n.IsOffscreen) && IsReportable(n));
+        node.DescendantsAndSelf().Count(n => (options.IncludeOffscreen || !n.IsOffscreen) && (options.Full || IsReportable(n)));
 
     private static void Indent(StringBuilder sb, int depth) => sb.Append(' ', depth * 2);
 
@@ -435,5 +492,11 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         public int Lines { get; set; }
 
         public int Omitted { get; set; }
+
+        /// <summary>Levels below the roots; null renders all of them. Only Snapshots set it.</summary>
+        public int? MaxDepth { get; init; }
+
+        /// <summary>Counts the element lines without writing them or assigning Refs.</summary>
+        public bool Counting { get; init; }
     }
 }

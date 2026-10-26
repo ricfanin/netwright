@@ -60,6 +60,7 @@ public sealed class DesktopTools(DesktopSession session)
         [Description("Only this subtree")] string? root = null,
         [Description("Every element, unfiltered")] bool full = false,
         bool include_offscreen = false,
+        [Description("Levels below root to show; deeper ones are counted")] int? depth = null,
         CancellationToken cancellationToken = default) =>
         RunAsync(async () =>
         {
@@ -70,6 +71,7 @@ public sealed class DesktopTools(DesktopSession session)
                 IncludeOffscreen = include_offscreen,
                 MaxLines = full ? Math.Max(defaults.MaxLines, 2000) : defaults.MaxLines,
                 MaxItemsPerContainer = full ? int.MaxValue : defaults.MaxItemsPerContainer,
+                MaxDepth = depth,
             };
             return Reply.Text((await session.SnapshotAsync(root, options, cancellationToken)).Text);
         });
