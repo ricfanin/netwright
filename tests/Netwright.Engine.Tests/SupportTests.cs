@@ -136,6 +136,88 @@ public class ProjectBuilderTests
     }
 }
 
+public sealed class ExpectedExecutableTests : IDisposable
+{
+    private readonly string _directory = Directory.CreateTempSubdirectory("netwright-allow-").FullName;
+
+    public void Dispose() => Directory.Delete(_directory, recursive: true);
+
+    [Theory]
+    [InlineData("Acme.Client.Shell\r\n", "Acme.Client.Shell")]
+    [InlineData("\r\n  Acme.Client.Shell  \r\n\r\n", "Acme.Client.Shell")]
+    [InlineData("", null)]
+    [InlineData("error MSB1009: Project file does not exist.\r\nSwitch: C:\\x.csproj", null)]
+    public void Reads_the_evaluated_assembly_name(string output, string? expected)
+    {
+        Assert.Equal(expected, ProjectBuilder.AssemblyNameFrom(output));
+    }
+
+    [Fact]
+    public async Task Falls_back_to_the_project_file_name_when_the_sdk_cannot_evaluate()
+    {
+        var project = Path.Combine(_directory, "Client.Shell.csproj");
+        File.WriteAllText(project, "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><AssemblyName>Acme.Client.Shell</AssemblyName></PropertyGroup></Project>");
+
+        var expected = await ProjectBuilder.ExpectedExecutableAsync("does-not-exist.exe", project, null, null, CancellationToken.None);
+
+        Assert.Equal((Path.Combine(_directory, "Client.Shell.exe"), false), expected);
+    }
+
+    [Fact]
+    public async Task A_cancelled_launch_stops_instead_of_falling_back_or_reporting_a_build_failure()
+    {
+        var project = Path.Combine(_directory, "Client.Shell.csproj");
+        File.WriteAllText(project, "<Project />");
+        using var cancelled = new CancellationTokenSource();
+        await cancelled.CancelAsync();
+
+        // dotnet starts and is killed at once; the cancellation must surface as such.
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => ProjectBuilder.ExpectedExecutableAsync("dotnet", project, null, null, cancelled.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => ProjectBuilder.BuildAsync("dotnet", project, null, null, cancelled.Token));
+    }
+
+    [Theory]
+    [InlineData("net8.0 -t:Evil")]
+    [InlineData("-t:Evil")]
+    [InlineData("-p:AssemblyName=Allowed")]
+    [InlineData("@evil.rsp")]
+    [InlineData("net8.0;AssemblyName=Allowed")]
+    [InlineData("net8.0\"")]
+    [InlineData("net8.0\n")]
+    public async Task Refuses_framework_and_configuration_values_that_are_no_plain_name(string value)
+    {
+        var project = Path.Combine(_directory, "Client.Shell.csproj");
+        File.WriteAllText(project, "<Project />");
+
+        // The check runs before any process starts, so the SDK path does not matter.
+        foreach (var run in new Func<Task>[]
+        {
+            () => ProjectBuilder.ExpectedExecutableAsync("does-not-exist.exe", project, null, value, CancellationToken.None),
+            () => ProjectBuilder.ExpectedExecutableAsync("does-not-exist.exe", project, value, null, CancellationToken.None),
+            () => ProjectBuilder.BuildAsync("does-not-exist.exe", project, null, value, CancellationToken.None),
+            () => ProjectBuilder.BuildAsync("does-not-exist.exe", project, value, null, CancellationToken.None),
+        })
+        {
+            var ex = await Assert.ThrowsAsync<NetwrightException>(run);
+            Assert.Equal(ErrorCodes.InvalidArgument, ex.Code);
+            Assert.NotNull(ex.Hint);
+        }
+    }
+
+    [Theory]
+    [InlineData("Release", "net8.0-windows")]
+    [InlineData("Debug_x64", "net8.0-windows10.0.19041.0")]
+    public async Task Accepts_usual_configuration_and_framework_names(string configuration, string framework)
+    {
+        var project = Path.Combine(_directory, "Client.Shell.csproj");
+        File.WriteAllText(project, "<Project />");
+
+        var expected = await ProjectBuilder.ExpectedExecutableAsync("does-not-exist.exe", project, configuration, framework, CancellationToken.None);
+
+        Assert.Equal((Path.Combine(_directory, "Client.Shell.exe"), false), expected);
+    }
+}
+
 public class CrashReporterTests
 {
     [Fact]

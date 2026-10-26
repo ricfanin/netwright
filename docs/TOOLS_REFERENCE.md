@@ -82,7 +82,7 @@ Launch, attach to, close, or inspect the Target App. A session has one Target Ap
 | `path` | launch: executable to start |
 | `project` | launch: `.csproj`/`.vbproj`/`.fsproj` to build (`dotnet msbuild`, Debug) and start |
 | `args` | launch: command-line arguments |
-| `framework` | launch: target framework of a multi-targeted project |
+| `framework` | launch: target framework of a multi-targeted project, e.g. `net8.0-windows`. Only letters, digits, `.`, `_` and `-`; anything else fails with `INVALID_ARGUMENT` |
 | `process` | attach: process id, process name, or part of a window title |
 | `force` | close: kill instead of asking the app to close |
 | `visible` | launch: show the app's windows (hidden by default) |
@@ -95,6 +95,8 @@ note: the app runs hidden; launch with visible=true to watch it.
 ```
 
 Apps launched by Netwright run **hidden** (ADR 0008): their windows never appear on screen, yet snapshots, actions and screenshots work as usual. A Foreground Action shows the window only while it runs. Pass `visible: true` to watch the app. .NET Framework apps and apps on .NET before 8 are always visible.
+
+**Allow list.** With `--allow`, a pattern is matched against the full path, the file name, and the file name without extension. For `path=` that is the executable. For `project=` the check runs before the build (the build executes project logic), against the executable named by the project's `AssemblyName`, read with `dotnet msbuild -getProperty:AssemblyName -noAutoResponse` (evaluation only: props are imported, no targets run). If the project cannot be evaluated, the project file name is used instead. So `--allow "Acme.Client*"` admits `Client.Shell.csproj` with `<AssemblyName>Acme.Client.Shell</AssemblyName>`. The executable the build actually produced is checked again before launch.
 
 A non-forced close that does not finish within 5 s (for example because of a "save changes?" prompt) fails with `TIMEOUT` and leaves the app running. Apps launched by Netwright are killed when the server stops; attached apps are left running.
 
