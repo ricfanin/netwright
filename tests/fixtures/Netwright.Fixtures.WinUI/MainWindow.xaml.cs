@@ -24,8 +24,6 @@ public sealed partial class MainWindow : Window
         NativeWindow.CenterOnScreen(this);
         Closed += (_, _) => Application.Current.Exit();
 
-        barActions.ItemsSource = new[] { "Approve", "Reject" };
-
         cmbCountry.ItemsSource = Countries;
         cmbCountry.SelectedIndex = -1;
 
@@ -163,12 +161,6 @@ public sealed partial class MainWindow : Window
     }
 
     private void BtnLater_Click(object sender, RoutedEventArgs e) => lblLater.Text = "Later clicked";
-
-    // WinUI bindings have no StringFormat, so the item buttons get their AutomationId here.
-    private void BarAction_Loaded(object sender, RoutedEventArgs e) =>
-        AutomationProperties.SetAutomationId((Button)sender, $"btnAction{((Button)sender).Content}");
-
-    private void BarAction_Click(object sender, RoutedEventArgs e) => lblAction.Text = $"Action: {((Button)sender).Content}";
 
     // ---- Grid ----
 
