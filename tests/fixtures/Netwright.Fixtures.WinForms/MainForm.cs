@@ -139,6 +139,12 @@ namespace Netwright.Fixtures.WinForms
             var btnCrash = AddButton(bar, "btnCrash", "Crash", ref x, 80);
             btnCrash.Click += OnCrashClick;
 
+            // Hidden unless set, so Snapshots of ordinary launches (and the benchmark) do not change.
+            var env = Environment.GetEnvironmentVariable("NETWRIGHT_FIXTURE_ENV");
+            var lblEnv = new Label { Visible = env != null };
+            ConfigureLabel(lblEnv, "lblEnv", "Env: " + env, new Point(x, 14), 150);
+            bar.Controls.Add(lblEnv);
+
             return bar;
         }
 

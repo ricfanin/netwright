@@ -20,6 +20,22 @@ public sealed class WinUiTests(ITestOutputHelper output)
 
         Assert.Matches(@"textbox ""Name"" \[e\d+\] #txtName", snapshot);
         Assert.Matches(@"button ""Submit"" \[e\d+\] #btnSubmit disabled", snapshot);
+        Assert.DoesNotContain("#lblEnv", snapshot, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Launch_sets_environment_variables_for_the_target_app()
+    {
+        Fixtures.KillStrays();
+        await using var session = new DesktopSession();
+        await session.LaunchAsync(new LaunchRequest
+        {
+            Path = Fixtures.ExecutablePath(FixtureKind.WinUI),
+            Arguments = ["--no-activate"],
+            EnvironmentVariables = new Dictionary<string, string> { ["NETWRIGHT_FIXTURE_ENV"] = "from launch" },
+        });
+
+        await session.ExpectAsync("#lblEnv", new ExpectRequest { Assertion = Assertion.Text, Expected = "Env: from launch" });
     }
 
     [Fact]
