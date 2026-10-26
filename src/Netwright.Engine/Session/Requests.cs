@@ -8,6 +8,13 @@ public sealed record SessionOptions
     /// <summary>Wildcard patterns (<c>*</c>, <c>?</c>) matched against executable paths and names. Empty allows every app.</summary>
     public IReadOnlyList<string> AllowedApps { get; init; } = [];
 
+    /// <summary>
+    /// Names (case-insensitive) that <see cref="LaunchRequest.EnvironmentVariables"/> may set. Null, the
+    /// default, allows every name: code that builds a <see cref="LaunchRequest"/> is trusted. The MCP server
+    /// sets the list from <c>--allow-env</c>, so an Agent can set no variable the User did not allow.
+    /// </summary>
+    public IReadOnlyList<string>? AllowedEnvironmentVariables { get; init; }
+
     /// <summary>How long an action waits for its element to exist and be Actionable.</summary>
     public int ActionTimeoutMs { get; init; } = 5000;
 
@@ -54,7 +61,8 @@ public sealed record LaunchRequest
     /// Environment variables set for the Target App on top of the inherited environment, for apps that
     /// change their UI Automation tree by environment (DevExpress <c>DX.UITESTINGENABLED=1</c>). They are
     /// applied before the Companion is added: <c>DOTNET_STARTUP_HOOKS</c> keeps its hooks and the Companion
-    /// is appended, and <c>NETWRIGHT_HIDDEN</c> is refused because <see cref="Visible"/> owns it.
+    /// is appended, and <c>NETWRIGHT_HIDDEN</c> is refused because <see cref="Visible"/> owns it. With
+    /// <see cref="SessionOptions.AllowedEnvironmentVariables"/> set, only the names listed there are accepted.
     /// </summary>
     public IReadOnlyDictionary<string, string> EnvironmentVariables { get; init; } = new Dictionary<string, string>();
 

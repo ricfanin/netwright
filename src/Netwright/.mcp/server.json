@@ -24,6 +24,12 @@
           "description": "Optional ';'-separated wildcard patterns of apps the agent may launch or attach to.",
           "isRequired": false,
           "isSecret": false
+        },
+        {
+          "name": "NETWRIGHT_ALLOW_ENV",
+          "description": "Optional ';'-separated names of environment variables the agent may set when it launches an app. None by default.",
+          "isRequired": false,
+          "isSecret": false
         }
       ]
     }

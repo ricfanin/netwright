@@ -259,3 +259,41 @@ public class StartupHookTests
         Assert.Equal(expected, Netwright.Engine.Companion.CompanionClient.MergeStartupHooks(existing, CompanionPath));
     }
 }
+
+public class LaunchEnvironmentTests
+{
+    private static Dictionary<string, string> Env(params string[] names) => names.ToDictionary(n => n, _ => "1");
+
+    [Fact]
+    public void Allows_every_name_without_an_allow_list()
+    {
+        // Netwright.Testing callers build the LaunchRequest themselves and are trusted.
+        DesktopSession.ValidateEnvironment(Env("DOTNET_STARTUP_HOOKS", "PATH"), allowed: null);
+    }
+
+    [Theory]
+    [InlineData("DX.UITESTINGENABLED")]
+    [InlineData("dx.uitestingenabled")]
+    public void Allows_listed_names_ignoring_case(string name)
+    {
+        DesktopSession.ValidateEnvironment(Env(name), allowed: ["DX.UITESTINGENABLED"]);
+    }
+
+    [Fact]
+    public void Refuses_a_name_outside_the_allow_list_and_names_the_option()
+    {
+        var error = Assert.Throws<NetwrightException>(() => DesktopSession.ValidateEnvironment(Env("DOTNET_STARTUP_HOOKS"), allowed: ["DX.UITESTINGENABLED"]));
+
+        Assert.Equal(ErrorCodes.NotAllowed, error.Code);
+        Assert.Contains("--allow-env DOTNET_STARTUP_HOOKS", error.Hint, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Refuses_every_name_when_the_allow_list_is_empty()
+    {
+        var error = Assert.Throws<NetwrightException>(() => DesktopSession.ValidateEnvironment(Env("DX.UITESTINGENABLED"), allowed: []));
+
+        Assert.Equal(ErrorCodes.NotAllowed, error.Code);
+        Assert.Contains("allows no environment variables", error.Hint, StringComparison.Ordinal);
+    }
+}

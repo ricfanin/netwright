@@ -35,7 +35,7 @@ public sealed class DesktopTools(DesktopSession session)
         string? process = null,
         [Description("Kill on close")] bool force = false,
         [Description("Show the launched app's windows (hidden by default)")] bool visible = false,
-        [Description("Extra environment variables for launch")] Dictionary<string, string>? env = null,
+        [Description("Extra environment variables for launch; names need --allow-env")] Dictionary<string, string>? env = null,
         CancellationToken cancellationToken = default) =>
         RunAsync(async () =>
         {

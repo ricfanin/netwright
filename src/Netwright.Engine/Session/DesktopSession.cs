@@ -60,7 +60,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
         ExclusiveAsync(async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
-            ValidateEnvironment(request.EnvironmentVariables);
+            ValidateEnvironment(request.EnvironmentVariables, _options.AllowedEnvironmentVariables);
             string fileName;
             string arguments;
             string allowPath;
@@ -589,7 +589,11 @@ public sealed partial class DesktopSession : IAsyncDisposable
         }
     }
 
-    private static void ValidateEnvironment(IReadOnlyDictionary<string, string> variables)
+    /// <summary>
+    /// Refuses malformed names and <c>NETWRIGHT_HIDDEN</c>, and, when <paramref name="allowed"/> is set,
+    /// every name not in it: a variable such as <c>DOTNET_STARTUP_HOOKS</c> runs code in the Target App.
+    /// </summary>
+    internal static void ValidateEnvironment(IReadOnlyDictionary<string, string> variables, IReadOnlyList<string>? allowed)
     {
         foreach (var name in variables.Keys)
         {
@@ -602,6 +606,17 @@ public sealed partial class DesktopSession : IAsyncDisposable
             if (CompanionClient.IsHiddenVariable(name))
             {
                 throw NetwrightException.InvalidArgument($"{name} cannot be set: it follows visible.", "Leave it out of env and pass visible=true to show the app.");
+            }
+
+            if (allowed is not null && !allowed.Any(a => string.Equals(a.Trim(), name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var current = allowed.Count == 0
+                    ? "The server allows no environment variables."
+                    : $"The server was started with --allow-env {string.Join(" --allow-env ", allowed)}.";
+                throw new NetwrightException(
+                    ErrorCodes.NotAllowed,
+                    $"{name} is not in the allowed environment variables list.",
+                    $"{current} Ask the User to add --allow-env {name}.");
             }
         }
     }
