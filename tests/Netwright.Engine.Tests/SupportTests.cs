@@ -329,6 +329,16 @@ public class LaunchEnvironmentTests
     }
 
     [Fact]
+    public void A_null_environment_means_no_variables()
+    {
+        // Netwright.Testing callers may pass null despite the annotation.
+        var request = new LaunchRequest { Path = "app.exe", EnvironmentVariables = null! };
+
+        Assert.Empty(request.EnvironmentVariables);
+        DesktopSession.ValidateEnvironment(request.EnvironmentVariables, allowed: []);
+    }
+
+    [Fact]
     public void Refuses_names_that_differ_only_in_case()
     {
         var error = Assert.Throws<NetwrightException>(() => DesktopSession.ValidateEnvironment(Env("Foo", "FOO"), allowed: null));

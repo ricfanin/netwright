@@ -43,6 +43,10 @@ public sealed record SessionOptions
 
 public sealed record LaunchRequest
 {
+    private static readonly IReadOnlyDictionary<string, string> NoVariables = new Dictionary<string, string>();
+
+    private readonly IReadOnlyDictionary<string, string> _environmentVariables = NoVariables;
+
     public string? Path { get; init; }
 
     public string? Project { get; init; }
@@ -64,8 +68,13 @@ public sealed record LaunchRequest
     /// is appended, and <c>NETWRIGHT_HIDDEN</c> is refused because <see cref="Visible"/> owns it. Names are
     /// case-insensitive, so two names that differ only in case are refused. With
     /// <see cref="SessionOptions.AllowedEnvironmentVariables"/> set, only the names listed there are accepted.
+    /// Null means none.
     /// </summary>
-    public IReadOnlyDictionary<string, string> EnvironmentVariables { get; init; } = new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, string> EnvironmentVariables
+    {
+        get => _environmentVariables;
+        init => _environmentVariables = value ?? NoVariables;
+    }
 
     /// <summary>
     /// Show the Target App's windows. By default an app launched with the Companion runs hidden: its
