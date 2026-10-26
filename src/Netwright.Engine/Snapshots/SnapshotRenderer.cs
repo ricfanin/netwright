@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Netwright.Engine.Model;
 using Netwright.Engine.Refs;
+using Netwright.Engine.Selectors;
 using Netwright.Engine.Uia;
 
 namespace Netwright.Engine.Snapshots;
@@ -255,7 +256,7 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         if (node.AutomationId.Length > 0 && !string.Equals(node.AutomationId, node.Name, StringComparison.Ordinal) &&
             node.ControlTypeId is not (ControlTypeIds.ListItem or ControlTypeIds.DataItem or ControlTypeIds.TreeItem))
         {
-            sb.Append(' ').Append(Selectors.SelectorStep.FormatAutomationId(node.AutomationId));
+            sb.Append(' ').Append(SelectorStep.FormatAutomationId(node.AutomationId));
         }
 
         if (!attributes)
