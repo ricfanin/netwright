@@ -50,6 +50,8 @@ namespace Netwright.Fixtures.WinForms
         // Keyboard tab
         private readonly Label _lblLastKey = new Label();
         private readonly Label _lblMouse = new Label();
+        private readonly CheckBox _chkSlow = new CheckBox();
+        private readonly Label _lblSlow = new Label();
 
         // Scroll tab
         private readonly Label _lblScrollClicked = new Label();
@@ -536,6 +538,17 @@ namespace Netwright.Fixtures.WinForms
 
             ConfigureLabel(_lblMouse, "lblMouse", "Mouse: none", new Point(FieldLeft + 220, y + 40), 250);
             page.Controls.Add(_lblMouse);
+            y += 116;
+
+            _chkSlow.Name = "chkSlow";
+            _chkSlow.Text = "Slow work";
+            _chkSlow.Location = new Point(FieldLeft, y);
+            _chkSlow.Size = new Size(110, 24);
+            _chkSlow.CheckedChanged += OnSlowCheckedChanged;
+            page.Controls.Add(_chkSlow);
+
+            ConfigureLabel(_lblSlow, "lblSlow", string.Empty, new Point(FieldLeft + 120, y + 4), 250);
+            page.Controls.Add(_lblSlow);
 
             return page;
         }
@@ -558,6 +571,18 @@ namespace Netwright.Fixtures.WinForms
             {
                 _lblMouse.Text = "Mouse: double";
             }
+        }
+
+        private void OnSlowCheckedChanged(object? sender, EventArgs e)
+        {
+            if (!_chkSlow.Checked)
+            {
+                return;
+            }
+
+            // Blocks the UI thread on purpose: a slow handler that opens no window.
+            System.Threading.Thread.Sleep(3000);
+            _lblSlow.Text = "Slow work done";
         }
 
         // ------------------------------------------------------------------ Scroll tab

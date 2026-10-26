@@ -1,5 +1,6 @@
 using Netwright.Engine.Diagnostics;
 using Netwright.Engine.Input;
+using Netwright.Engine.Model;
 using Netwright.Engine.Refs;
 using Netwright.Engine.Session;
 using Netwright.Engine.Uia;
@@ -201,5 +202,90 @@ public class ArgumentQuotingTests
     public void Quotes_arguments_with_spaces_and_quotes()
     {
         Assert.Equal("--tab Grid \"C:\\My Files\\a.txt\" \"say \\\"hi\\\"\" \"\"", DesktopSession.JoinArguments(["--tab", "Grid", "C:\\My Files\\a.txt", "say \"hi\"", ""]));
+    }
+}
+
+public class BlockedCallNoteTests
+{
+    private static UiNode Win(string title, string key, params UiNode[] children) =>
+        Node(ControlTypeIds.Window, title, patterns: UiPatterns.Window, key: key, children: children);
+
+    [Fact]
+    public void Names_the_dialog_only_when_a_window_opened()
+    {
+        var before = Tree(Win("Main", "w", Button("Delete", key: "del")));
+        var withDialog = Tree(Win("Main", "w", Button("Delete", key: "del"), Win("Confirm", "dlg", Button("Yes"))));
+
+        var note = DesktopSession.BlockedCallNote(before, withDialog, returned: false, 1600, n => $"window \"{n.Name}\"");
+
+        Assert.Contains("opened a modal dialog: window \"Confirm\"", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Names_the_window_a_call_opened_before_it_returned()
+    {
+        var before = Tree(Win("Main", "w", Button("Open", key: "open")));
+        var after = Tree(Win("Main", "w", Button("Open", key: "open"), Win("Tool Window", "tool", Button("Close"))));
+
+        var note = DesktopSession.BlockedCallNote(before, after, returned: true, 1600, n => $"window \"{n.Name}\"");
+
+        Assert.Equal("The call returned only after a new window opened: window \"Tool Window\".", note);
+    }
+
+    [Fact]
+    public void A_call_that_returned_late_keeps_the_action_note()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.LateCallNote(Task.CompletedTask, () => "Bindings were not committed.", tree, tree, 1600, n => n.Name);
+
+        Assert.StartsWith("The Target App was busy for 1600 ms", note, StringComparison.Ordinal);
+        Assert.EndsWith(" Bindings were not committed.", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_still_running_does_not_read_the_action_note()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var running = new TaskCompletionSource();
+
+        var note = DesktopSession.LateCallNote(running.Task, () => throw new InvalidOperationException("read the note of a running call"), tree, tree, 1600, n => n.Name);
+
+        Assert.Contains("has not returned after 1600 ms", note, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false, "has not returned after 1600 ms")]
+    [InlineData(true, "was busy for 1600 ms")]
+    public void Reports_a_busy_ui_thread_when_no_window_opened(bool returned, string expected)
+    {
+        var before = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var after = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.BlockedCallNote(before, after, returned, 1600, n => n.Name);
+
+        Assert.Contains(expected, note, StringComparison.Ordinal);
+        Assert.DoesNotContain("dialog", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_that_failed_late_rethrows_its_exception()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var failure = new InvalidOperationException("perform failed");
+
+        var thrown = Assert.Throws<InvalidOperationException>(() =>
+            DesktopSession.LateCallNote(Task.FromException(failure), () => null, tree, tree, 1600, n => n.Name));
+
+        Assert.Same(failure, thrown);
+    }
+
+    [Fact]
+    public void A_call_that_was_cancelled_late_rethrows_the_cancellation()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        Assert.ThrowsAny<OperationCanceledException>(() =>
+            DesktopSession.LateCallNote(Task.FromCanceled(new CancellationToken(canceled: true)), () => null, tree, tree, 1600, n => n.Name));
     }
 }

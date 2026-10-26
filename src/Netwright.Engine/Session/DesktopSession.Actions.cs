@@ -493,9 +493,12 @@ public sealed partial class DesktopSession
 
             try
             {
+                var workTime = Stopwatch.StartNew();
                 var work = Task.Run(() => perform(context), cancellationToken);
+                _ = work.ContinueWith(_ => workTime.Stop(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 var finished = await Task.WhenAny(work, Task.Delay(_options.BlockingCallTimeoutMs, cancellationToken)).ConfigureAwait(false);
-                if (finished == work)
+                var blocked = finished != work;
+                if (!blocked)
                 {
                     await work.ConfigureAwait(false);
                     if (context.Note is { } actionNote)
@@ -507,7 +510,6 @@ public sealed partial class DesktopSession
                 {
                     context.Abandoned = true;
                     _ = work.ContinueWith(t => _ = t.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
-                    note = "The call is still running inside the Target App, which usually means it opened a modal dialog.";
                     if (context.Summary.Length == 0)
                     {
                         context.Summary = $"{kind} on {Line(node)}";
@@ -520,6 +522,11 @@ public sealed partial class DesktopSession
                 }
 
                 var (after, settled) = await SettleAsync(cancellationToken).ConfigureAwait(false);
+                if (blocked)
+                {
+                    note = Append(note, LateCallNote(work, () => context.Note, before, after, workTime.ElapsedMilliseconds, Line));
+                }
+
                 if (foreground && !revealed && (keepFocus || after.Windows.Any(w => before.Find(w.Key) is null)))
                 {
                     scope.KeepFocus();
@@ -556,6 +563,43 @@ public sealed partial class DesktopSession
                 }
             }
         }, cancellationToken);
+
+    /// <summary>
+    /// The note for a call that did not return within <see cref="SessionOptions.BlockingCallTimeoutMs"/>,
+    /// judged once the UI Settled. A call that failed in the meantime rethrows its exception, as awaiting
+    /// it in time would have; a call that returned keeps the action's own note.
+    /// </summary>
+    internal static string LateCallNote(Task work, Func<string?> actionNote, UiTree before, UiTree after, long elapsedMs, Func<UiNode, string> line)
+    {
+        // Read the status once, so a call that ends during this method is not reported both ways.
+        var status = work.Status;
+        if (status is TaskStatus.Faulted or TaskStatus.Canceled)
+        {
+            work.GetAwaiter().GetResult();
+        }
+
+        var returned = status == TaskStatus.RanToCompletion;
+        var note = BlockedCallNote(before, after, returned, elapsedMs, line);
+        return returned && actionNote() is { } late ? note + " " + late : note;
+    }
+
+    /// <summary>
+    /// Explains a call that did not return within <see cref="SessionOptions.BlockingCallTimeoutMs"/>: a
+    /// modal dialog only when a new window actually appeared, otherwise a busy UI thread.
+    /// </summary>
+    internal static string BlockedCallNote(UiTree before, UiTree after, bool returned, long elapsedMs, Func<UiNode, string> line)
+    {
+        if (after.AllNodes.FirstOrDefault(n => n.ControlTypeId == ControlTypeIds.Window && before.Find(n.Key) is null) is { } opened)
+        {
+            return returned
+                ? $"The call returned only after a new window opened: {line(opened)}."
+                : $"The call is still running inside the Target App because it opened a modal dialog: {line(opened)}.";
+        }
+
+        return returned
+            ? string.Create(CultureInfo.InvariantCulture, $"The Target App was busy for {elapsedMs} ms before the call returned; no window opened.")
+            : string.Create(CultureInfo.InvariantCulture, $"The call has not returned after {elapsedMs} ms: the Target App's UI thread is busy, and no window opened. Wait with desktop_wait before the next action.");
+    }
 
     /// <summary>Shows or hides again a window of a hidden Target App; false when the app is not hidden.</summary>
     private bool Reveal(nint window, bool revealed) =>

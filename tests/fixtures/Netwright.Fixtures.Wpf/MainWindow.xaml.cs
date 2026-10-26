@@ -174,5 +174,12 @@ public partial class MainWindow : Window
         lblMouse.Text = "Mouse: right";
     }
 
+    private void ChkSlow_Checked(object sender, RoutedEventArgs e)
+    {
+        // Blocks the UI thread on purpose: a slow handler that opens no window.
+        Thread.Sleep(3000);
+        lblSlow.Text = "Slow work done";
+    }
+
     private sealed record Order(int Id, string Customer, string Amount);
 }
