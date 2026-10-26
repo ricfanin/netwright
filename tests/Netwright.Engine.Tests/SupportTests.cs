@@ -261,6 +261,39 @@ public class BlockedCallNoteTests
         Assert.Contains("opened a modal dialog: window \"Confirm\"", note, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Names_the_window_a_call_opened_before_it_returned()
+    {
+        var before = Tree(Win("Main", "w", Button("Open", key: "open")));
+        var after = Tree(Win("Main", "w", Button("Open", key: "open"), Win("Tool Window", "tool", Button("Close"))));
+
+        var note = DesktopSession.BlockedCallNote(before, after, returned: true, 1600, n => $"window \"{n.Name}\"");
+
+        Assert.Equal("The call returned only after a new window opened: window \"Tool Window\".", note);
+    }
+
+    [Fact]
+    public void A_call_that_returned_late_keeps_the_action_note()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.LateCallNote(Task.CompletedTask, () => "Bindings were not committed.", tree, tree, 1600, n => n.Name);
+
+        Assert.StartsWith("The Target App was busy for 1600 ms", note, StringComparison.Ordinal);
+        Assert.EndsWith(" Bindings were not committed.", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_still_running_does_not_read_the_action_note()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var running = new TaskCompletionSource();
+
+        var note = DesktopSession.LateCallNote(running.Task, () => throw new InvalidOperationException("read the note of a running call"), tree, tree, 1600, n => n.Name);
+
+        Assert.Contains("has not returned after 1600 ms", note, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData(false, "has not returned after 1600 ms")]
     [InlineData(true, "was busy for 1600 ms")]
