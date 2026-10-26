@@ -15,6 +15,9 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
           --allow <pattern>         Only allow launching/attaching apps whose path or name matches.
                                     Wildcards * and ? are supported; repeat for several patterns.
                                     Also read from NETWRIGHT_ALLOW (separated by ';').
+          --allow-env <name>        Let desktop_app launch set this environment variable (case-insensitive);
+                                    repeat for several names. None is allowed by default.
+                                    Also read from NETWRIGHT_ALLOW_ENV (separated by ';').
           --action-timeout <ms>     How long actions wait for an element to be actionable (default 5000).
           --settle-timeout <ms>     Upper bound for waiting until the UI settles (default 3000).
           --max-snapshot-lines <n>  Line budget of a snapshot (default 300).
@@ -26,6 +29,7 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
     {
         var session = new SessionOptions();
         var allowed = new List<string>();
+        var allowedEnvironment = new List<string>();
         var help = false;
         var version = false;
 
@@ -34,12 +38,20 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
             allowed.AddRange(fromEnvironment.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
         }
 
+        if (environment("NETWRIGHT_ALLOW_ENV") is { Length: > 0 } namesFromEnvironment)
+        {
+            allowedEnvironment.AddRange(namesFromEnvironment.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
+
         for (var i = 0; i < args.Length; i++)
         {
             switch (args[i])
             {
                 case "--allow":
                     allowed.Add(Value(args, ref i));
+                    break;
+                case "--allow-env":
+                    allowedEnvironment.Add(Value(args, ref i));
                     break;
                 case "--action-timeout":
                     session = session with { ActionTimeoutMs = PositiveInt(args, ref i) };
@@ -61,7 +73,8 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
             }
         }
 
-        return new ServerOptions(session with { AllowedApps = allowed }, help, version);
+        // Never null here: an Agent may set only the variables the User listed, none by default.
+        return new ServerOptions(session with { AllowedApps = allowed, AllowedEnvironmentVariables = allowedEnvironment }, help, version);
     }
 
     private static string Value(string[] args, ref int i)

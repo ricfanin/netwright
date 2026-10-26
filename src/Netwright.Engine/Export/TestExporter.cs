@@ -92,7 +92,14 @@ public static class TestExporter
                 var arguments = step.Argument("arguments") is { Length: > 0 } a
                     ? string.Concat(a.Split(ArgumentSeparator).Select(x => ", " + Literal(x)))
                     : "";
-                if (step.Argument("project") is { } project)
+                if (step.Argument("environment") is { Length: > 0 } environment)
+                {
+                    foreach (var line in LaunchWithEnvironment(step, environment))
+                    {
+                        yield return line;
+                    }
+                }
+                else if (step.Argument("project") is { } project)
                 {
                     var framework = step.Argument("framework") is { } f ? Literal(f) : "null";
                     yield return $"await using var app = await DesktopApp.LaunchProjectAsync({Literal(project)}, {framework}{arguments});";
@@ -210,6 +217,44 @@ public static class TestExporter
 
                 break;
         }
+    }
+
+    /// <summary>A launch that sets environment variables goes through <c>DesktopApp.StartAsync</c> with a full request.</summary>
+    private static IEnumerable<string> LaunchWithEnvironment(RecordedStep step, string environment)
+    {
+        yield return "await using var app = await DesktopApp.StartAsync(new LaunchRequest";
+        yield return "{";
+        if (step.Argument("project") is { } project)
+        {
+            yield return $"    Project = {Literal(project)},";
+            if (step.Argument("framework") is { } framework)
+            {
+                yield return $"    Framework = {Literal(framework)},";
+            }
+
+            yield return "    TimeoutMs = 120000,";
+        }
+        else
+        {
+            yield return $"    Path = {Literal(step.Argument("path") ?? "")},";
+        }
+
+        if (step.Argument("arguments") is { Length: > 0 } arguments)
+        {
+            yield return $"    Arguments = [{string.Join(", ", arguments.Split(ArgumentSeparator).Select(Literal))}],";
+        }
+
+        yield return "    EnvironmentVariables = new System.Collections.Generic.Dictionary<string, string>";
+        yield return "    {";
+        foreach (var variable in environment.Split(ArgumentSeparator))
+        {
+            var separator = variable.IndexOf('=', StringComparison.Ordinal);
+            yield return $"        [{Literal(variable[..separator])}] = {Literal(variable[(separator + 1)..])},";
+        }
+
+        yield return "    },";
+        yield return "});";
+        yield return "";
     }
 
     private static string ExpectationCall(Assertion assertion, string? expected) => assertion switch

@@ -34,13 +34,14 @@ public sealed class DesktopTools(DesktopSession session)
         string? process = null,
         [Description("Kill on close")] bool force = false,
         [Description("Show the launched app's windows (hidden by default)")] bool visible = false,
+        [Description("Extra environment variables for launch; names need --allow-env")] Dictionary<string, string>? env = null,
         CancellationToken cancellationToken = default) =>
         RunAsync(async () =>
         {
             switch (Normalize(action))
             {
                 case "launch":
-                    var launched = await session.LaunchAsync(new LaunchRequest { Path = path, Project = project, Arguments = args ?? [], Framework = framework, Visible = visible }, cancellationToken);
+                    var launched = await session.LaunchAsync(new LaunchRequest { Path = path, Project = project, Arguments = args ?? [], Framework = framework, Visible = visible, EnvironmentVariables = env ?? new Dictionary<string, string>() }, cancellationToken);
                     return Reply.Text(StatusText(launched, "Launched"));
                 case "attach":
                     var attached = await session.AttachAsync(AttachRequestFor(process), cancellationToken);

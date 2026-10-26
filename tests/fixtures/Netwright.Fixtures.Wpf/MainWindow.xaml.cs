@@ -19,6 +19,11 @@ public partial class MainWindow : Window
 
         txtBound.DataContext = lblBound.DataContext = new BoundModel();
 
+        // Collapsed unless set, so Snapshots of ordinary launches (and the benchmark) do not change.
+        var env = Environment.GetEnvironmentVariable("NETWRIGHT_FIXTURE_ENV");
+        lblEnv.Text = $"Env: {env}";
+        lblEnv.Visibility = env is null ? Visibility.Collapsed : Visibility.Visible;
+
         cmbCountry.ItemsSource = Countries;
         cmbCountry.SelectedIndex = -1;
 

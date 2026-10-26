@@ -26,7 +26,7 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         {
             Name = "netwright",
             Command = server,
-            Arguments = ["--action-timeout", "1500"],
+            Arguments = ["--action-timeout", "1500", "--allow-env", "netwright_fixture_env"],
         }));
     }
 
@@ -144,6 +144,37 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
 
         Assert.Null(result.StructuredContent);
         Assert.Contains("#txtName", Assert.Single(result.Content.OfType<TextContentBlock>()).Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Launch_passes_environment_variables_from_a_json_object()
+    {
+        await Call("desktop_app", new
+        {
+            action = "launch",
+            path = Fixtures.ExecutablePath(FixtureKind.Wpf),
+            args = new[] { "--no-activate" },
+            env = new Dictionary<string, string> { ["NETWRIGHT_FIXTURE_ENV"] = "over mcp" },
+        });
+
+        var expect = await Call("desktop_expect", new { target = "#lblEnv", assertion = "text", expected = "Env: over mcp" });
+        Assert.StartsWith("pass:", expect, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Launch_refuses_environment_variables_the_user_did_not_allow()
+    {
+        var refused = await Call("desktop_app", new
+        {
+            action = "launch",
+            path = Fixtures.ExecutablePath(FixtureKind.Wpf),
+            args = new[] { "--no-activate" },
+            env = new Dictionary<string, string> { ["DOTNET_STARTUP_HOOKS"] = @"\\attacker\share\hook.dll" },
+        }, expectError: true);
+
+        Assert.StartsWith("error NOT_ALLOWED:", refused, StringComparison.Ordinal);
+        Assert.Contains("--allow-env DOTNET_STARTUP_HOOKS", refused, StringComparison.Ordinal);
+        Assert.StartsWith("error NO_APP:", await Call("desktop_snapshot", expectError: true), StringComparison.Ordinal);
     }
 
     private async Task<string> Call(string tool, object? arguments = null, bool expectError = false)

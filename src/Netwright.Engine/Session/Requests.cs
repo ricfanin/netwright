@@ -8,6 +8,13 @@ public sealed record SessionOptions
     /// <summary>Wildcard patterns (<c>*</c>, <c>?</c>) matched against executable paths and names. Empty allows every app.</summary>
     public IReadOnlyList<string> AllowedApps { get; init; } = [];
 
+    /// <summary>
+    /// Names (case-insensitive) that <see cref="LaunchRequest.EnvironmentVariables"/> may set. Null, the
+    /// default, allows every name: code that builds a <see cref="LaunchRequest"/> is trusted. The MCP server
+    /// sets the list from <c>--allow-env</c>, so an Agent can set no variable the User did not allow.
+    /// </summary>
+    public IReadOnlyList<string>? AllowedEnvironmentVariables { get; init; }
+
     /// <summary>How long an action waits for its element to exist and be Actionable.</summary>
     public int ActionTimeoutMs { get; init; } = 5000;
 
@@ -33,6 +40,10 @@ public sealed record SessionOptions
 
 public sealed record LaunchRequest
 {
+    private static readonly IReadOnlyDictionary<string, string> NoVariables = new Dictionary<string, string>();
+
+    private readonly IReadOnlyDictionary<string, string> _environmentVariables = NoVariables;
+
     public string? Path { get; init; }
 
     public string? Project { get; init; }
@@ -46,6 +57,21 @@ public sealed record LaunchRequest
     public string? Framework { get; init; }
 
     public int TimeoutMs { get; init; } = 30000;
+
+    /// <summary>
+    /// Environment variables set for the Target App on top of the inherited environment, for apps that
+    /// change their UI Automation tree by environment (DevExpress <c>DX.UITESTINGENABLED=1</c>). They are
+    /// applied before the Companion is added: <c>DOTNET_STARTUP_HOOKS</c> keeps its hooks and the Companion
+    /// is appended, and <c>NETWRIGHT_HIDDEN</c> is refused because <see cref="Visible"/> owns it. Names are
+    /// case-insensitive, so two names that differ only in case are refused. With
+    /// <see cref="SessionOptions.AllowedEnvironmentVariables"/> set, only the names listed there are accepted.
+    /// Null means none.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> EnvironmentVariables
+    {
+        get => _environmentVariables;
+        init => _environmentVariables = value ?? NoVariables;
+    }
 
     /// <summary>
     /// Show the Target App's windows. By default an app launched with the Companion runs hidden: its

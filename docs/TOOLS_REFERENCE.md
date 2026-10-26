@@ -86,6 +86,7 @@ Launch, attach to, close, or inspect the Target App. A session has one Target Ap
 | `process` | attach: process id, process name, or part of a window title |
 | `force` | close: kill instead of asking the app to close |
 | `visible` | launch: show the app's windows (hidden by default) |
+| `env` | launch: environment variables for the app on top of the server's environment, e.g. `{"DX.UITESTINGENABLED": "1"}`. Only names the User allowed with `--allow-env` (none by default, case-insensitive); any other name fails with `NOT_ALLOWED`, and two names that differ only in case fail with `INVALID_ARGUMENT`. `DOTNET_STARTUP_HOOKS` keeps your hooks and the Companion is added after them; `NETWRIGHT_HIDDEN` cannot be set, use `visible`. The values are written into tests from `desktop_export_test`, so pass no secrets here |
 
 ```
 > desktop_app action=launch project=src/MyApp/MyApp.csproj
@@ -266,7 +267,7 @@ public async Task Checkout_succeeds()
 | `NO_APP` | No Target App; launch or attach first |
 | `APP_EXITED` | The Target App has exited |
 | `APP_NOT_RESPONDING` | UI Automation calls time out (app busy or hung) |
-| `NOT_ALLOWED` | The app is not in the server's `--allow` list |
+| `NOT_ALLOWED` | The app is not in the server's `--allow` list, or an `env` name is not in its `--allow-env` list |
 | `LAUNCH_FAILED` / `BUILD_FAILED` | The process could not start / the project did not build (errors included) |
 | `ELEMENT_NOT_FOUND` | No element matches the Selector (after waiting) |
 | `AMBIGUOUS_SELECTOR` | Several elements match; the candidates are listed |

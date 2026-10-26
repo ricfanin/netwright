@@ -92,7 +92,7 @@ claude mcp add netwright -- dnx Netwright --yes
 }
 ```
 
-Prefer a global tool? Run `dotnet tool install -g Netwright` and use `"command": "netwright"`. To restrict which apps an agent may touch, add `"--", "--allow", "MyApp*"` to the args. See the [Integration Guide](docs/INTEGRATION_GUIDE.md) for all options.
+Prefer a global tool? Run `dotnet tool install -g Netwright` and use `"command": "netwright"`. To restrict which apps an agent may touch, add `"--", "--allow", "MyApp*"` to the args. An agent can set an environment variable for the app it launches only after you allow the name, for example `"--allow-env", "DX.UITESTINGENABLED"`. See the [Integration Guide](docs/INTEGRATION_GUIDE.md) for all options.
 
 ## Tools
 

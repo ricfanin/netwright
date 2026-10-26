@@ -77,6 +77,7 @@ dotnet tool install -g Netwright
 | Option | Default | Purpose |
 |---|---|---|
 | `--allow <pattern>` (repeatable), or `NETWRIGHT_ALLOW="a*;b.exe"` | allow all | Restrict which executables can be launched or attached. The pattern matches the full path, file name, or name without `.exe`; `*` and `?` are wildcards |
+| `--allow-env <name>` (repeatable), or `NETWRIGHT_ALLOW_ENV="A;B"` | allow none | Environment variables that `desktop_app action=launch env=…` may set, compared case-insensitively, e.g. `--allow-env DX.UITESTINGENABLED`. Any other name fails with `NOT_ALLOWED`. See [Security](#security) before allowing one |
 | `--action-timeout <ms>` | 5000 | How long actions wait for their target to be Actionable |
 | `--settle-timeout <ms>` | 3000 | Upper bound of the wait for the UI to settle after an action |
 | `--max-snapshot-lines <n>` | 300 | Line budget of a filtered Snapshot |
@@ -133,7 +134,7 @@ Every successful action and expectation is recorded with a stable Selector. Afte
 | Symptom | Cause and fix |
 |---|---|
 | The client does not list `desktop_*` tools | Run `dnx Netwright --yes -- --version` in a terminal to confirm the SDK can start it. Check the client's MCP log |
-| `NOT_ALLOWED` | The server was started with `--allow`; add a pattern for the app |
+| `NOT_ALLOWED` | The server was started with `--allow`; add a pattern for the app. For an `env` name, add `--allow-env <name>` |
 | `APP_NOT_RESPONDING` | The app's UI thread is busy or hung; UI Automation calls time out. Wait, or inspect with `desktop_logs` |
 | Attach finds the process but the Snapshot is empty | The app runs elevated. Start the MCP client elevated or run the app normally |
 | `NEEDS_FOREGROUND` on a click | The element has no click pattern (custom-drawn control); retry with `foreground=true`, or give it an AutomationPeer |
@@ -146,5 +147,6 @@ Every successful action and expectation is recorded with a stable Selector. Afte
 
 - Netwright only talks to the local machine over stdio; it opens no network ports.
 - Use `--allow` so an agent cannot operate unrelated apps, such as your mail client or password manager, on the same desktop.
+- Allow only the environment variables your app needs with `--allow-env`. An allowed variable is set by the agent, and some run code of its choice inside the app, even with `--allow` pinned to a full path: `DOTNET_STARTUP_HOOKS`, `DOTNET_ROOT`/`DOTNET_ROOT_X64`, `DOTNET_ADDITIONAL_DEPS`, `DOTNET_SHARED_STORE`, the `CORECLR_*` and `COR_*` profiler variables, and `PATH` all make the app load code from a path the agent picks. A prompt injection in the app's UI is enough to make an agent try it.
 - Snapshots, values and screenshots are sent to the model. Password fields are masked as `value=***`, but screenshots show whatever is on screen.
 - `desktop_app`, `desktop_click`, `desktop_press_key` and `desktop_window` are annotated as destructive, and read-only tools as read-only, so clients can ask for confirmation selectively.

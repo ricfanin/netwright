@@ -60,6 +60,25 @@ public sealed class HiddenTests
         Assert.All(TopLevelWindows(status.ProcessId), window => Assert.False(IsHidden(window)));
     }
 
+    [Fact]
+    public async Task Startup_hooks_passed_in_env_still_load_the_companion()
+    {
+        Fixtures.KillStrays();
+        await using var session = new DesktopSession();
+        var status = await session.LaunchAsync(new LaunchRequest
+        {
+            Path = Fixtures.ExecutablePath(FixtureKind.Wpf),
+            Arguments = ["--no-activate"],
+            // An empty entry and the Companion itself: the merge drops both, so the Companion loads once.
+            EnvironmentVariables = new Dictionary<string, string> { ["DOTNET_STARTUP_HOOKS"] = ";" + Engine.Companion.CompanionClient.AssemblyPath },
+        });
+
+        // Only the Companion cloaks the windows, so hidden windows prove it loaded.
+        Assert.All(TopLevelWindows(status.ProcessId), window => Assert.True(IsHidden(window)));
+        await session.TypeAsync("#txtName", new TypeRequest { Text = "Ada" });
+        await session.ExpectAsync("#txtName", new ExpectRequest { Assertion = Assertion.Text, Expected = "Ada" });
+    }
+
     private static List<nint> TopLevelWindows(int processId)
     {
         var windows = new List<nint>();
