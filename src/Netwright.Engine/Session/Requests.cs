@@ -61,7 +61,8 @@ public sealed record LaunchRequest
     /// Environment variables set for the Target App on top of the inherited environment, for apps that
     /// change their UI Automation tree by environment (DevExpress <c>DX.UITESTINGENABLED=1</c>). They are
     /// applied before the Companion is added: <c>DOTNET_STARTUP_HOOKS</c> keeps its hooks and the Companion
-    /// is appended, and <c>NETWRIGHT_HIDDEN</c> is refused because <see cref="Visible"/> owns it. With
+    /// is appended, and <c>NETWRIGHT_HIDDEN</c> is refused because <see cref="Visible"/> owns it. Names are
+    /// case-insensitive, so two names that differ only in case are refused. With
     /// <see cref="SessionOptions.AllowedEnvironmentVariables"/> set, only the names listed there are accepted.
     /// </summary>
     public IReadOnlyDictionary<string, string> EnvironmentVariables { get; init; } = new Dictionary<string, string>();

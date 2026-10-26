@@ -590,11 +590,13 @@ public sealed partial class DesktopSession : IAsyncDisposable
     }
 
     /// <summary>
-    /// Refuses malformed names and <c>NETWRIGHT_HIDDEN</c>, and, when <paramref name="allowed"/> is set,
-    /// every name not in it: a variable such as <c>DOTNET_STARTUP_HOOKS</c> runs code in the Target App.
+    /// Refuses malformed names, <c>NETWRIGHT_HIDDEN</c>, names that differ only in case, and, when
+    /// <paramref name="allowed"/> is set, every name not in it: a variable such as
+    /// <c>DOTNET_STARTUP_HOOKS</c> runs code in the Target App.
     /// </summary>
     internal static void ValidateEnvironment(IReadOnlyDictionary<string, string> variables, IReadOnlyList<string>? allowed)
     {
+        var seen = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var name in variables.Keys)
         {
             if (string.IsNullOrWhiteSpace(name) || name.Contains('=', StringComparison.Ordinal) || name.Contains('\0', StringComparison.Ordinal))
@@ -606,6 +608,12 @@ public sealed partial class DesktopSession : IAsyncDisposable
             if (CompanionClient.IsHiddenVariable(name))
             {
                 throw NetwrightException.InvalidArgument($"{name} cannot be set: it follows visible.", "Leave it out of env and pass visible=true to show the app.");
+            }
+
+            // Windows names are case-insensitive: one of the two would win silently, and the export would replay both.
+            if (!seen.TryAdd(name, name))
+            {
+                throw NetwrightException.InvalidArgument($"{seen[name]} and {name} are the same environment variable.", "Environment variable names are case-insensitive; set each one once.");
             }
 
             if (allowed is not null && !allowed.Any(a => string.Equals(a.Trim(), name, StringComparison.OrdinalIgnoreCase)))

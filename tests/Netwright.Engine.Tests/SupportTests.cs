@@ -296,4 +296,13 @@ public class LaunchEnvironmentTests
         Assert.Equal(ErrorCodes.NotAllowed, error.Code);
         Assert.Contains("allows no environment variables", error.Hint, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Refuses_names_that_differ_only_in_case()
+    {
+        var error = Assert.Throws<NetwrightException>(() => DesktopSession.ValidateEnvironment(Env("Foo", "FOO"), allowed: null));
+
+        Assert.Equal(ErrorCodes.InvalidArgument, error.Code);
+        Assert.Contains("Foo and FOO", error.Message, StringComparison.Ordinal);
+    }
 }
