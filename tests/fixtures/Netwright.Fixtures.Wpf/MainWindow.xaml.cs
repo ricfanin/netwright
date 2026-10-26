@@ -142,8 +142,6 @@ public partial class MainWindow : Window
 
     private void BtnLater_Click(object sender, RoutedEventArgs e) => lblLater.Text = "Later clicked";
 
-    private void BarAction_Click(object sender, RoutedEventArgs e) => lblAction.Text = $"Action: {((Button)sender).Content}";
-
     // ---- Tree ----
 
     private void TreeFolders_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -153,6 +151,8 @@ public partial class MainWindow : Window
             lblSelectedNode.Text = $"Selected: {item.Header}";
         }
     }
+
+    private void BarAction_Click(object sender, RoutedEventArgs e) => lblAction.Text = $"Action: {((Button)sender).Content}";
 
     // ---- Keyboard ----
 

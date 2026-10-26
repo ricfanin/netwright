@@ -57,8 +57,6 @@ Rules:
 | `btnEnableLater` | Button | `Enable later` | After **1000 ms**, enables `btnLater` |
 | `btnLater` | Button | `Later` | Disabled initially. When clicked, sets `lblLater` to `Later clicked` |
 | `lblLater` | Label | `` | |
-| `barActions` | ItemsControl | Name `Actions` | **WPF only** (a WinUI ItemsControl does not wrap its items in DataItems). Items `Approve` and `Reject`, each rendered as a Button (`btnActionApprove`, `btnActionReject`) through the item template. UI Automation shows each item as a DataItem holding the button. Clicking one sets `lblAction` to `Action: {item}` |
-| `lblAction` | Label | `Action: none` | **WPF only.** |
 
 **Tab "Grid"** (`tabGrid`)
 
@@ -73,6 +71,8 @@ Rules:
 | `treeFolders` | TreeView | Name `Folders` | `Root` › (`Documents` › (`Invoices`, `Reports`), `Pictures`). Everything collapsed initially |
 | `lblSelectedNode` | Label | `` | On selection: `Selected: {node text}` |
 | `expAdvanced` | Expander | `Advanced` | **WPF/WinUI only.** Collapsed initially and contains CheckBox `chkVerbose` "Verbose logging" |
+| `barActions` | ItemsControl | Name `Actions` | **WPF only** (a WinUI ItemsControl does not wrap its items in DataItems). Items `Approve` and `Reject`, each rendered as a Button (`btnActionApprove`, `btnActionReject`) through the item template. UI Automation shows each item as a DataItem holding the button. Clicking one sets `lblAction` to `Action: {item}`. Kept off the tabs the Benchmark snapshots |
+| `lblAction` | Label | `Action: none` | **WPF only.** |
 
 **Tab "Keyboard"** (`tabKeyboard`)
 

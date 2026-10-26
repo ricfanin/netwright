@@ -352,7 +352,7 @@ public sealed partial class SessionTests(ITestOutputHelper output)
     [Fact]
     public async Task Rows_show_the_controls_they_hold()
     {
-        await using var session = await Fixtures.LaunchAsync(FixtureKind.Wpf, "Async");
+        await using var session = await Fixtures.LaunchAsync(FixtureKind.Wpf, "Tree");
 
         var bar = (await session.SnapshotAsync("#barActions")).Text;
         var full = (await session.SnapshotAsync("#barActions", new Engine.Snapshots.SnapshotOptions { Full = true })).Text;
