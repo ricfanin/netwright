@@ -72,6 +72,25 @@ public class ChangeReporterTests
     }
 
     [Fact]
+    public void Reports_the_controls_a_row_holds()
+    {
+        // A button bar built from an items control: each item is a DataItem holding one button.
+        static UiNode Item(string name, bool enabled) => Node(ControlTypeIds.DataItem, name, patterns: UiPatterns.SelectionItem, key: $"item-{name}",
+            children: Pane(Button(name, enabled: enabled, key: $"btn-{name}")));
+        static UiNode Bar(params UiNode[] items) => Node(ControlTypeIds.List, "Actions", key: "bar", children: items);
+        var empty = Tree(Win("Main", "w", Bar()));
+        var opened = Tree(Win("Main", "w", Bar(Item("Approve", enabled: false))));
+        var enabled = Tree(Win("Main", "w", Bar(Item("Approve", enabled: true))));
+
+        var added = ChangeReporter.Build(empty, opened, _renderer);
+        var changed = ChangeReporter.Build(opened, enabled, _renderer);
+
+        Assert.Equal(1, added.Changes);
+        Assert.Matches(@"^\+ row ""Approve"" \[e\d+\]\r?\n  \+ button ""Approve"" \[e\d+\] disabled$", added.Text);
+        Assert.Matches(@"^~ button ""Approve"" \[e\d+\]$", changed.Text);
+    }
+
+    [Fact]
     public void Refs_in_reports_match_refs_from_snapshots()
     {
         var refs = new RefRegistry();

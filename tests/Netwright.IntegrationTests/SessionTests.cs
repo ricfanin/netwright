@@ -278,6 +278,26 @@ public sealed partial class SessionTests(ITestOutputHelper output)
         await session.ExpectAsync("#lblMouse", new ExpectRequest { Assertion = Assertion.Text, Expected = "Mouse: double" });
     }
 
+    [Fact]
+    public async Task Rows_show_the_controls_they_hold()
+    {
+        await using var session = await Fixtures.LaunchAsync(FixtureKind.Wpf, "Tree");
+
+        var bar = (await session.SnapshotAsync("#barActions")).Text;
+        var full = (await session.SnapshotAsync("#barActions", new Engine.Snapshots.SnapshotOptions { Full = true })).Text;
+        output.WriteLine(bar);
+        output.WriteLine(full);
+
+        // The fixture reproduces the wrapper: UI Automation shows each item as a DataItem around the button.
+        Assert.Contains("row \"Approve\"", full, StringComparison.Ordinal);
+        Assert.Matches(@"row ""Approve"" \[e\d+\]\r?\n\s+- button ""Approve"" \[e\d+\] #btnActionApprove", bar);
+
+        var clicked = await session.ClickAsync(RefOf(bar, "#btnActionApprove"));
+
+        Assert.StartsWith("clicked button \"Approve\"", clicked.Summary, StringComparison.Ordinal);
+        Assert.Contains("Action: Approve", clicked.Changes.Text, StringComparison.Ordinal);
+    }
+
     [Theory]
     [MemberData(nameof(Kinds))]
     public async Task Windows_can_be_minimized_and_restored(FixtureKind kind)

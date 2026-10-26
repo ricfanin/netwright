@@ -23,6 +23,7 @@ internal static class TestTree
         string? value = null,
         int? rows = null,
         string? key = null,
+        bool readOnly = false,
         params UiNode[] children)
     {
         var node = new UiNode
@@ -40,6 +41,7 @@ internal static class TestTree
             IsSelected = selected,
             Expand = expand,
             Value = value,
+            ValueIsReadOnly = readOnly,
             GridRowCount = rows,
             Bounds = new Rectangle(0, 0, 10, 10),
             WindowHandle = controlType == ControlTypeIds.Window ? 1 : 0,

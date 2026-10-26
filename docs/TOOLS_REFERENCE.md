@@ -106,7 +106,7 @@ A non-forced close that does not finish within 5 s (for example because of a "sa
 | `full` | Show every element, including layout panes, scrollbars and composite parts |
 | `include_offscreen` | Include elements scrolled out of view |
 
-The default view keeps interactive elements, text and named containers. It collapses unnamed layout panes, summarizes grid rows, shows at most 20 items per list and 300 lines, and leaves out offscreen elements.
+The default view keeps interactive elements, text and named containers. It collapses unnamed layout panes, summarizes grid rows into one line (with the buttons, check boxes and editable fields a row holds listed under it, each with its own Ref), shows at most 20 items per list and 300 lines, and leaves out offscreen elements.
 
 ## desktop_find
 

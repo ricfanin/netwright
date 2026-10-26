@@ -114,6 +114,115 @@ public class SnapshotRendererTests
     }
 
     [Fact]
+    public void Shows_the_controls_inside_a_grid_row_under_its_summary()
+    {
+        // WPF DataGrid: an editable text cell has Invoke and Value itself; template cells hold controls.
+        var row = Node(ControlTypeIds.DataItem, "Row 1", patterns: UiPatterns.SelectionItem, children:
+        [
+            Node(ControlTypeIds.Custom, patterns: UiPatterns.Invoke | UiPatterns.Value, value: "1"),
+            Node(ControlTypeIds.Custom, children: Node(ControlTypeIds.Button, "Delete", patterns: UiPatterns.Invoke, children: Text("Delete"))),
+            Node(ControlTypeIds.Custom, children: Node(ControlTypeIds.CheckBox, "Paid", patterns: UiPatterns.Toggle, toggle: ToggleValue.Off)),
+        ]);
+        var grid = Node(ControlTypeIds.DataGrid, "Orders", patterns: UiPatterns.Grid, rows: 1, children: row);
+
+        var text = Renderer().Render([Window("Main", grid)]).Text;
+
+        Assert.Matches(@"- row ""1 \| Delete \| Paid"" \[e\d+\]\r?\n\s+- button ""Delete"" \[e\d+\]\r?\n\s+- checkbox ""Paid"" \[e\d+\] unchecked", text);
+        Assert.DoesNotContain("custom", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Shows_the_button_and_check_box_cells_of_a_winforms_grid_row()
+    {
+        var idCell = Node(ControlTypeIds.DataItem, "Id Row 0", patterns: UiPatterns.Value, value: "1");
+        var openCell = Node(ControlTypeIds.Button, "Open Row 0", patterns: UiPatterns.Invoke | UiPatterns.Value, value: "Open");
+        var paidCell = Node(ControlTypeIds.CheckBox, "Paid Row 0", patterns: UiPatterns.Toggle, toggle: ToggleValue.On);
+        var grid = Node(ControlTypeIds.DataGrid, "Orders", patterns: UiPatterns.Grid, rows: 1,
+            children: Node(ControlTypeIds.Custom, "Row 0", children: [idCell, openCell, paidCell]));
+
+        var renderer = Renderer();
+        var text = renderer.Render([Window("Main", grid)]).Text;
+
+        Assert.Contains("- row \"1 | Open | Paid Row 0\"", text, StringComparison.Ordinal);
+        Assert.Matches(@"- button ""Open Row 0"" \[e\d+\] value=""Open""", text);
+        Assert.Matches(@"- checkbox ""Paid Row 0"" \[e\d+\] checked", text);
+        Assert.DoesNotContain("Id Row 0", text, StringComparison.Ordinal);
+        Assert.True(renderer.IsReportable(openCell));
+        Assert.False(renderer.IsReportable(idCell));
+    }
+
+    [Fact]
+    public void Shows_the_button_of_an_item_that_wraps_a_button()
+    {
+        // A dialog button bar built from an items control: each item is a DataItem holding one button.
+        static UiNode Item(string name) => Node(ControlTypeIds.DataItem, name, patterns: UiPatterns.SelectionItem,
+            children: Pane(Node(ControlTypeIds.Button, name, patterns: UiPatterns.Invoke, children: Text(name))));
+        var note = Node(ControlTypeIds.DataItem, "Note", children:
+        [
+            Node(ControlTypeIds.Edit, "Comment", patterns: UiPatterns.Value, value: "fine"),
+            Node(ControlTypeIds.Edit, "Created", patterns: UiPatterns.Value, value: "today", readOnly: true),
+        ]);
+        var window = Window("Confirm", Node(ControlTypeIds.List, children: [Item("_Ja"), Item("_Nein"), note]));
+
+        var renderer = Renderer();
+        var text = renderer.Render([window]).Text;
+
+        Assert.Matches(@"- row ""_Ja"" \[e\d+\]\r?\n\s+- button ""_Ja"" \[e\d+\]", text);
+        Assert.Matches(@"- button ""_Nein"" \[e\d+\]", text);
+        Assert.Matches(@"- textbox ""Comment"" \[e\d+\] value=""fine""", text);
+        Assert.DoesNotContain("textbox \"Created\"", text, StringComparison.Ordinal);
+        Assert.True(renderer.IsReportable(note.Children[0]));
+        Assert.False(renderer.IsReportable(note.Children[1]));
+    }
+
+    [Fact]
+    public void Keeps_rows_nested_in_a_row_as_rows_with_their_own_controls()
+    {
+        // Master-detail: an order row holds its own button and a list of line rows, each with a button.
+        static UiNode Line(string name) => Node(ControlTypeIds.DataItem, name, patterns: UiPatterns.SelectionItem,
+            children: [Text(name), Button("Remove")]);
+        var order = Node(ControlTypeIds.DataItem, "Order 1", patterns: UiPatterns.SelectionItem, children:
+        [
+            Text("Order 1"),
+            Button("Open"),
+            Node(ControlTypeIds.List, "Lines", children: [Line("Line A"), Line("Line B"), Line("Line C")]),
+        ]);
+        var window = Window("Main", Node(ControlTypeIds.List, "Orders", children: order));
+
+        var text = Renderer(new SnapshotOptions { MaxItemsPerContainer = 2 }).Render([window]).Text;
+
+        Assert.Equal(
+            """
+            - window "Main" [e1]
+              - list "Orders" [e2]
+                - row "Order 1 | Open | Lines" [e3]
+                  - button "Open" [e4]
+                  - row "Line A | Remove" [e5]
+                    - button "Remove" [e6]
+                  - row "Line B | Remove" [e7]
+                    - button "Remove" [e8]
+                  - ... 1 more items
+            """.ReplaceLineEndings(),
+            text.ReplaceLineEndings());
+    }
+
+    [Fact]
+    public void Shows_the_radio_buttons_a_row_holds()
+    {
+        // UI Automation radio buttons expose SelectionItem, not Toggle.
+        static UiNode Option(string name, bool selected) => Node(ControlTypeIds.DataItem, name, patterns: UiPatterns.SelectionItem,
+            children: Node(ControlTypeIds.RadioButton, name, patterns: UiPatterns.SelectionItem, selected: selected));
+        var options = Node(ControlTypeIds.List, "Shipping", children: [Option("Standard", true), Option("Express", false)]);
+
+        var renderer = Renderer();
+        var text = renderer.Render([Window("Main", options)]).Text;
+
+        Assert.Matches(@"- row ""Standard"" \[e\d+\]\r?\n\s+- radio ""Standard"" \[e\d+\] checked", text);
+        Assert.Matches(@"- row ""Express"" \[e\d+\]\r?\n\s+- radio ""Express"" \[e\d+\] unchecked", text);
+        Assert.True(renderer.IsReportable(options.Children[1].Children[0]));
+    }
+
+    [Fact]
     public void Hides_the_parts_of_composite_controls()
     {
         var slider = Node(ControlTypeIds.Slider, "Quantity", patterns: UiPatterns.RangeValue, children: [Node(ControlTypeIds.Button, "", "IncreaseLarge", UiPatterns.Invoke)]);

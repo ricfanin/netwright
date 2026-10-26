@@ -19,6 +19,8 @@ public partial class MainWindow : Window
 
         txtBound.DataContext = lblBound.DataContext = new BoundModel();
 
+        barActions.ItemsSource = new[] { "Approve", "Reject" };
+
         cmbCountry.ItemsSource = Countries;
         cmbCountry.SelectedIndex = -1;
 
@@ -149,6 +151,8 @@ public partial class MainWindow : Window
             lblSelectedNode.Text = $"Selected: {item.Header}";
         }
     }
+
+    private void BarAction_Click(object sender, RoutedEventArgs e) => lblAction.Text = $"Action: {((Button)sender).Content}";
 
     // ---- Keyboard ----
 
