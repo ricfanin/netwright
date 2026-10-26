@@ -191,6 +191,22 @@ public class SnapshotRendererTests
     }
 
     [Fact]
+    public void Shows_the_radio_buttons_a_row_holds()
+    {
+        // UI Automation radio buttons expose SelectionItem, not Toggle.
+        static UiNode Option(string name, bool selected) => Node(ControlTypeIds.DataItem, name, patterns: UiPatterns.SelectionItem,
+            children: Node(ControlTypeIds.RadioButton, name, patterns: UiPatterns.SelectionItem, selected: selected));
+        var options = Node(ControlTypeIds.List, "Shipping", children: [Option("Standard", true), Option("Express", false)]);
+
+        var renderer = Renderer();
+        var text = renderer.Render([Window("Main", options)]).Text;
+
+        Assert.Matches(@"- row ""Standard"" \[e\d+\]\r?\n\s+- radio ""Standard"" \[e\d+\] checked", text);
+        Assert.Matches(@"- row ""Express"" \[e\d+\]\r?\n\s+- radio ""Express"" \[e\d+\] unchecked", text);
+        Assert.True(renderer.IsReportable(options.Children[1].Children[0]));
+    }
+
+    [Fact]
     public void Hides_the_parts_of_composite_controls()
     {
         var slider = Node(ControlTypeIds.Slider, "Quantity", patterns: UiPatterns.RangeValue, children: [Node(ControlTypeIds.Button, "", "IncreaseLarge", UiPatterns.Invoke)]);

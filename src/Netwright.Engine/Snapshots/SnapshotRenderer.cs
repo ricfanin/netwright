@@ -474,20 +474,26 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
     }
 
     /// <summary>
-    /// An element inside a row that can be invoked, toggled or edited. A grid's own cells stay in the
-    /// row summary (an editable WPF cell has Invoke and Value), unless the cell is a control itself,
-    /// like the button and check box cells of a WinForms DataGridView.
+    /// An element inside a row that can be invoked, toggled, selected as a radio button or edited. A
+    /// grid's own cells stay in the row summary (an editable WPF cell has Invoke and Value), unless the
+    /// cell is a control itself, like the button and check box cells of a WinForms DataGridView.
     /// </summary>
     internal static bool IsRowAction(UiNode node)
     {
-        if (!node.Has(UiPatterns.Invoke) && !node.Has(UiPatterns.Toggle) && !(node.Has(UiPatterns.Value) && !node.ValueIsReadOnly))
+        // UI Automation radio buttons expose SelectionItem, not Toggle.
+        var acts = node.Has(UiPatterns.Invoke) || node.Has(UiPatterns.Toggle) ||
+                   (node.ControlTypeId == ControlTypeIds.RadioButton && node.Has(UiPatterns.SelectionItem)) ||
+                   (node.Has(UiPatterns.Value) && !node.ValueIsReadOnly);
+        if (!acts)
         {
             return false;
         }
 
-        var isCell = node.Parent is { } row && IsGridRow(row) && IsGridContainer(row.Parent);
-        return !isCell || node.ControlTypeId is ControlTypeIds.Button or ControlTypeIds.CheckBox or ControlTypeIds.RadioButton or ControlTypeIds.Hyperlink;
+        return !IsCell(node) || node.ControlTypeId is ControlTypeIds.Button or ControlTypeIds.CheckBox or ControlTypeIds.RadioButton or ControlTypeIds.Hyperlink;
     }
+
+    /// <summary>A cell of a grid row: a direct child of a row that sits in a DataGrid or Table.</summary>
+    private static bool IsCell(UiNode node) => node.Parent is { } row && IsGridRow(row) && IsGridContainer(row.Parent);
 
     private static string RowSummary(UiNode row)
     {
