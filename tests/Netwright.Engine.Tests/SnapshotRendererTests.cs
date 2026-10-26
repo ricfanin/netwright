@@ -191,6 +191,37 @@ public class SnapshotRendererTests
     }
 
     [Fact]
+    public void Keeps_rows_nested_in_a_row_as_rows_with_their_own_controls()
+    {
+        // Master-detail: an order row holds its own button and a list of line rows, each with a button.
+        static UiNode Line(string name) => Node(ControlTypeIds.DataItem, name, patterns: UiPatterns.SelectionItem,
+            children: [Text(name), Button("Remove")]);
+        var order = Node(ControlTypeIds.DataItem, "Order 1", patterns: UiPatterns.SelectionItem, children:
+        [
+            Text("Order 1"),
+            Button("Open"),
+            Node(ControlTypeIds.List, "Lines", children: [Line("Line A"), Line("Line B"), Line("Line C")]),
+        ]);
+        var window = Window("Main", Node(ControlTypeIds.List, "Orders", children: order));
+
+        var text = Renderer(new SnapshotOptions { MaxItemsPerContainer = 2 }).Render([window]).Text;
+
+        Assert.Equal(
+            """
+            - window "Main" [e1]
+              - list "Orders" [e2]
+                - row "Order 1 | Open | Lines" [e3]
+                  - button "Open" [e4]
+                  - row "Line A | Remove" [e5]
+                    - button "Remove" [e6]
+                  - row "Line B | Remove" [e7]
+                    - button "Remove" [e8]
+                  - ... 1 more items
+            """.ReplaceLineEndings(),
+            text.ReplaceLineEndings());
+    }
+
+    [Fact]
     public void Shows_the_radio_buttons_a_row_holds()
     {
         // UI Automation radio buttons expose SelectionItem, not Toggle.

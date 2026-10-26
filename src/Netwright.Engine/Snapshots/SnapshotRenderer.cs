@@ -163,11 +163,7 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
             if (IsGridRow(node))
             {
                 WriteLine(node, depth, state, prefix, RowSummary(node), roleOverride: "row");
-                foreach (var action in RowActions(node))
-                {
-                    RenderNode(action, depth + 1, node.Name, state, prefix);
-                }
-
+                RenderRowActions(node, depth + 1, state, prefix);
                 return;
             }
 
@@ -244,23 +240,55 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
             RenderNode(child, depth, parentName, state, childPrefix);
         }
 
-        if ((hiddenItems > 0 || offscreen > 0) && !state.Counting)
+        WriteOmittedItems(depth, state, childPrefix, hiddenItems, offscreen);
+    }
+
+    /// <summary>Renders the row actions of a row, with nested rows and items capped like a list.</summary>
+    private void RenderRowActions(UiNode row, int depth, RenderState state, string prefix)
+    {
+        var shownItems = 0;
+        var hiddenItems = 0;
+        foreach (var action in RowActions(row))
         {
-            var parts = new List<string>();
-            if (hiddenItems > 0)
+            if (IsItem(action) || IsGridRow(action))
             {
-                parts.Add($"{hiddenItems} more items");
+                if (shownItems >= options.MaxItemsPerContainer)
+                {
+                    hiddenItems++;
+                    continue;
+                }
+
+                shownItems++;
             }
 
-            if (offscreen > 0)
-            {
-                parts.Add($"{offscreen} offscreen");
-            }
-
-            Indent(state.Builder, depth);
-            state.Builder.Append(childPrefix).Append("... ").AppendJoin(", ", parts).AppendLine();
-            state.Lines++;
+            RenderNode(action, depth, row.Name, state, prefix);
         }
+
+        WriteOmittedItems(depth, state, prefix, hiddenItems, offscreen: 0);
+    }
+
+    private static void WriteOmittedItems(int depth, RenderState state, string prefix, int hiddenItems, int offscreen)
+    {
+        // A depth limit counts what a Snapshot from its node would list; this line is not an element.
+        if ((hiddenItems == 0 && offscreen == 0) || state.Counting)
+        {
+            return;
+        }
+
+        var parts = new List<string>();
+        if (hiddenItems > 0)
+        {
+            parts.Add($"{hiddenItems} more items");
+        }
+
+        if (offscreen > 0)
+        {
+            parts.Add($"{offscreen} offscreen");
+        }
+
+        Indent(state.Builder, depth);
+        state.Builder.Append(prefix).Append("... ").AppendJoin(", ", parts).AppendLine();
+        state.Lines++;
     }
 
     /// <summary>
@@ -448,7 +476,9 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
 
     /// <summary>
     /// The controls inside a row that act on their own, outermost first. The row's summary line would
-    /// hide them, and clicking the row only selects it, so they get lines with their own Refs.
+    /// hide them, and clicking the row only selects it, so they get lines with their own Refs. A row or
+    /// item nested in the row (master-detail, a card with its own button bar) is returned as is, so it
+    /// renders with its own summary and actions instead of flattening its controls into this row.
     /// </summary>
     private IEnumerable<UiNode> RowActions(UiNode node)
     {
@@ -459,7 +489,7 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
                 continue;
             }
 
-            if (IsRowAction(child))
+            if (IsRowAction(child) || IsNestedItem(child))
             {
                 yield return child;
             }
@@ -491,6 +521,13 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
 
         return !IsCell(node) || node.ControlTypeId is ControlTypeIds.Button or ControlTypeIds.CheckBox or ControlTypeIds.RadioButton or ControlTypeIds.Hyperlink;
     }
+
+    /// <summary>
+    /// A row or item inside a row's subtree that belongs to a list of its own. The row's direct children
+    /// are its cells or parts (a WinForms grid row holds DataItem cells), never nested items.
+    /// </summary>
+    private static bool IsNestedItem(UiNode node) =>
+        (IsItem(node) || IsGridRow(node)) && node.Parent is { } parent && !IsGridRow(parent);
 
     /// <summary>A cell of a grid row: a direct child of a row that sits in a DataGrid or Table.</summary>
     private static bool IsCell(UiNode node) => node.Parent is { } row && IsGridRow(row) && IsGridContainer(row.Parent);
