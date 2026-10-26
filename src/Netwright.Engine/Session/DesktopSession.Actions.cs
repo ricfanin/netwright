@@ -522,11 +522,7 @@ public sealed partial class DesktopSession
                 var (after, settled) = await SettleAsync(cancellationToken).ConfigureAwait(false);
                 if (blocked)
                 {
-                    note = Append(note, BlockedCallNote(before, after, work.IsCompleted, workTime.ElapsedMilliseconds, Line));
-                    if (work.IsCompletedSuccessfully && context.Note is { } lateNote)
-                    {
-                        note = Append(note, lateNote);
-                    }
+                    note = Append(note, LateCallNote(work, () => context.Note, before, after, workTime.ElapsedMilliseconds, Line));
                 }
 
                 if (foreground && !revealed && (keepFocus || after.Windows.Any(w => before.Find(w.Key) is null)))
@@ -565,6 +561,25 @@ public sealed partial class DesktopSession
                 }
             }
         }, cancellationToken);
+
+    /// <summary>
+    /// The note for a call that did not return within <see cref="SessionOptions.BlockingCallTimeoutMs"/>,
+    /// judged once the UI Settled. A call that failed in the meantime rethrows its exception, as awaiting
+    /// it in time would have; a call that returned keeps the action's own note.
+    /// </summary>
+    internal static string LateCallNote(Task work, Func<string?> actionNote, UiTree before, UiTree after, long elapsedMs, Func<UiNode, string> line)
+    {
+        // Read the status once, so a call that ends during this method is not reported both ways.
+        var status = work.Status;
+        if (status is TaskStatus.Faulted or TaskStatus.Canceled)
+        {
+            work.GetAwaiter().GetResult();
+        }
+
+        var returned = status == TaskStatus.RanToCompletion;
+        var note = BlockedCallNote(before, after, returned, elapsedMs, line);
+        return returned && actionNote() is { } late ? note + " " + late : note;
+    }
 
     /// <summary>
     /// Explains a call that did not return within <see cref="SessionOptions.BlockingCallTimeoutMs"/>: a

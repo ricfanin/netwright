@@ -274,4 +274,25 @@ public class BlockedCallNoteTests
         Assert.Contains(expected, note, StringComparison.Ordinal);
         Assert.DoesNotContain("dialog", note, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void A_call_that_failed_late_rethrows_its_exception()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var failure = new InvalidOperationException("perform failed");
+
+        var thrown = Assert.Throws<InvalidOperationException>(() =>
+            DesktopSession.LateCallNote(Task.FromException(failure), () => null, tree, tree, 1600, n => n.Name));
+
+        Assert.Same(failure, thrown);
+    }
+
+    [Fact]
+    public void A_call_that_was_cancelled_late_rethrows_the_cancellation()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        Assert.ThrowsAny<OperationCanceledException>(() =>
+            DesktopSession.LateCallNote(Task.FromCanceled(new CancellationToken(canceled: true)), () => null, tree, tree, 1600, n => n.Name));
+    }
 }
