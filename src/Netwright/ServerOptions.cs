@@ -18,6 +18,8 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
           --action-timeout <ms>     How long actions wait for an element to be actionable (default 5000).
           --settle-timeout <ms>     Upper bound for waiting until the UI settles (default 3000).
           --max-snapshot-lines <n>  Line budget of a snapshot (default 300).
+          --screenshot-dir <dir>    Let desktop_screenshot save PNGs (path=) inside this directory.
+                                    Also read from NETWRIGHT_SCREENSHOT_DIR.
           --version                 Print the version.
           --help                    Show this help.
         """;
@@ -28,6 +30,11 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
         var allowed = new List<string>();
         var help = false;
         var version = false;
+
+        if (environment("NETWRIGHT_SCREENSHOT_DIR") is { Length: > 0 } screenshotDirectory)
+        {
+            session = session with { ScreenshotDirectory = FullPath("NETWRIGHT_SCREENSHOT_DIR", screenshotDirectory) };
+        }
 
         if (environment("NETWRIGHT_ALLOW") is { Length: > 0 } fromEnvironment)
         {
@@ -49,6 +56,9 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
                     break;
                 case "--max-snapshot-lines":
                     session = session with { Snapshot = session.Snapshot with { MaxLines = PositiveInt(args, ref i) } };
+                    break;
+                case "--screenshot-dir":
+                    session = session with { ScreenshotDirectory = FullPath(args[i], Value(args, ref i)) };
                     break;
                 case "--help" or "-h" or "-?":
                     help = true;
@@ -84,5 +94,18 @@ internal sealed record ServerOptions(SessionOptions Session, bool ShowHelp, bool
         }
 
         return value;
+    }
+
+    /// <summary>Resolved once at startup, so a relative directory means the one the server was started in.</summary>
+    private static string FullPath(string name, string text)
+    {
+        try
+        {
+            return Path.GetFullPath(text);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            throw new ArgumentException($"{name} needs a directory path, got '{text}'", ex);
+        }
     }
 }

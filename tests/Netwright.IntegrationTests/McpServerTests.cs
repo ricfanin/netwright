@@ -11,6 +11,7 @@ namespace Netwright.IntegrationTests;
 [Collection("UI")]
 public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
 {
+    private readonly string _screenshots = Directory.CreateTempSubdirectory("netwright-mcp-shots-").FullName;
     private McpClient? _client;
 
     public async Task InitializeAsync()
@@ -26,7 +27,7 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         {
             Name = "netwright",
             Command = server,
-            Arguments = ["--action-timeout", "1500"],
+            Arguments = ["--action-timeout", "1500", "--screenshot-dir", _screenshots],
         }));
     }
 
@@ -38,6 +39,7 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         }
 
         Fixtures.KillStrays();
+        Directory.Delete(_screenshots, recursive: true);
     }
 
     [Fact]
@@ -62,6 +64,9 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.True(snapshot.Annotations?.ReadOnlyHint);
         var click = tools.Single(t => t.ProtocolTool.Name == "desktop_click").ProtocolTool;
         Assert.NotEqual(true, click.Annotations?.ReadOnlyHint);
+        var screenshot = tools.Single(t => t.ProtocolTool.Name == "desktop_screenshot").ProtocolTool;
+        Assert.NotEqual(true, screenshot.Annotations?.ReadOnlyHint);
+        Assert.True(screenshot.Annotations?.DestructiveHint);
         Assert.False(string.IsNullOrWhiteSpace(_client.ServerInstructions));
     }
 
@@ -110,6 +115,36 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         var image = Assert.Single(result.Content.OfType<ImageContentBlock>());
         Assert.Equal("image/png", image.MimeType);
         Assert.Contains("640x", Assert.Single(result.Content.OfType<TextContentBlock>()).Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Screenshots_can_be_saved_inside_the_screenshot_directory()
+    {
+        await Call("desktop_app", new { action = "launch", path = Fixtures.ExecutablePath(FixtureKind.Wpf), args = new[] { "--no-activate" } });
+
+        var result = await _client!.CallToolAsync("desktop_screenshot", new Dictionary<string, object?> { ["max_size"] = 640, ["path"] = "run 1/main", ["image"] = false });
+        var text = Assert.Single(result.Content.OfType<TextContentBlock>()).Text;
+        var outside = await Call("desktop_screenshot", new { path = @"..\outside.png" }, expectError: true);
+        var unc = await Call("desktop_screenshot", new { path = @"\\server\share\shot.png" }, expectError: true);
+
+        var saved = Path.Combine(_screenshots, "run 1", "main.png");
+        Assert.Empty(result.Content.OfType<ImageContentBlock>());
+        Assert.Contains("saved: " + saved, text, StringComparison.Ordinal);
+        var png = File.ReadAllBytes(saved);
+        Assert.Equal([0x89, (byte)'P', (byte)'N', (byte)'G'], png[..4]);
+        var width = System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16, 4));
+        Assert.Contains($": {width}x", text, StringComparison.Ordinal);
+        Assert.StartsWith("error INVALID_ARGUMENT:", outside, StringComparison.Ordinal);
+        Assert.StartsWith("error INVALID_ARGUMENT:", unc, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Screenshots_without_image_need_a_path()
+    {
+        var error = await Call("desktop_screenshot", new { image = false }, expectError: true);
+
+        Assert.StartsWith("error INVALID_ARGUMENT:", error, StringComparison.Ordinal);
+        Assert.Contains("image=false needs a path", error, StringComparison.Ordinal);
     }
 
     [Fact]
