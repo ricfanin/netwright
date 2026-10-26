@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Netwright.Engine.Diagnostics;
 using Netwright.Engine.Input;
 using Netwright.Engine.Refs;
@@ -263,6 +264,8 @@ public class StartupHookTests
 
 public class LaunchEnvironmentTests
 {
+    private const string CompanionPath = @"C:\tools\Netwright.Companion.dll";
+
     private static Dictionary<string, string> Env(params string[] names) => names.ToDictionary(n => n, _ => "1");
 
     [Fact]
@@ -296,6 +299,33 @@ public class LaunchEnvironmentTests
 
         Assert.Equal(ErrorCodes.NotAllowed, error.Code);
         Assert.Contains("allows no environment variables", error.Hint, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("netwright_hidden")]
+    [InlineData("A=B")]
+    [InlineData(" ")]
+    public void Refuses_netwright_hidden_and_malformed_names(string name)
+    {
+        var error = Assert.Throws<NetwrightException>(() => DesktopSession.ValidateEnvironment(Env(name), allowed: null));
+
+        Assert.Equal(ErrorCodes.InvalidArgument, error.Code);
+    }
+
+    [Theory]
+    [InlineData("DOTNET_STARTUP_HOOKS", "dotnet_startup_hooks", @"C:\hooks\Mine.dll", @"C:\hooks\Mine.dll;" + CompanionPath)]
+    [InlineData("dotnet_startup_hooks", null, null, @"C:\inherited\Profiler.dll;" + CompanionPath)]
+    public void Startup_hooks_in_any_case_end_up_in_one_variable_with_the_companion_last(string inheritedName, string? passedName, string? passedValue, string expected)
+    {
+        var startInfo = new ProcessStartInfo("app.exe");
+        startInfo.Environment[inheritedName] = @"C:\inherited\Profiler.dll";
+        var passed = passedName is null ? new Dictionary<string, string>() : new Dictionary<string, string> { [passedName] = passedValue! };
+
+        Assert.True(DesktopSession.ApplyEnvironment(startInfo, passed, hidden: true, CompanionPath));
+
+        // The env value replaces the inherited one, as for any other variable; the Companion is appended.
+        var hooks = Assert.Single(startInfo.Environment, v => string.Equals(v.Key, "DOTNET_STARTUP_HOOKS", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(expected, hooks.Value);
     }
 
     [Fact]

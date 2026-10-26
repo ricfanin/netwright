@@ -20,7 +20,6 @@ namespace Netwright.Engine.Session;
 public sealed partial class DesktopSession : IAsyncDisposable
 {
     private static readonly Lazy<bool> DpiAwareness = new(() => NativeMethods.SetProcessDpiAwarenessContext(NativeMethods.PerMonitorAwareV2));
-
     private readonly SessionOptions _options;
     private readonly IUIAutomation _uia;
     private readonly UiaTreeReader _reader;
@@ -60,7 +59,8 @@ public sealed partial class DesktopSession : IAsyncDisposable
         ExclusiveAsync(async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
-            ValidateEnvironment(request.EnvironmentVariables, _options.AllowedEnvironmentVariables);
+            var environment = request.EnvironmentVariables;
+            ValidateEnvironment(environment, _options.AllowedEnvironmentVariables);
             string fileName;
             string arguments;
             string allowPath;
@@ -106,12 +106,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 RedirectStandardError = true,
                 WorkingDirectory = request.WorkingDirectory ?? System.IO.Path.GetDirectoryName(allowPath) ?? Environment.CurrentDirectory,
             };
-            foreach (var (name, value) in request.EnvironmentVariables)
-            {
-                startInfo.Environment[name] = value;
-            }
-
-            var companion = CompanionClient.AddTo(startInfo, hidden: !request.Visible);
+            var companion = ApplyEnvironment(startInfo, environment, hidden: !request.Visible, CompanionClient.AssemblyPath);
 
             Process process;
             try
@@ -138,7 +133,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 ("project", request.Project),
                 ("framework", request.Framework),
                 ("arguments", request.Arguments.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, request.Arguments) : null),
-                ("environment", request.EnvironmentVariables.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, request.EnvironmentVariables.Select(v => v.Key + "=" + v.Value)) : null));
+                ("environment", environment.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, environment.Select(v => v.Key + "=" + v.Value)) : null));
 
             await WaitForFirstWindowAsync(app, request.TimeoutMs, cancellationToken).ConfigureAwait(false);
             return BuildStatus(app);
@@ -587,6 +582,24 @@ public sealed partial class DesktopSession : IAsyncDisposable
         {
             return true;
         }
+    }
+
+    /// <summary>
+    /// Sets <paramref name="variables"/> on top of the inherited environment, then adds the Companion,
+    /// which keeps the startup hooks they set. Returns whether the Companion was added.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ProcessStartInfo.Environment"/> is case-insensitive on Windows, so a variable passed as
+    /// <c>dotnet_startup_hooks</c> replaces the inherited <c>DOTNET_STARTUP_HOOKS</c> instead of adding a second one.
+    /// </remarks>
+    internal static bool ApplyEnvironment(ProcessStartInfo startInfo, IReadOnlyDictionary<string, string> variables, bool hidden, string? companionPath)
+    {
+        foreach (var (name, value) in variables)
+        {
+            startInfo.Environment[name] = value;
+        }
+
+        return CompanionClient.AddTo(startInfo, hidden, companionPath);
     }
 
     /// <summary>

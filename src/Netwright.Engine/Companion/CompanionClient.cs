@@ -43,11 +43,12 @@ internal static class CompanionClient
 
     /// <summary>
     /// Makes the process load the Companion, keeping startup hooks that are already set. With
-    /// <paramref name="hidden"/> the Companion cloaks the app's windows (ADR 0008).
+    /// <paramref name="hidden"/> the Companion cloaks the app's windows (ADR 0008). Does nothing and
+    /// returns false when <paramref name="assemblyPath"/> (normally <see cref="AssemblyPath"/>) is null.
     /// </summary>
-    public static bool AddTo(ProcessStartInfo startInfo, bool hidden)
+    public static bool AddTo(ProcessStartInfo startInfo, bool hidden, string? assemblyPath)
     {
-        if (AssemblyPath is null)
+        if (assemblyPath is null)
         {
             return false;
         }
@@ -63,7 +64,7 @@ internal static class CompanionClient
         }
 
         var existing = startInfo.Environment.TryGetValue(StartupHooksVariable, out var value) ? value : null;
-        startInfo.Environment[StartupHooksVariable] = MergeStartupHooks(existing, AssemblyPath);
+        startInfo.Environment[StartupHooksVariable] = MergeStartupHooks(existing, assemblyPath);
         return true;
     }
 

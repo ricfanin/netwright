@@ -1,4 +1,3 @@
-using Netwright.Engine;
 using Netwright.Engine.Session;
 
 namespace Netwright.IntegrationTests;
@@ -29,22 +28,5 @@ public sealed partial class SessionTests
         await using var session = await Fixtures.LaunchAsync(kind);
 
         await session.ExpectAsync("#lblEnv", new ExpectRequest { Assertion = Assertion.Gone });
-    }
-
-    [Theory]
-    [InlineData("netwright_hidden")]
-    [InlineData("A=B")]
-    [InlineData(" ")]
-    public async Task Launch_refuses_netwright_hidden_and_malformed_names(string name)
-    {
-        await using var session = new DesktopSession();
-
-        var error = await Assert.ThrowsAsync<NetwrightException>(() => session.LaunchAsync(new LaunchRequest
-        {
-            Path = Fixtures.ExecutablePath(FixtureKind.Wpf),
-            EnvironmentVariables = new Dictionary<string, string> { [name] = "x" },
-        }));
-
-        Assert.Equal(ErrorCodes.InvalidArgument, error.Code);
     }
 }
