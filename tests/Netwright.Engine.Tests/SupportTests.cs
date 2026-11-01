@@ -277,7 +277,7 @@ public class BlockedCallNoteTests
     {
         var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
 
-        var note = DesktopSession.LateCallNote(Task.CompletedTask, () => "Bindings were not committed.", tree, tree, 1600, n => n.Name);
+        var note = DesktopSession.LateCallNote(Task.CompletedTask, () => "Bindings were not committed.", () => false, appExited: false, tree, tree, 1600, n => n.Name);
 
         Assert.StartsWith("The Target App was busy for 1600 ms", note, StringComparison.Ordinal);
         Assert.EndsWith(" Bindings were not committed.", note, StringComparison.Ordinal);
@@ -289,7 +289,7 @@ public class BlockedCallNoteTests
         var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
         var running = new TaskCompletionSource();
 
-        var note = DesktopSession.LateCallNote(running.Task, () => throw new InvalidOperationException("read the note of a running call"), tree, tree, 1600, n => n.Name);
+        var note = DesktopSession.LateCallNote(running.Task, () => throw new InvalidOperationException("read the note of a running call"), () => false, appExited: false, tree, tree, 1600, n => n.Name);
 
         Assert.Contains("has not returned after 1600 ms", note, StringComparison.Ordinal);
     }
@@ -315,7 +315,7 @@ public class BlockedCallNoteTests
         var failure = new InvalidOperationException("perform failed");
 
         var thrown = Assert.Throws<InvalidOperationException>(() =>
-            DesktopSession.LateCallNote(Task.FromException(failure), () => null, tree, tree, 1600, n => n.Name));
+            DesktopSession.LateCallNote(Task.FromException(failure), () => null, () => false, appExited: false, tree, tree, 1600, n => n.Name));
 
         Assert.Same(failure, thrown);
     }
@@ -326,6 +326,39 @@ public class BlockedCallNoteTests
         var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
 
         Assert.ThrowsAny<OperationCanceledException>(() =>
-            DesktopSession.LateCallNote(Task.FromCanceled(new CancellationToken(canceled: true)), () => null, tree, tree, 1600, n => n.Name));
+            DesktopSession.LateCallNote(Task.FromCanceled(new CancellationToken(canceled: true)), () => null, () => false, appExited: false, tree, tree, 1600, n => n.Name));
+    }
+
+    [Fact]
+    public void A_call_that_failed_because_the_app_exited_leaves_it_to_the_exit_note()
+    {
+        // A handler that crashed the app after the timeout faults the call with "element not available".
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var gone = Task.FromException(new NetwrightException(ErrorCodes.StaleRef, "button \"Load\" disappeared while acting on it."));
+
+        Assert.Null(DesktopSession.LateCallNote(gone, () => null, () => false, appExited: true, tree, tree, 1600, n => n.Name));
+        Assert.Null(DesktopSession.LateCallNote(new TaskCompletionSource().Task, () => null, () => false, appExited: true, tree, tree, 1600, n => n.Name));
+    }
+
+    [Fact]
+    public void A_call_that_returned_without_its_input_says_no_input_was_sent()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.LateCallNote(Task.CompletedTask, () => null, () => true, appExited: false, tree, tree, 1600, n => n.Name);
+
+        Assert.StartsWith("No input was sent", note, StringComparison.Ordinal);
+        Assert.DoesNotContain("before the call returned", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_still_running_is_not_asked_whether_it_skipped_its_input()
+    {
+        // The flag is only final once the call returned.
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.LateCallNote(new TaskCompletionSource().Task, () => null, () => throw new InvalidOperationException("read the flag of a running call"), appExited: false, tree, tree, 1600, n => n.Name);
+
+        Assert.Contains("has not returned after 1600 ms", note, StringComparison.Ordinal);
     }
 }
