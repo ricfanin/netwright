@@ -380,6 +380,26 @@ public sealed partial class SessionTests(ITestOutputHelper output)
     }
 
     [Fact]
+    [Trait("Category", "Build")]
+    public async Task Projects_on_a_unc_or_device_path_are_not_evaluated()
+    {
+        // \\?\UNC\host\share paths start the same way, so a local \\?\ path stands in for a share here.
+        var directory = Directory.CreateTempSubdirectory("netwright-allow-").FullName;
+        try
+        {
+            var project = Path.Combine(directory, "Client.Shell.csproj");
+            File.WriteAllText(project, "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><AssemblyName>Acme.Client.Shell</AssemblyName></PropertyGroup></Project>");
+
+            Assert.True((await ProjectBuilder.ExpectedExecutableAsync("dotnet", project, null, null, CancellationToken.None)).Evaluated);
+            Assert.Equal((@"\\?\" + Path.Combine(directory, "Client.Shell.exe"), false), await ProjectBuilder.ExpectedExecutableAsync("dotnet", @"\\?\" + project, null, null, CancellationToken.None));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Attaches_to_a_running_app_by_name()
     {
         Fixtures.KillStrays();

@@ -54,14 +54,15 @@ internal static partial class ProjectBuilder
     /// name is the project's evaluated <c>AssemblyName</c> (evaluation only: props are imported, no targets run), so
     /// a name set in Directory.Build.props or built from properties counts too. When the evaluation
     /// fails it falls back to the project file name (<c>Evaluated</c> is false); the build then reports
-    /// the failure in detail.
+    /// the failure in detail. A project on a UNC path is not evaluated: its props could make the
+    /// evaluation reach other network paths before the check.
     /// </summary>
     public static async Task<(string Path, bool Evaluated)> ExpectedExecutableAsync(
         string dotnet, string projectPath, string? configuration, string? framework, CancellationToken cancellationToken)
     {
         var fullPath = Path.GetFullPath(projectPath);
         var fallback = (Path.ChangeExtension(fullPath, ".exe"), false);
-        if (!File.Exists(fullPath))
+        if (!File.Exists(fullPath) || fullPath.StartsWith(@"\\", StringComparison.Ordinal))
         {
             return fallback;
         }
