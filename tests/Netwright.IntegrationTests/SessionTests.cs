@@ -206,6 +206,23 @@ public sealed partial class SessionTests(ITestOutputHelper output)
 
     [Theory]
     [MemberData(nameof(Kinds))]
+    public async Task Grid_cells_are_found_by_their_value(FixtureKind kind)
+    {
+        await using var session = await Fixtures.LaunchAsync(kind, "Grid");
+
+        var exact = await session.FindAsync("#gridOrders >> [value=\"customer 5\"]");
+        var contains = await session.FindAsync("#gridOrders >> [value~=\"Customer 1\"]");
+        output.WriteLine(exact);
+        output.WriteLine(contains);
+
+        Assert.StartsWith("1 match:", exact, StringComparison.Ordinal);
+        Assert.Contains("Customer 5", exact, StringComparison.Ordinal);
+        Assert.Matches(@"^\d+ matches:", contains);
+        Assert.DoesNotContain("Customer 5", contains, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [MemberData(nameof(Kinds))]
     public async Task A_depth_limited_full_snapshot_can_be_explored_top_down(FixtureKind kind)
     {
         await using var session = await Fixtures.LaunchAsync(kind, "Grid");

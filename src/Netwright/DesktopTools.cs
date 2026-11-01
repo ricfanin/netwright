@@ -78,7 +78,7 @@ public sealed class DesktopTools(DesktopSession session)
         });
 
     [McpServerTool(Name = "desktop_find", Title = "Find", ReadOnly = true, OpenWorld = false)]
-    [Description("Elements matching a Selector, with Refs. Selectors: #automationId, role \"name\", role ~\"partial\", a >> b, :nth(2).")]
+    [Description("Elements matching a Selector, with Refs. Selectors: #automationId, role \"name\", role ~\"partial\", [value=\"x\"], [value~=\"x\"], a >> b, :nth(2).")]
     public Task<CallToolResult> Find(string selector, CancellationToken cancellationToken = default) =>
         RunAsync(async () => Reply.Text(await session.FindAsync(selector, 30, cancellationToken)));
 

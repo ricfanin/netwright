@@ -23,11 +23,13 @@ internal static class TestTree
         string? value = null,
         int? rows = null,
         string? key = null,
+        bool password = false,
         params UiNode[] children)
     {
         var node = new UiNode
         {
             Key = key ?? $"k{Interlocked.Increment(ref _nextKey)}",
+            IsPassword = password,
             ControlTypeId = controlType,
             Role = Roles.FromControlType(controlType),
             Name = name,

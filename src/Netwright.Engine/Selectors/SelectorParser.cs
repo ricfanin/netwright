@@ -8,15 +8,19 @@ namespace Netwright.Engine.Selectors;
 /// Parses Selectors.
 /// <code>
 /// selector := step (">>" step)*
-/// step     := role? ("#" (automationId | '"' automationId '"'))? (("~")? '"' name '"')? (":nth(" n ")")?
+/// step     := role? ("#" (automationId | '"' automationId '"'))? (("~")? '"' name '"')?
+///             ("[value" ("=" | "~=") '"' value '"' "]")? (":nth(" n ")")?
 /// </code>
-/// Names match case-insensitively; <c>"x"</c> is an exact match and <c>~"x"</c> a substring match.
-/// <c>:nth(n)</c> is 1-based.
+/// Names and values match case-insensitively; <c>"x"</c> and <c>[value="x"]</c> are exact matches,
+/// <c>~"x"</c> and <c>[value~="x"]</c> substring matches. <c>:nth(n)</c> is 1-based.
 /// </summary>
 public static class SelectorParser
 {
     public const string Syntax =
-        "Selector syntax: #automationId | #\"id with spaces\" | role \"exact name\" | role ~\"partial name\" | step:nth(2) | step >> step (e.g. window \"Confirm\" >> button \"Yes\").";
+        "Selector syntax: #automationId | #\"id with spaces\" | role \"exact name\" | role ~\"partial name\" | [value=\"exact value\"] | [value~=\"partial value\"] | step:nth(2) | step >> step (e.g. window \"Confirm\" >> button \"Yes\", #Customer[value=\"Rossi\"]).";
+
+    private const string ValueExact = "[value=";
+    private const string ValueContains = "[value~=";
 
     public static Selector Parse(string text)
     {
@@ -60,6 +64,8 @@ public static class SelectorParser
         string? automationId = null;
         string? name = null;
         var match = NameMatch.Exact;
+        string? value = null;
+        var valueMatch = NameMatch.Exact;
         int? nth = null;
 
         if (char.IsLetter(reader.Peek))
@@ -76,7 +82,7 @@ public static class SelectorParser
             reader.Advance();
             automationId = !reader.AtEnd && reader.Peek == '"'
                 ? ReadQuoted(reader, text)
-                : reader.ReadWhile(c => !EndsUnquotedAutomationId(c));
+                : ReadUnquotedAutomationId(reader);
             if (automationId.Length == 0)
             {
                 throw Invalid(text, "'#' must be followed by an AutomationId (quote it when it contains spaces: #\"my id\")");
@@ -100,6 +106,28 @@ public static class SelectorParser
             reader.Position = checkpoint;
         }
 
+        checkpoint = reader.Position;
+        reader.SkipWhitespace();
+        var contains = reader.TryConsume(ValueContains);
+        if (contains || reader.TryConsume(ValueExact))
+        {
+            valueMatch = contains ? NameMatch.Contains : NameMatch.Exact;
+            if (reader.AtEnd || reader.Peek != '"')
+            {
+                throw Invalid(text, "[value=...] needs a quoted value, e.g. [value=\"ORD-4711\"]");
+            }
+
+            value = ReadQuoted(reader, text);
+            if (!reader.TryConsume("]"))
+            {
+                throw Invalid(text, "[value=\"...\" must be closed with ]");
+            }
+        }
+        else
+        {
+            reader.Position = checkpoint;
+        }
+
         if (reader.TryConsume(":nth("))
         {
             var digits = reader.ReadWhile(char.IsDigit);
@@ -115,16 +143,32 @@ public static class SelectorParser
             }
         }
 
-        if (role is null && automationId is null && name is null)
+        if (role is null && automationId is null && name is null && value is null)
         {
-            throw Invalid(text, $"expected a role, #automationId or \"name\" at position {reader.Position + 1}");
+            throw Invalid(text, $"expected a role, #automationId, \"name\" or [value=\"...\"] at position {reader.Position + 1}");
         }
 
-        return new SelectorStep(role, automationId, name, match, nth);
+        return new SelectorStep(role, automationId, name, match, nth) { Value = value, ValueMatch = valueMatch };
     }
 
     /// <summary>A character that ends an unquoted <c>#id</c>; an id containing one must be printed quoted.</summary>
     internal static bool EndsUnquotedAutomationId(char c) => char.IsWhiteSpace(c) || c is '"' or '~' or ':' or '>';
+
+    /// <summary>
+    /// An unquoted <c>#id</c> also ends where <c>[value=</c> or <c>[value~=</c> begins. Any other <c>[</c>
+    /// belongs to the id, so Selectors like <c>#Item[3]</c> keep parsing as before.
+    /// </summary>
+    private static string ReadUnquotedAutomationId(Reader reader)
+    {
+        var start = reader.Position;
+        while (!reader.AtEnd && !EndsUnquotedAutomationId(reader.Peek) &&
+               !reader.LookingAt(ValueExact) && !reader.LookingAt(ValueContains))
+        {
+            reader.Advance();
+        }
+
+        return reader.Text[start..reader.Position];
+    }
 
     private static string ReadQuoted(Reader reader, string text)
     {
@@ -171,6 +215,8 @@ public static class SelectorParser
     {
         public int Position { get; set; }
 
+        public string Text => text;
+
         public int Length => text.Length;
 
         public bool AtEnd => Position >= text.Length;
@@ -187,9 +233,11 @@ public static class SelectorParser
             }
         }
 
+        public bool LookingAt(string token) => string.CompareOrdinal(text, Position, token, 0, token.Length) == 0;
+
         public bool TryConsume(string token)
         {
-            if (string.CompareOrdinal(text, Position, token, 0, token.Length) == 0)
+            if (LookingAt(token))
             {
                 Position += token.Length;
                 return true;
