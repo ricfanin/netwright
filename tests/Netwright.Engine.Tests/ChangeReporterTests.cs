@@ -101,6 +101,89 @@ public class ChangeReporterTests
         Assert.Contains("~ button \"Submit\" [e2]", report.Text, StringComparison.Ordinal);
     }
 
+    // A provider that hands an unchanged element a new RuntimeId while its children keep theirs, like the
+    // inner pane of a DevExpress HamburgerMenu on every navigation.
+    private static UiNode Menu(string key, ToggleValue pinned = ToggleValue.Off) =>
+        Node(ControlTypeIds.Pane, "HamburgerMenu", id: "HamburgerMenu", key: key, children:
+        [
+            Button("Orders", key: "orders"),
+            Node(ControlTypeIds.CheckBox, "Pin", patterns: UiPatterns.Toggle, toggle: pinned, key: "pin"),
+        ]);
+
+    [Fact]
+    public void An_element_with_a_new_key_and_the_same_children_is_paired()
+    {
+        var before = Tree(Win("Main", "w", Menu("menu1"), Button("Save", key: "save")));
+        var after = Tree(Win("Main", "w", Menu("menu2"), Button("Save", key: "save")));
+
+        var report = ChangeReporter.Build(before, after, _renderer);
+
+        Assert.True(report.IsEmpty, report.Text);
+    }
+
+    [Fact]
+    public void A_paired_element_reports_only_the_state_that_changed_inside_it()
+    {
+        var before = Tree(Win("Main", "w", Menu("menu1")));
+        var after = Tree(Win("Main", "w", Menu("menu2", ToggleValue.On)));
+
+        var report = ChangeReporter.Build(before, after, _renderer);
+
+        Assert.Equal(1, report.Changes);
+        Assert.StartsWith("~ checkbox \"Pin\"", report.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Refs_move_to_the_new_key_of_a_paired_element()
+    {
+        var refs = new RefRegistry();
+        var renderer = new SnapshotRenderer(refs, new SnapshotOptions());
+        var before = Tree(Win("Main", "w", Menu("menu1")));
+        var menuRef = refs.GetOrAssign(before.Windows[0].Children[0]);
+        var after = Tree(Win("Main", "w", Menu("menu2")));
+
+        ChangeReporter.Build(before, after, renderer);
+
+        Assert.Equal("menu2", refs.Resolve(menuRef, after).Key);
+    }
+
+    [Fact]
+    public void A_replaced_subtree_of_another_shape_is_still_reported()
+    {
+        var before = Tree(Win("Main", "w", Node(ControlTypeIds.Pane, "Details", key: "p1", children: [Button("Edit", key: "edit")])));
+        var after = Tree(Win("Main", "w", Node(ControlTypeIds.Pane, "Details", key: "p2", children: [Button("Save", key: "s2"), Button("Cancel", key: "c2")])));
+
+        var text = ChangeReporter.Build(before, after, _renderer).Text;
+
+        Assert.Contains("- pane \"Details\"", text, StringComparison.Ordinal);
+        Assert.Contains("+ pane \"Details\"", text, StringComparison.Ordinal);
+        Assert.Contains("+ button \"Save\"", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_replaced_element_whose_children_got_new_keys_is_still_reported()
+    {
+        var before = Tree(Win("Main", "w", Node(ControlTypeIds.Pane, "Details", key: "p1", children: [Button("Edit", key: "edit1")])));
+        var after = Tree(Win("Main", "w", Node(ControlTypeIds.Pane, "Details", key: "p2", children: [Button("Edit", key: "edit2")])));
+
+        var text = ChangeReporter.Build(before, after, _renderer).Text;
+
+        Assert.Contains("- pane \"Details\"", text, StringComparison.Ordinal);
+        Assert.Contains("+ pane \"Details\"", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_replaced_element_without_children_is_still_reported()
+    {
+        var before = Tree(Win("Main", "w", Button("Next", key: "next1")));
+        var after = Tree(Win("Main", "w", Button("Next", key: "next2")));
+
+        var text = ChangeReporter.Build(before, after, _renderer).Text;
+
+        Assert.Contains("- button \"Next\"", text, StringComparison.Ordinal);
+        Assert.Contains("+ button \"Next\"", text, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Truncates_large_reports()
     {

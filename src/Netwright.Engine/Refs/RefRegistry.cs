@@ -37,6 +37,21 @@ public sealed class RefRegistry
 
     public string? TryGetRef(UiNode node) => _refByKey.GetValueOrDefault(node.Key);
 
+    /// <summary>
+    /// Moves a Ref to the element's new key, for a provider that re-created an unchanged element under
+    /// a new RuntimeId, so the Ref the Agent holds keeps resolving.
+    /// </summary>
+    public void Rebind(string oldKey, string newKey)
+    {
+        if (oldKey == newKey || _refByKey.ContainsKey(newKey) || !_refByKey.Remove(oldKey, out var id))
+        {
+            return;
+        }
+
+        _refByKey[newKey] = id;
+        _entries[id] = _entries[id] with { Key = newKey };
+    }
+
     public RefEntry? Lookup(string refId) => _entries.GetValueOrDefault(refId);
 
     /// <summary>
