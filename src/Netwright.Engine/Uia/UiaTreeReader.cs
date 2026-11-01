@@ -156,6 +156,11 @@ internal sealed class UiaTreeReader
         var expand = Int(element, PropertyIds.ExpandCollapseState);
         var range = Double(element, PropertyIds.RangeValueValue);
         var modal = full ? Bool(element, PropertyIds.WindowIsModal) : null;
+        if (full && modal != true && windowHandle != 0 && NativeMethods.BlocksItsOwner(windowHandle))
+        {
+            modal = true;
+        }
+
         var rows = full ? Int(element, PropertyIds.GridRowCount) : null;
         var scrollable = full ? Bool(element, PropertyIds.ScrollVerticallyScrollable) : null;
 

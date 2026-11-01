@@ -67,6 +67,21 @@ internal static partial class NativeMethods
     [DllImport("user32.dll")]
     public static extern nint GetWindow(nint hwnd, uint uCmd);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindowEnabled(nint hwnd);
+
+    /// <summary>
+    /// True when the window is enabled and its owner is disabled, the state <c>ShowDialog</c> and
+    /// message boxes leave behind. WPF dialogs report WindowPattern.IsModal false, so UI Automation
+    /// alone misses them.
+    /// </summary>
+    public static bool BlocksItsOwner(nint hwnd)
+    {
+        var owner = GetWindow(hwnd, GwOwner);
+        return owner != 0 && IsWindowEnabled(hwnd) && !IsWindowEnabled(owner);
+    }
+
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool PrintWindow(nint hwnd, nint hdcBlt, uint nFlags);
