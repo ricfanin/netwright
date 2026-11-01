@@ -24,6 +24,11 @@ public sealed partial class MainWindow : Window
         NativeWindow.CenterOnScreen(this);
         Closed += (_, _) => Application.Current.Exit();
 
+        // Collapsed unless set, so Snapshots of ordinary launches (and the benchmark) do not change.
+        var env = Environment.GetEnvironmentVariable("NETWRIGHT_FIXTURE_ENV");
+        lblEnv.Text = $"Env: {env}";
+        lblEnv.Visibility = env is null ? Visibility.Collapsed : Visibility.Visible;
+
         cmbCountry.ItemsSource = Countries;
         cmbCountry.SelectedIndex = -1;
 

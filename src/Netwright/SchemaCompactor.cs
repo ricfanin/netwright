@@ -55,6 +55,11 @@ internal static class SchemaCompactor
             CompactProperty(items);
         }
 
+        if (property["additionalProperties"] is JsonObject additional)
+        {
+            CompactProperty(additional);
+        }
+
         CompactObject(property);
     }
 }

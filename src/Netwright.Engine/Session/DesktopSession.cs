@@ -20,7 +20,6 @@ namespace Netwright.Engine.Session;
 public sealed partial class DesktopSession : IAsyncDisposable
 {
     private static readonly Lazy<bool> DpiAwareness = new(() => NativeMethods.SetProcessDpiAwarenessContext(NativeMethods.PerMonitorAwareV2));
-
     private readonly SessionOptions _options;
     private readonly IUIAutomation _uia;
     private readonly UiaTreeReader _reader;
@@ -60,6 +59,8 @@ public sealed partial class DesktopSession : IAsyncDisposable
         ExclusiveAsync(async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
+            var environment = request.EnvironmentVariables;
+            ValidateEnvironment(environment, _options.AllowedEnvironmentVariables);
             string fileName;
             string arguments;
             string allowPath;
@@ -105,7 +106,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 RedirectStandardError = true,
                 WorkingDirectory = request.WorkingDirectory ?? System.IO.Path.GetDirectoryName(allowPath) ?? Environment.CurrentDirectory,
             };
-            var companion = CompanionClient.AddTo(startInfo, hidden: !request.Visible);
+            var companion = ApplyEnvironment(startInfo, environment, hidden: !request.Visible, CompanionClient.AssemblyPath);
 
             Process process;
             try
@@ -131,7 +132,8 @@ public sealed partial class DesktopSession : IAsyncDisposable
                 ("path", request.Path),
                 ("project", request.Project),
                 ("framework", request.Framework),
-                ("arguments", request.Arguments.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, request.Arguments) : null));
+                ("arguments", request.Arguments.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, request.Arguments) : null),
+                ("environment", environment.Count > 0 ? string.Join(Export.TestExporter.ArgumentSeparator, environment.Select(v => v.Key + "=" + v.Value)) : null));
 
             await WaitForFirstWindowAsync(app, request.TimeoutMs, cancellationToken).ConfigureAwait(false);
             return BuildStatus(app);
@@ -581,6 +583,81 @@ public sealed partial class DesktopSession : IAsyncDisposable
             return true;
         }
     }
+
+    /// <summary>
+    /// Sets <paramref name="variables"/> on top of the inherited environment, then adds the Companion,
+    /// which keeps the startup hooks they set. Returns whether the Companion was added.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ProcessStartInfo.Environment"/> is case-insensitive on Windows, so a variable passed as
+    /// <c>dotnet_startup_hooks</c> replaces the inherited <c>DOTNET_STARTUP_HOOKS</c> instead of adding a second one.
+    /// </remarks>
+    internal static bool ApplyEnvironment(ProcessStartInfo startInfo, IReadOnlyDictionary<string, string> variables, bool hidden, string? companionPath)
+    {
+        foreach (var (name, value) in variables)
+        {
+            startInfo.Environment[name] = value;
+        }
+
+        return CompanionClient.AddTo(startInfo, hidden, companionPath);
+    }
+
+    /// <summary>
+    /// Refuses malformed names and values, <c>NETWRIGHT_HIDDEN</c>, names that differ only in case,
+    /// and, when <paramref name="allowed"/> is set, every name not in it: a variable such as
+    /// <c>DOTNET_STARTUP_HOOKS</c> runs code in the Target App.
+    /// </summary>
+    internal static void ValidateEnvironment(IReadOnlyDictionary<string, string> variables, IReadOnlyList<string>? allowed)
+    {
+        var seen = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, value) in variables)
+        {
+            if (string.IsNullOrWhiteSpace(name) || name.Contains('=', StringComparison.Ordinal) || HasBreakingCharacter(name))
+            {
+                throw NetwrightException.InvalidArgument($"'{name}' is not a valid environment variable name.");
+            }
+
+            // The environment block is "name=value\0..." and .NET does not check values for NUL, so a NUL would
+            // smuggle in variables the allow list never saw. A null value would unset the inherited variable,
+            // which the exported test cannot replay.
+            if (value is null)
+            {
+                throw NetwrightException.InvalidArgument($"{name} has no value.", "Pass a string; an empty string sets the variable to empty.");
+            }
+
+            if (HasBreakingCharacter(value))
+            {
+                throw NetwrightException.InvalidArgument($"The value of {name} contains a NUL or U+001F character.", "Environment values cannot contain them.");
+            }
+
+            // Netwright would overwrite it anyway; refusing it says so instead of ignoring it silently.
+            if (CompanionClient.IsHiddenVariable(name))
+            {
+                throw NetwrightException.InvalidArgument($"{name} cannot be set: it follows visible.", "Leave it out of env and pass visible=true to show the app.");
+            }
+
+            // Windows names are case-insensitive: one of the two would win silently, and the export would replay both.
+            if (!seen.TryAdd(name, name))
+            {
+                throw NetwrightException.InvalidArgument($"{seen[name]} and {name} are the same environment variable.", "Environment variable names are case-insensitive; set each one once.");
+            }
+
+            if (allowed is not null && !allowed.Any(a => string.Equals(a.Trim(), name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var current = allowed.Count == 0
+                    ? "The server allows no environment variables."
+                    : $"The server was started with --allow-env {string.Join(" --allow-env ", allowed)}.";
+                throw new NetwrightException(
+                    ErrorCodes.NotAllowed,
+                    $"{name} is not in the allowed environment variables list.",
+                    $"{current} Ask the User to add --allow-env {name}.");
+            }
+        }
+    }
+
+    /// <summary>NUL ends a variable in the environment block; the export separator splits the recorded launch.</summary>
+    private static bool HasBreakingCharacter(string text) =>
+        text.Contains('\0', StringComparison.Ordinal) || text.Contains(Export.TestExporter.ArgumentSeparator, StringComparison.Ordinal);
 
     private void EnsureAllowed(string executablePath)
     {

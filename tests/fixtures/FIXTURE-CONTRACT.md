@@ -27,6 +27,7 @@ Rules:
 | `btnTrace` | Button | `Write diagnostics` | Writes `fixture-trace: hello` via `System.Diagnostics.Trace.WriteLine`, `fixture-stdout: hello` via `Console.Out.WriteLine` (then flushes), and `fixture-stderr: hello` via `Console.Error.WriteLine`. Then sets `lblDiag` to `Diagnostics written` |
 | `lblDiag` | Label | `` (empty) | |
 | `btnCrash` | Button | `Crash` | Throws `new InvalidOperationException("Fixture crash requested")` on the UI thread, **unhandled** (the process must terminate) |
+| `lblEnv` | Label/TextBlock | `Env: {value}` | Shows the value of the environment variable `NETWRIGHT_FIXTURE_ENV` at startup; collapsed or hidden (absent from the tree) when it is not set |
 
 ### Tabs: TabControl `tabs`
 

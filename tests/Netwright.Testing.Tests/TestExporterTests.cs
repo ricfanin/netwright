@@ -95,6 +95,25 @@ public class TestExporterTests
     }
 
     [Fact]
+    public void Launches_with_environment_variables_replay_them()
+    {
+        var steps = new[]
+        {
+            Step("launch", null, ("path", @"C:\apps\Orders.exe"), ("arguments", "--tab"), ("environment", $"DX.UITESTINGENABLED=1{TestExporter.ArgumentSeparator}MODE=a=b")),
+            Step("click", "#btnSubmit"),
+        };
+
+        var code = TestExporter.Export(steps, "with environment");
+
+        Assert.Contains("await using var app = await DesktopApp.StartAsync(new LaunchRequest", code, StringComparison.Ordinal);
+        Assert.Contains("[\"DX.UITESTINGENABLED\"] = \"1\",", code, StringComparison.Ordinal);
+        Assert.Contains("[\"MODE\"] = \"a=b\",", code, StringComparison.Ordinal);
+        Assert.Contains("Arguments = [\"--tab\"],", code, StringComparison.Ordinal);
+        var diagnostics = Compile(code, typeof(FactAttribute).Assembly);
+        Assert.True(diagnostics.Count == 0, string.Join(Environment.NewLine, diagnostics) + Environment.NewLine + code);
+    }
+
+    [Fact]
     public void Refuses_to_export_without_a_launch()
     {
         var ex = Assert.Throws<NetwrightException>(() => TestExporter.Export([Step("click", "#btn")], "x"));

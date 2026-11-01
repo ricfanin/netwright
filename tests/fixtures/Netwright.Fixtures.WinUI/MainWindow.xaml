@@ -42,6 +42,7 @@
             <Button x:Name="btnTrace" AutomationProperties.AutomationId="btnTrace" Content="Write diagnostics" Click="BtnTrace_Click" />
             <TextBlock x:Name="lblDiag" AutomationProperties.AutomationId="lblDiag" Style="{StaticResource ValueLabel}" Text="" />
             <Button x:Name="btnCrash" AutomationProperties.AutomationId="btnCrash" Content="Crash" Click="BtnCrash_Click" />
+            <TextBlock x:Name="lblEnv" AutomationProperties.AutomationId="lblEnv" Style="{StaticResource ValueLabel}" Text="" />
         </StackPanel>
 
         <TabView x:Name="tabs" Grid.Row="2" Margin="4"
