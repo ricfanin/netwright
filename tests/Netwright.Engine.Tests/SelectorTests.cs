@@ -52,6 +52,69 @@ public class SelectorParserTests
     }
 
     [Theory]
+    [InlineData("[value=\"ORD-4711\"]", null, null, "ORD-4711", NameMatch.Exact)]
+    [InlineData("textbox[value~=\"@example.com\"]", "textbox", null, "@example.com", NameMatch.Contains)]
+    [InlineData("#PositionNumber[value=\"ORD-4711\"]", null, "PositionNumber", "ORD-4711", NameMatch.Exact)]
+    [InlineData("textbox [value=\"\"]", "textbox", null, "", NameMatch.Exact)]
+    [InlineData("#Item[3]", null, "Item[3]", null, NameMatch.Exact)]
+    public void Parses_value_predicates(string text, string? role, string? automationId, string? value, NameMatch match)
+    {
+        var step = Assert.Single(SelectorParser.Parse(text).Steps);
+
+        Assert.Equal(role, step.Role);
+        Assert.Equal(automationId, step.AutomationId);
+        Assert.Equal(value, step.Value);
+        Assert.Equal(match, step.ValueMatch);
+    }
+
+    [Fact]
+    public void Parses_a_value_predicate_after_a_name_and_before_nth()
+    {
+        var step = SelectorParser.Parse("window \"Main\" >> textbox ~\"mail\"[value~=\"@\"]:nth(2)").Steps[1];
+
+        Assert.Equal("mail", step.Name);
+        Assert.Equal(NameMatch.Contains, step.NameMatch);
+        Assert.Equal("@", step.Value);
+        Assert.Equal(NameMatch.Contains, step.ValueMatch);
+        Assert.Equal(2, step.Nth);
+    }
+
+    [Theory]
+    [InlineData("ORD-4711")]
+    [InlineData("quote\"inside")]
+    [InlineData("back\\slash")]
+    [InlineData("line\nbreak")]
+    [InlineData("cr\r\nlf")]
+    [InlineData("literal\\n")]
+    [InlineData("]")]
+    [InlineData("[value=\"x\"]")]
+    [InlineData("")]
+    public void Values_round_trip(string value)
+    {
+        foreach (var match in new[] { NameMatch.Exact, NameMatch.Contains })
+        {
+            var selector = new Selector([
+                new SelectorStep("grid", null, "Orders", NameMatch.Exact, null),
+                new SelectorStep("row", "Customer", "Row 1", NameMatch.Contains, 2) { Value = value, ValueMatch = match },
+            ]);
+
+            var printed = selector.ToString();
+
+            Assert.DoesNotContain('\n', printed);
+            Assert.Equal(selector.Steps, SelectorParser.Parse(printed).Steps);
+        }
+    }
+
+    [Theory]
+    [InlineData("[value=\"x\"]", "[value=\"x\"]")]
+    [InlineData("textbox[value~=\"a \\\"b\\\"\"]", "textbox[value~=\"a \\\"b\\\"\"]")]
+    [InlineData("#id \"Name\" [value=\"x\"]:nth(2)", "#id \"Name\"[value=\"x\"]:nth(2)")]
+    public void Prints_value_predicates(string text, string printed)
+    {
+        Assert.Equal(printed, SelectorParser.Parse(text).ToString());
+    }
+
+    [Theory]
     [InlineData("#\"Clear Filter Button\"", "Clear Filter Button")]
     [InlineData("button#\"a \\\"b\\\" c\\\\d\"", "a \"b\" c\\d")]
     [InlineData("#\"x:y>z\" >> button", "x:y>z")]
@@ -74,6 +137,8 @@ public class SelectorParserTests
     [InlineData("C:\\temp", "#\"C:\\\\temp\"")]
     [InlineData("line\nbreak", "#\"line\\nbreak\"")]
     [InlineData("cr\r\nlf", "#\"cr\\r\\nlf\"")]
+    [InlineData("Item[3]", "#\"Item[3]\"")]
+    [InlineData("x[value=\"y\"]", "#\"x[value=\\\"y\\\"]\"")]
     public void Prints_automation_ids_that_parse_back(string id, string printed)
     {
         Assert.Equal(printed, SelectorStep.FormatAutomationId(id));
@@ -122,6 +187,13 @@ public class SelectorParserTests
     [InlineData("button:nth(0)")]
     [InlineData("#")]
     [InlineData("~")]
+    [InlineData("[value]")]
+    [InlineData("[value=x]")]
+    [InlineData("[value=\"x\"")]
+    [InlineData("[value=\"x")]
+    [InlineData("[value==\"x\"]")]
+    [InlineData("[name=\"x\"]")]
+    [InlineData("button[value=\"x\"] trailing")]
     public void Rejects_invalid_selectors(string text)
     {
         var ex = Assert.Throws<NetwrightException>(() => SelectorParser.Parse(text));
@@ -134,6 +206,8 @@ public class SelectorParserTests
     [InlineData("button \"Save\"")]
     [InlineData("window \"Confirm\" >> button#btnYes")]
     [InlineData("item ~\"Ital\":nth(3)")]
+    [InlineData("#gridOrders >> #Customer[value=\"Customer 5\"]")]
+    [InlineData("textbox[value~=\"@example.com\"]:nth(1)")]
     public void Round_trips_through_ToString(string text)
     {
         var parsed = SelectorParser.Parse(text);
@@ -186,6 +260,57 @@ public class SelectorMatcherTests
         var tree = SampleTree();
         Assert.Equal("ok2", Assert.Single(SelectorMatcher.Match(SelectorParser.Parse("button \"OK\":nth(2)"), tree)).AutomationId);
         Assert.Empty(SelectorMatcher.Match(SelectorParser.Parse("button \"OK\":nth(3)"), tree));
+    }
+
+    private static Model.UiTree OrdersTree() => Tree(
+        Window("Main",
+            Node(ControlTypeIds.DataGrid, "Orders", "gridOrders", children:
+            [
+                Node(ControlTypeIds.DataItem, "Row 1", children: [TextBox("", "Customer", value: "Ada Rossi"), TextBox("", "Order", value: "ORD-4711")]),
+                Node(ControlTypeIds.DataItem, "Row 2", children: [TextBox("", "Customer", value: " ada rossi "), TextBox("", "Order", value: "ORD-4712")]),
+            ]),
+            Button("ORD-4711", "btnName"),
+            TextBox("Email", "txtEmail", value: "ada@example.com"),
+            Node(ControlTypeIds.Edit, "Password", "txtPassword", UiPatterns.Value, value: "secret", password: true)));
+
+    [Fact]
+    public void Matches_values_exactly_trimmed_and_case_insensitively()
+    {
+        var tree = OrdersTree();
+
+        Assert.Equal(2, SelectorMatcher.Match(SelectorParser.Parse("[value=\"ADA ROSSI\"]"), tree).Count);
+        Assert.Equal("Order", Assert.Single(SelectorMatcher.Match(SelectorParser.Parse("[value=\"ORD-4711\"]"), tree)).AutomationId);
+        Assert.Empty(SelectorMatcher.Match(SelectorParser.Parse("[value=\"ORD-471\"]"), tree));
+    }
+
+    [Fact]
+    public void Matches_values_that_contain_the_text()
+    {
+        var tree = OrdersTree();
+
+        Assert.Equal(2, SelectorMatcher.Match(SelectorParser.Parse("#Order[value~=\"ord-47\"]"), tree).Count);
+        Assert.Equal("txtEmail", Assert.Single(SelectorMatcher.Match(SelectorParser.Parse("textbox[value~=\"@example.com\"]"), tree)).AutomationId);
+    }
+
+    [Fact]
+    public void A_value_predicate_combines_with_chains_and_nth()
+    {
+        var tree = OrdersTree();
+
+        var match = Assert.Single(SelectorMatcher.Match(SelectorParser.Parse("#gridOrders >> #Customer[value=\"ada rossi\"]:nth(2)"), tree));
+
+        Assert.Equal("Row 2", match.Parent!.Name);
+    }
+
+    [Fact]
+    public void A_value_predicate_never_matches_an_element_without_a_value_or_a_password()
+    {
+        var tree = OrdersTree();
+
+        Assert.DoesNotContain(SelectorMatcher.Match(SelectorParser.Parse("[value~=\"ORD-4711\"]"), tree), n => n.AutomationId == "btnName");
+        Assert.Empty(SelectorMatcher.Match(SelectorParser.Parse("button[value~=\"\"]"), tree));
+        Assert.Empty(SelectorMatcher.Match(SelectorParser.Parse("[value=\"secret\"]"), tree));
+        Assert.Empty(SelectorMatcher.Match(SelectorParser.Parse("#txtPassword[value~=\"s\"]"), tree));
     }
 
     [Fact]

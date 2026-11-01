@@ -49,21 +49,24 @@ public static class SelectorMatcher
             return false;
         }
 
-        if (step.Name is not null)
+        if (step.Name is not null && !TextMatches(node.Name, step.Name, step.NameMatch))
         {
-            var name = node.Name.Trim();
-            var wanted = step.Name.Trim();
-            var ok = step.NameMatch == NameMatch.Exact
-                ? string.Equals(name, wanted, StringComparison.OrdinalIgnoreCase)
-                : name.Contains(wanted, StringComparison.OrdinalIgnoreCase);
-            if (!ok)
-            {
-                return false;
-            }
+            return false;
+        }
+
+        // A password field never matches a value predicate, so its text cannot be guessed one Selector at a time.
+        if (step.Value is not null && (node.Value is null || node.IsPassword || !TextMatches(node.Value, step.Value, step.ValueMatch)))
+        {
+            return false;
         }
 
         return true;
     }
+
+    private static bool TextMatches(string actual, string wanted, NameMatch match) =>
+        match == NameMatch.Exact
+            ? string.Equals(actual.Trim(), wanted.Trim(), StringComparison.OrdinalIgnoreCase)
+            : actual.Trim().Contains(wanted.Trim(), StringComparison.OrdinalIgnoreCase);
 
     private static List<UiNode> Distinct(IEnumerable<UiNode> nodes)
     {

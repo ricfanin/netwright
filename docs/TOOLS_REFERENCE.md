@@ -33,14 +33,16 @@ Attributes: `disabled`, `focused`, `modal`, `minimized`, `checked`/`unchecked`/`
 
 **Ref.** `e12` identifies one element and **stays valid across Snapshots** while that element exists. When the element is gone, using the Ref fails with `STALE_REF`.
 
-**Selector.** Targets an element without a Snapshot. Names are case-insensitive.
+**Selector.** Targets an element without a Snapshot. Names and values are case-insensitive.
 
 | Selector | Matches |
 |---|---|
 | `#btnSave` | AutomationId `btnSave` |
-| `#"Item 3"` | AutomationId `Item 3`: quote an id that contains a space, `"`, `~`, `:` or `>` (escape `"` and `\` inside with `\`; `\n` and `\r` are line breaks, in names too). Snapshots and stable Selectors print such ids quoted |
+| `#"Item 3"` | AutomationId `Item 3`: quote an id that contains a space, `"`, `~`, `:` or `>` (escape `"` and `\` inside with `\`; `\n` and `\r` are line breaks, in names and values too). Snapshots and stable Selectors print such ids quoted, and ids that contain `[` |
 | `button "Save"` | a button named exactly "Save" |
 | `textbox ~"mail"` | a text box whose name contains "mail" |
+| `#PositionNumber[value="ORD-4711"]` | the element `PositionNumber` whose value is exactly "ORD-4711", e.g. a grid cell |
+| `textbox[value~="@example.com"]` | a text box whose value contains "@example.com". A value predicate never matches an element without a value, or a password field |
 | `button#btnSave` | both conditions |
 | `item:nth(2)` | the second match (1-based) |
 | `window "Confirm" >> button "Yes"` | a "Yes" button inside the "Confirm" window |
@@ -48,6 +50,8 @@ Attributes: `disabled`, `focused`, `modal`, `minimized`, `checked`/`unchecked`/`
 Roles: `button`, `checkbox`, `combobox`, `textbox` (alias `edit`), `link`, `image`, `item`, `list`, `menu`, `menubar`, `menuitem`, `progressbar`, `radio`, `slider`, `spinner`, `statusbar`, `tabs`, `tab`, `text` (alias `label`), `toolbar`, `tree`, `treeitem`, `grid`, `row`, `table`, `columnheader`, `window` (alias `dialog`), `pane`, `group`, `document`, `custom`, `element` (any).
 
 A Selector that matches several elements fails with `AMBIGUOUS_SELECTOR` and lists them with their Refs.
+
+Selectors only see elements that exist in the UI Automation tree. A virtualized grid or list creates rows only near the visible area, so a cell far down matches only after you scroll or filter to it.
 
 **Actions.** `click`, `type`, `set_state`, `press_key`, `scroll` and `window` all follow the same steps:
 
