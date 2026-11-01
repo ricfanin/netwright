@@ -357,6 +357,29 @@ public sealed partial class SessionTests(ITestOutputHelper output)
     }
 
     [Fact]
+    [Trait("Category", "Build")]
+    public async Task Evaluation_ignores_a_global_json_next_to_the_project()
+    {
+        // Since .NET 10, sdk.paths lets global.json point the dotnet host at an SDK folder beside it.
+        // Run from the project folder, the host would load this dotnet.dll before the allow list check.
+        var directory = Directory.CreateTempSubdirectory("netwright-allow-").FullName;
+        try
+        {
+            var sdk = Directory.CreateDirectory(Path.Combine(directory, ".dotnet", "sdk", "10.0.100")).FullName;
+            File.WriteAllText(Path.Combine(sdk, "dotnet.dll"), "not an SDK");
+            File.WriteAllText(Path.Combine(directory, "global.json"), "{\"sdk\":{\"version\":\"10.0.100\",\"paths\":[\".dotnet\"]}}");
+            var project = Path.Combine(directory, "Client.Shell.csproj");
+            File.WriteAllText(project, "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><AssemblyName>Acme.Client.Shell</AssemblyName></PropertyGroup></Project>");
+
+            Assert.Equal((Path.Combine(directory, "Acme.Client.Shell.exe"), true), await ProjectBuilder.ExpectedExecutableAsync("dotnet", project, null, null, CancellationToken.None));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Attaches_to_a_running_app_by_name()
     {
         Fixtures.KillStrays();

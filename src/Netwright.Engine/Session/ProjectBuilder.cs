@@ -34,7 +34,7 @@ internal static partial class ProjectBuilder
         arguments.AddRange(["-nodeReuse:false", "-p:UseSharedCompilation=false"]);
         arguments.AddRange(["-getProperty:TargetPath", "-getProperty:RunCommand", "-getProperty:RunArguments"]);
 
-        var result = await RunAsync(dotnet, arguments, fullPath, TimeSpan.FromMinutes(10), cancellationToken).ConfigureAwait(false);
+        var result = await RunAsync(dotnet, arguments, Path.GetDirectoryName(fullPath)!, TimeSpan.FromMinutes(10), cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         var (exitCode, text) = result
             ?? throw new NetwrightException(ErrorCodes.BuildFailed, $"Building {Path.GetFileName(fullPath)} did not finish within 10 minutes.");
@@ -72,7 +72,10 @@ internal static partial class ProjectBuilder
 
         try
         {
-            var result = await RunAsync(dotnet, arguments, fullPath, TimeSpan.FromMinutes(2), cancellationToken).ConfigureAwait(false);
+            // The dotnet host looks for global.json from its working directory upward, and since .NET 10
+            // its sdk.paths can name an SDK folder next to it, whose dotnet.dll the host then runs. So the
+            // evaluation, which precedes the allow list check, runs from a folder the project does not control.
+            var result = await RunAsync(dotnet, arguments, Path.GetTempPath(), TimeSpan.FromMinutes(2), cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
             return result is (0, var output) && AssemblyNameFrom(output) is { } name
                 ? (Path.Combine(Path.GetDirectoryName(fullPath)!, name + ".exe"), true)
@@ -113,11 +116,11 @@ internal static partial class ProjectBuilder
                 $"Pass a plain name of letters, digits, '.', '_' and '-' that starts with a letter or digit, e.g. {example}.");
 
     /// <summary>
-    /// Runs the .NET SDK host in the project's folder; null when it did not finish in time or the caller
-    /// cancelled, so callers check their token first.
+    /// Runs the .NET SDK host in <paramref name="workingDirectory"/>; null when it did not finish in time or
+    /// the caller cancelled, so callers check their token first.
     /// </summary>
     private static async Task<(int ExitCode, string Output)?> RunAsync(
-        string dotnet, IEnumerable<string> arguments, string projectPath, TimeSpan timeout, CancellationToken cancellationToken)
+        string dotnet, IEnumerable<string> arguments, string workingDirectory, TimeSpan timeout, CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo(dotnet, arguments)
         {
@@ -125,7 +128,7 @@ internal static partial class ProjectBuilder
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WorkingDirectory = Path.GetDirectoryName(projectPath)!,
+            WorkingDirectory = workingDirectory,
             StandardOutputEncoding = Encoding.UTF8,
         };
         startInfo.Environment["DOTNET_CLI_UI_LANGUAGE"] = "en";
