@@ -139,6 +139,8 @@ In the background a left click uses the first supported option: Invoke, Toggle, 
 
 In the background the text is set through the Value pattern. Bindings that update only when focus leaves the field (WPF `LostFocus`, WinForms `OnValidation`) are committed by the Netwright Companion in apps Netwright launched. Otherwise the result notes it once per session; use `foreground: true` if the app reads the value from such a binding.
 
+With `foreground: true` the target gets keyboard focus first. A target that does not accept it (a label or a container, for example) fails at once with `NOT_ACTIONABLE` ("does not accept keyboard focus"). Waiting does not help: target the text field itself, or leave `foreground` off if the target has the Value pattern.
+
 ## desktop_set_state
 
 Set exactly one of:
@@ -158,6 +160,8 @@ Set exactly one of:
 | `keys` | `Enter`, `Ctrl+S`, `Alt+F4`, `Tab Tab Enter`: key names are Enter, Tab, Escape, Space, Backspace, Delete, Insert, Home, End, PageUp, PageDown, Up/Down/Left/Right, F1–F24, A–Z, 0–9, combined with Ctrl/Alt/Shift/Win |
 | `target` | focus this element first |
 | `foreground` | must be `true` |
+
+A `target` that does not accept keyboard focus (a label, for example) fails at once with `NOT_ACTIONABLE` ("does not accept keyboard focus") instead of being clicked, because a click may act on it. Waiting does not help: target the element that should receive the keys, or click or select it first and press the keys without a target.
 
 ## desktop_scroll
 
@@ -272,7 +276,7 @@ public async Task Checkout_succeeds()
 | `AMBIGUOUS_SELECTOR` | Several elements match; the candidates are listed |
 | `INVALID_SELECTOR` | Selector syntax error |
 | `STALE_REF` | The Ref's element no longer exists |
-| `NOT_ACTIONABLE` | The element stayed disabled or offscreen |
+| `NOT_ACTIONABLE` | The element stayed disabled or offscreen. For `press_key` and foreground `type` it can also mean "does not accept keyboard focus": then waiting does not help, target another element |
 | `NEEDS_FOREGROUND` | Retry with `foreground: true` |
 | `NOT_SUPPORTED` | The element does not support the operation (see `desktop_inspect`) |
 | `EXPECTATION_FAILED` | `desktop_expect` did not pass |

@@ -316,7 +316,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
         {
             return _reader.Capture(app.ProcessIds, CaptureDetail.Full, includeOffscreen);
         }
-        catch (COMException ex) when (ex.HResult == unchecked((int)0x80131505))
+        catch (Exception ex) when (PatternCalls.IsUiaTimeout(ex))
         {
             throw new NetwrightException(ErrorCodes.AppNotResponding, $"{app.ExecutableName} is not responding to UI Automation.", "It may be busy or hung. Wait and retry.", ex);
         }
@@ -330,7 +330,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
         {
             return _reader.Capture(app.ProcessIds, CaptureDetail.Light, includeOffscreen);
         }
-        catch (COMException ex) when (ex.HResult == unchecked((int)0x80131505))
+        catch (Exception ex) when (PatternCalls.IsUiaTimeout(ex))
         {
             throw new NetwrightException(ErrorCodes.AppNotResponding, $"{app.ExecutableName} is not responding to UI Automation.", "It may be busy or hung. Wait and retry.", ex);
         }

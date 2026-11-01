@@ -203,3 +203,43 @@ public class ArgumentQuotingTests
         Assert.Equal("--tab Grid \"C:\\My Files\\a.txt\" \"say \\\"hi\\\"\" \"\"", DesktopSession.JoinArguments(["--tab", "Grid", "C:\\My Files\\a.txt", "say \"hi\"", ""]));
     }
 }
+
+public class PatternCallsTests
+{
+    [Fact]
+    public void Maps_invalid_operation_and_timeout_from_ui_automation()
+    {
+        // UIA_E_INVALIDOPERATION and UIA_E_TIMEOUT reach .NET as these exception types, not as COMException.
+        var node = Button("Root");
+
+        Assert.True(PatternCalls.IsUiaFailure(new InvalidOperationException()));
+        Assert.True(PatternCalls.IsUiaFailure(new TimeoutException()));
+        Assert.True(PatternCalls.IsUiaFailure(new System.Runtime.InteropServices.COMException()));
+        Assert.False(PatternCalls.IsUiaFailure(new ArgumentException()));
+        Assert.Equal(ErrorCodes.NotSupported, PatternCalls.Translate(new InvalidOperationException(), node).Code);
+        Assert.Equal(ErrorCodes.AppNotResponding, PatternCalls.Translate(new TimeoutException(), node).Code);
+    }
+
+    [Fact]
+    public void Recognizes_a_ui_automation_timeout_by_its_exception_type()
+    {
+        // Captures map a timeout to APP_NOT_RESPONDING; it never arrives as a COMException.
+        Assert.True(PatternCalls.IsUiaTimeout(new TimeoutException()));
+        Assert.False(PatternCalls.IsUiaTimeout(new InvalidOperationException()));
+        Assert.False(PatternCalls.IsUiaTimeout(new System.Runtime.InteropServices.COMException()));
+    }
+
+    [Fact]
+    public void Only_known_focus_refusals_count_as_refusing_keyboard_focus()
+    {
+        // FocusForKeys turns these into NOT_ACTIONABLE; an unknown HRESULT such as E_FAIL stays NOT_SUPPORTED.
+        var node = Button("Root");
+        var uiaNotSupported = new System.Runtime.InteropServices.COMException("not supported", unchecked((int)0x80040204));
+
+        Assert.True(PatternCalls.IsFocusRefusal(PatternCalls.Translate(new InvalidOperationException(), node)));
+        Assert.True(PatternCalls.IsFocusRefusal(PatternCalls.Translate(uiaNotSupported, node)));
+        Assert.False(PatternCalls.IsFocusRefusal(PatternCalls.Translate(new System.Runtime.InteropServices.COMException(), node)));
+        Assert.False(PatternCalls.IsFocusRefusal(PatternCalls.Translate(new TimeoutException(), node)));
+        Assert.False(PatternCalls.IsFocusRefusal(new NetwrightException(ErrorCodes.NotSupported, "no inner exception")));
+    }
+}
