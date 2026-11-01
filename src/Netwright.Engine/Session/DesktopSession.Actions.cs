@@ -581,7 +581,7 @@ public sealed partial class DesktopSession
             UiNode? node = null;
             if (target is null)
             {
-                node = tree.Focused ?? MainWindow(tree, RequireApp());
+                node = tree.Focused ?? tree.ActiveModal ?? MainWindow(tree, RequireApp());
             }
             else
             {

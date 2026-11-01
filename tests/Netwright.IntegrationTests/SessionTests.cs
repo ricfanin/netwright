@@ -157,6 +157,24 @@ public sealed partial class SessionTests(ITestOutputHelper output)
 
     [Theory]
     [MemberData(nameof(Kinds))]
+    public async Task An_open_modal_dialog_is_marked_modal(FixtureKind kind)
+    {
+        await using var session = await Fixtures.LaunchAsync(kind);
+        await session.ClickAsync("#btnOpenModal");
+        await session.WaitAsync(new WaitRequest { Target = "#btnYes" });
+
+        var snapshot = (await session.SnapshotAsync()).Text;
+        output.WriteLine(snapshot);
+
+        Assert.Matches(@"\smodal(\s|$)", DialogLine(snapshot));
+        await session.ClickAsync("#btnNo");
+    }
+
+    internal static string DialogLine(string snapshot) =>
+        snapshot.ReplaceLineEndings("\n").Split('\n').Single(l => l.Contains("window \"Confirm\"", StringComparison.Ordinal));
+
+    [Theory]
+    [MemberData(nameof(Kinds))]
     public async Task Tree_items_can_be_expanded_and_selected(FixtureKind kind)
     {
         await using var session = await Fixtures.LaunchAsync(kind, "Tree");

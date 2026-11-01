@@ -33,7 +33,15 @@ public sealed class UiTree
         return _byKey.GetValueOrDefault(key);
     }
 
-    public UiNode? Focused => AllNodes.LastOrDefault(n => n.HasFocus);
+    /// <summary>
+    /// The element with keyboard focus. While a modal window is open it blocks input to the rest of
+    /// the app, so focus is looked for inside that window only: providers that keep a focused element
+    /// per window would otherwise name an element behind the dialog. Null when none is found there.
+    /// </summary>
+    public UiNode? Focused => (ActiveModal?.DescendantsAndSelf() ?? AllNodes).LastOrDefault(n => n.HasFocus);
+
+    /// <summary>The innermost open modal window (the last one in document order), or null.</summary>
+    public UiNode? ActiveModal => AllNodes.LastOrDefault(n => n.ControlTypeId == Uia.ControlTypeIds.Window && n.IsModal == true);
 
     /// <summary>
     /// A cheap fingerprint of everything a Change Report can mention. Two equal fingerprints mean the

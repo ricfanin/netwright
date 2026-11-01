@@ -76,6 +76,35 @@ public class ChangeReporterTests
     }
 
     [Fact]
+    public void Focus_behind_an_open_modal_dialog_is_not_reported()
+    {
+        // Providers that keep a focused element per window report the main window's element as focused too.
+        static UiTree Screen(bool staleFocus, bool dialogFocus) => Tree(Win("Main", "w",
+            Node(ControlTypeIds.Button, "Change tenant", "IconButton.Change_Tenant", UiPatterns.Invoke, focused: staleFocus, key: "tenant"),
+            Modal("Select", "dlg", Node(ControlTypeIds.TreeItem, "Documents", patterns: UiPatterns.SelectionItem, focused: dialogFocus, key: "docs"))));
+
+        var stale = ChangeReporter.Build(Screen(false, false), Screen(true, false), _renderer);
+        var inDialog = ChangeReporter.Build(Screen(false, false), Screen(true, true), _renderer);
+
+        Assert.DoesNotContain("focus:", stale.Text, StringComparison.Ordinal);
+        Assert.Contains("focus: treeitem \"Documents\"", inDialog.Text, StringComparison.Ordinal);
+        Assert.Equal("docs", Screen(true, true).Focused?.Key);
+        Assert.Equal("tenant", Tree(Win("Main", "w", Node(ControlTypeIds.Button, "Change tenant", focused: true, key: "tenant"))).Focused?.Key);
+    }
+
+    private static UiNode Modal(string title, string key, params UiNode[] children)
+    {
+        var window = new UiNode { Key = key, ControlTypeId = ControlTypeIds.Window, Role = "window", Name = title, Patterns = UiPatterns.Window, IsModal = true };
+        foreach (var child in children)
+        {
+            child.Parent = window;
+            window.Children.Add(child);
+        }
+
+        return window;
+    }
+
+    [Fact]
     public void Element_becoming_visible_counts_as_added()
     {
         var before = Tree(Win("Main", "w", Node(ControlTypeIds.Button, "Later", patterns: UiPatterns.Invoke, offscreen: true, key: "later")));

@@ -62,6 +62,20 @@ public sealed class WinUiTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task An_open_modal_window_is_marked_modal()
+    {
+        await using var session = await Fixtures.LaunchAsync(FixtureKind.WinUI);
+        await session.ClickAsync("#btnOpenModal");
+        await session.WaitAsync(new WaitRequest { Target = "#btnYes" });
+
+        var snapshot = (await session.SnapshotAsync()).Text;
+        output.WriteLine(snapshot);
+
+        Assert.Matches(@"\smodal(\s|$)", SessionTests.DialogLine(snapshot));
+        await session.ClickAsync("#btnNo");
+    }
+
+    [Fact]
     public async Task Offscreen_item_is_scrolled_into_view_and_clicked()
     {
         await using var session = await Fixtures.LaunchAsync(FixtureKind.WinUI, "Scroll");
