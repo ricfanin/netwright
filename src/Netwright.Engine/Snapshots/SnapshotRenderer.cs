@@ -86,9 +86,11 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
             return false;
         }
 
+        // A text that acts, like a link, is a control of its row even when it repeats the row's name.
         if (node.ControlTypeId == ControlTypeIds.Text)
         {
-            return node.Name.Length > 0 && !string.Equals(node.Name, node.Parent?.Name, StringComparison.OrdinalIgnoreCase) && !IsGridContainer(node.Parent);
+            return node.Name.Length > 0 && !IsGridContainer(node.Parent) &&
+                   (!string.Equals(node.Name, node.Parent?.Name, StringComparison.OrdinalIgnoreCase) || (IsGridRow(node.Parent!) && IsRowAction(node)));
         }
 
         if (node.ControlTypeId == ControlTypeIds.Image && node.Name.Length == 0)
@@ -97,8 +99,8 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
         }
 
         // Cells are summarized into their row, column headers into one line. A cell that is a control
-        // of its own keeps its line, like the other controls of a row.
-        return node.Parent is not { } parent || (IsGridRow(parent) ? IsRowAction(node) : !IsHeaderRow(parent));
+        // of its own keeps its line, like the other controls of a row and a grid nested in the row.
+        return node.Parent is not { } parent || (IsGridRow(parent) ? IsRowAction(node) || IsGridContainer(node) : !IsHeaderRow(parent));
     }
 
     /// <param name="node">The element.</param>
@@ -163,7 +165,15 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
             if (IsGridRow(node))
             {
                 WriteLine(node, depth, state, prefix, RowSummary(node), roleOverride: "row");
-                RenderRowActions(node, depth + 1, state, prefix);
+                if (state.MaxDepth is { } rowDepth && depth >= rowDepth)
+                {
+                    WriteCutOff(node, depth, state, prefix);
+                }
+                else
+                {
+                    RenderRowActions(node, depth + 1, state, prefix);
+                }
+
                 return;
             }
 
@@ -261,7 +271,8 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
                 shownItems++;
             }
 
-            RenderNode(action, depth, row.Name, state, prefix);
+            // No parent name: the Text rule would hide an acting text that repeats the row's name.
+            RenderNode(action, depth, null, state, prefix);
         }
 
         WriteOmittedItems(depth, state, prefix, hiddenItems, offscreen: 0);
@@ -295,11 +306,19 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
     /// Counts what a depth limit leaves out below <paramref name="node"/>: the elements a Snapshot with
     /// <c>root=</c> this node would list, with the same item limits and collapsing. The line always carries
     /// the node's Ref, even for text that gets none on its own line, so the Agent can continue from it.
+    /// Below a grid row that is its row actions, as for the row's own line.
     /// </summary>
     private void WriteCutOff(UiNode node, int depth, RenderState state, string prefix)
     {
         var counter = new RenderState { Counting = true };
-        RenderBelow(node, depth, counter, prefix);
+        if (!options.Full && IsGridRow(node))
+        {
+            RenderRowActions(node, depth + 1, counter, prefix);
+        }
+        else
+        {
+            RenderBelow(node, depth, counter, prefix);
+        }
         var hidden = counter.Lines;
         if (hidden == 0)
         {
@@ -489,11 +508,12 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
                 continue;
             }
 
-            if (IsRowAction(child) || IsNestedItem(child))
+            // A grid in a row (WPF RowDetailsTemplate, the usual master-detail layout) is rendered as a grid.
+            if (IsRowAction(child) || IsNestedItem(child) || IsGridContainer(child))
             {
                 yield return child;
             }
-            else if (!IsGridContainer(child))
+            else
             {
                 foreach (var nested in RowActions(child))
                 {

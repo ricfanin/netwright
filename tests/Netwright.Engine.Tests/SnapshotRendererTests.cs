@@ -222,6 +222,60 @@ public class SnapshotRendererTests
     }
 
     [Fact]
+    public void Keeps_a_grid_nested_in_a_row_as_a_grid()
+    {
+        // WPF RowDetailsTemplate: the details presenter under the order row holds a grid of line rows.
+        static UiNode Line(string name) => Node(ControlTypeIds.DataItem, name, patterns: UiPatterns.SelectionItem,
+            children: Node(ControlTypeIds.Custom, patterns: UiPatterns.Invoke | UiPatterns.Value, value: name));
+        var lines = Node(ControlTypeIds.DataGrid, "Lines", patterns: UiPatterns.Grid, rows: 2, children: [Line("Line A"), Line("Line B")]);
+        var order = Node(ControlTypeIds.DataItem, "Order 1", patterns: UiPatterns.SelectionItem, children:
+        [
+            Node(ControlTypeIds.Custom, patterns: UiPatterns.Invoke | UiPatterns.Value, value: "Order 1"),
+            Node(ControlTypeIds.Custom, children: lines),
+        ]);
+        var grid = Node(ControlTypeIds.DataGrid, "Orders", patterns: UiPatterns.Grid, rows: 1, children: order);
+
+        var renderer = Renderer();
+        var text = renderer.Render([Window("Main", grid)]).Text;
+
+        Assert.Matches(@"- row ""Order 1[^""]*"" \[e\d+\]\r?\n\s+- grid ""Lines"" \[e\d+\][^\r\n]*\r?\n\s+- row ""Line A"" \[e\d+\]\r?\n\s+- row ""Line B"" \[e\d+\]", text);
+        Assert.True(renderer.IsReportable(lines));
+    }
+
+    [Fact]
+    public void A_row_at_the_depth_limit_counts_its_controls_like_a_snapshot_of_the_row()
+    {
+        var order = Node(ControlTypeIds.DataItem, "Order 1", patterns: UiPatterns.SelectionItem, children:
+        [
+            Text("Order 1"),
+            Button("Open"),
+            Node(ControlTypeIds.List, "Lines", children: [Node(ControlTypeIds.DataItem, "Line A", patterns: UiPatterns.SelectionItem, children: Button("Remove"))]),
+        ]);
+        var window = Window("Main", Node(ControlTypeIds.List, "Orders", children: order));
+
+        // Window at depth 0, list at 1, the row at 2: its controls would be at 3.
+        var cut = Renderer(new SnapshotOptions { MaxDepth = 2 }).Render([window]).Text;
+        var below = Renderer().Render([order]).Text.ReplaceLineEndings("\n").Split('\n').Length - 1;
+
+        Assert.Equal(3, below);
+        Assert.Matches(@"- row ""Order 1 \| Open \| Lines"" \[e3\]\r?\n\s+- \.\.\. 3 more elements below \(root=e3\)", cut);
+        Assert.DoesNotContain("button \"Open\"", cut, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Shows_an_acting_text_named_like_its_row()
+    {
+        var link = Node(ControlTypeIds.Text, "Order 7", patterns: UiPatterns.Invoke);
+        var row = Node(ControlTypeIds.DataItem, "Order 7", patterns: UiPatterns.SelectionItem, children: link);
+
+        var renderer = Renderer();
+        var text = renderer.Render([Window("Main", Node(ControlTypeIds.List, "Orders", children: row))]).Text;
+
+        Assert.Matches(@"- row ""Order 7"" \[e\d+\]\r?\n\s+- text ""Order 7"" \[e\d+\]", text);
+        Assert.True(renderer.IsReportable(link));
+    }
+
+    [Fact]
     public void Shows_the_radio_buttons_a_row_holds()
     {
         // UI Automation radio buttons expose SelectionItem, not Toggle.
