@@ -55,6 +55,32 @@ public sealed class ScreenshotFilesTests : IDisposable
         Assert.Equal(Path.Combine(root, "shots", "a.png"), ScreenshotFiles.Resolve(root, "shots/a.png"));
     }
 
+    [Theory]
+    [InlineData("C:shot.png")]
+    [InlineData("\\shot.png")]
+    [InlineData("/shot.png")]
+    public void Refuses_rooted_paths(string path)
+    {
+        var error = Assert.Throws<NetwrightException>(() => ScreenshotFiles.Resolve(_directory, path));
+
+        Assert.Contains("not relative", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Refuses_an_absolute_path_even_inside_the_directory()
+    {
+        Assert.Equal(ErrorCodes.InvalidArgument, Assert.Throws<NetwrightException>(() => ScreenshotFiles.Resolve(_directory, Path.Combine(_directory, "a.png"))).Code);
+    }
+
+    [Fact]
+    public void Refuses_a_sibling_that_differs_from_the_directory_only_in_case()
+    {
+        // On a folder with per-directory case sensitivity (created from WSL) that sibling is another folder.
+        var sibling = "..\\" + Path.GetFileName(_directory).ToUpperInvariant() + "\\shot.png";
+
+        Assert.Equal(ErrorCodes.InvalidArgument, Assert.Throws<NetwrightException>(() => ScreenshotFiles.Resolve(_directory, sibling)).Code);
+    }
+
     [Fact]
     public void Refuses_to_save_without_a_configured_directory()
     {

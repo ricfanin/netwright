@@ -16,7 +16,7 @@ public static class ScreenshotFiles
         "COM¹", "COM²", "COM³", "LPT¹", "LPT²", "LPT³",
     };
 
-    /// <summary>Resolves <paramref name="path"/> (relative to <paramref name="directory"/>, or absolute inside it) to a full .png path.</summary>
+    /// <summary>Resolves <paramref name="path"/>, relative to <paramref name="directory"/>, to a full .png path.</summary>
     public static string Resolve(string? directory, string path)
     {
         if (string.IsNullOrWhiteSpace(directory))
@@ -32,6 +32,15 @@ public static class ScreenshotFiles
         }
 
         var root = Root(directory);
+
+        // Only relative paths: combined with the root, they keep the root's exact spelling unless ".." climbs
+        // out, so the prefix check can compare case-sensitively. On a folder with per-directory case
+        // sensitivity, C:\cs\SHOTS is a sibling of the root C:\cs\shots, not the root itself.
+        if (Path.IsPathRooted(path.Trim()))
+        {
+            throw NetwrightException.InvalidArgument($"'{path}' is not relative.", $"Pass a path relative to the screenshot directory {root}.");
+        }
+
         var prefix = Path.EndsInDirectorySeparator(root) ? root : root + Path.DirectorySeparatorChar;
         string full;
         try
@@ -43,7 +52,7 @@ public static class ScreenshotFiles
             throw NetwrightException.InvalidArgument($"'{path}' is not a valid file path.");
         }
 
-        if (!full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        if (!full.StartsWith(prefix, StringComparison.Ordinal))
         {
             throw NetwrightException.InvalidArgument($"'{path}' is outside the screenshot directory {root}.", "Pass a path relative to that directory.");
         }
@@ -113,7 +122,11 @@ public static class ScreenshotFiles
 
     private static bool IsDeviceName(string segment) => DeviceNames.Contains(segment.Split('.')[0].TrimEnd(' '));
 
-    /// <summary>A junction or symbolic link below the root could point outside it, so writing through one is refused.</summary>
+    /// <summary>
+    /// A junction or symbolic link below the root could point outside it, so writing through one is refused.
+    /// A link created between this check and the move is not caught; only someone who can already write
+    /// into the screenshot directory could do that.
+    /// </summary>
     private static void RefuseLinks(string root, string full, string path)
     {
         var file = new FileInfo(full);
