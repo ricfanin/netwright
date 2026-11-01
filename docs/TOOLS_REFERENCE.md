@@ -66,7 +66,7 @@ clicked button "Submit" [e17] #btnSubmit
 focus: button "Yes" [e32] #btnYes
 ```
 
-`+` added, `-` removed, `~` changed, `focus:` focus moved. Read the report instead of taking a new Snapshot after every action.
+`+` added, `-` removed, `~` changed, `focus:` focus moved. While a modal dialog is open, focus is only looked for inside it; when no element there has focus, the line is left out. Read the report instead of taking a new Snapshot after every action.
 
 **Foreground Action.** Some input cannot be delivered in the background: key presses, right and double clicks, and clicks on elements that have no click pattern. Those tools return `NEEDS_FOREGROUND`. Pass `foreground: true` to briefly bring the window forward and use the real mouse or keyboard. Netwright then returns focus and the cursor to where the user left them. The exception is when the action opened a menu or dialog, which would close if it lost focus.
 
