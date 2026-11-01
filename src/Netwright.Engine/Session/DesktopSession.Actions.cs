@@ -819,8 +819,10 @@ public sealed partial class DesktopSession
     /// <summary>
     /// Gives the element keyboard focus before real key input. An element that refuses focus through
     /// UI Automation is reported with a hint instead of being clicked, because a click may act on it.
+    /// Some providers (WinForms labels and tree nodes) accept SetFocus without moving focus, so the
+    /// keys would go to whichever control had it; that is reported the same way.
     /// </summary>
-    private static void FocusForKeys(UiNode node, string hint)
+    private void FocusForKeys(UiNode node, string hint)
     {
         try
         {
@@ -832,7 +834,73 @@ public sealed partial class DesktopSession
         }
 
         Wait.UntilInputIsProcessed();
+        if (!KeyboardFocusReached(node))
+        {
+            throw new NetwrightException(ErrorCodes.NotActionable, $"{PatternCalls.Describe(node)} did not take keyboard focus.", hint);
+        }
     }
+
+    /// <summary>
+    /// True when keyboard focus is on the element or inside it, or on a container that holds the
+    /// element as its selected item (a tree or list keeps focus itself and routes keys to its
+    /// selection). Also true when focus cannot be read, so an unreadable state keeps the old behaviour.
+    /// </summary>
+    private bool KeyboardFocusReached(UiNode node)
+    {
+        if (node.Native is not { } target)
+        {
+            return true;
+        }
+
+        try
+        {
+            // Focus moves through the app's message queue; give a slow provider a moment.
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                if (attempt > 0)
+                {
+                    Thread.Sleep(50);
+                }
+
+                var focused = _uia.GetFocusedElement();                if (focused is null)
+                {
+                    continue;
+                }
+
+                if (IsSameOrAncestor(target, focused) || (IsSameOrAncestor(focused, target) && IsLiveSelected(target)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch (Exception ex) when (PatternCalls.IsUiaFailure(ex))
+        {
+            return true;
+        }
+    }
+
+    /// <summary>True when <paramref name="ancestor"/> is <paramref name="element"/> or one of its ancestors in the raw view.</summary>
+    private bool IsSameOrAncestor(IUIAutomationElement ancestor, IUIAutomationElement element)
+    {
+        var walker = _uia.RawViewWalker;
+        var current = element;
+        for (var depth = 0; current is not null && depth < 256; depth++)
+        {
+            if (_uia.CompareElements(current, ancestor) != 0)
+            {
+                return true;
+            }
+
+            current = walker.GetParentElement(current);
+        }
+
+        return false;
+    }
+
+    private static bool IsLiveSelected(IUIAutomationElement element) =>
+        element.GetCurrentPattern(PatternIds.SelectionItem) is IUIAutomationSelectionItemPattern item && item.CurrentIsSelected != 0;
 
     private static Point ClickPoint(UiNode node)
     {

@@ -164,7 +164,7 @@ Set exactly one of:
 | `target` | focus this element first |
 | `foreground` | must be `true` |
 
-A `target` that does not accept keyboard focus (a label, for example) fails at once with `NOT_ACTIONABLE` ("does not accept keyboard focus") instead of being clicked, because a click may act on it. Waiting does not help: target the element that should receive the keys, or click or select it first and press the keys without a target.
+A `target` that does not accept keyboard focus (a label, for example) fails at once with `NOT_ACTIONABLE` ("does not accept keyboard focus") instead of being clicked, because a click may act on it. The same applies when focus does not reach it ("did not take keyboard focus"), e.g. an unselected WinForms tree item, whose tree keeps focus. Waiting does not help: target the element that should receive the keys, or click or select it first and press the keys without a target.
 
 ## desktop_scroll
 
@@ -288,7 +288,7 @@ public async Task Checkout_succeeds()
 | `AMBIGUOUS_SELECTOR` | Several elements match; the candidates are listed |
 | `INVALID_SELECTOR` | Selector syntax error |
 | `STALE_REF` | The Ref's element no longer exists |
-| `NOT_ACTIONABLE` | The element stayed disabled or offscreen. For `press_key` and foreground `type` it can also mean "does not accept keyboard focus": then waiting does not help, target another element |
+| `NOT_ACTIONABLE` | The element stayed disabled or offscreen. For `press_key` and foreground `type` it can also mean "does not accept keyboard focus" or "did not take keyboard focus": then waiting does not help, target another element |
 | `NEEDS_FOREGROUND` | Retry with `foreground: true` |
 | `NOT_SUPPORTED` | The element does not support the operation (see `desktop_inspect`) |
 | `EXPECTATION_FAILED` | `desktop_expect` did not pass |
