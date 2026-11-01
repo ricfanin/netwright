@@ -105,8 +105,11 @@ A non-forced close that does not finish within 5 s (for example because of a "sa
 | `root` | Ref or Selector: show only this subtree |
 | `full` | Show every element, including layout panes, scrollbars and composite parts |
 | `include_offscreen` | Include elements scrolled out of view |
+| `depth` | Show this many levels below the root (0: the root only). An element at the limit gets one line such as `... 37 more elements below (root=e12)`, counting the elements `root=e12` would list; continue with `root=e12` |
 
 The default view keeps interactive elements, text and named containers. It collapses unnamed layout panes, summarizes grid rows, shows at most 20 items per list and 300 lines, and leaves out offscreen elements.
+
+On a large view, explore top-down with `root` and `depth` (for example `full=true depth=2`) instead of reading the whole `full` Snapshot at once.
 
 ## desktop_find
 

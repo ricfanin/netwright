@@ -42,6 +42,21 @@ public class ChangeReporterTests
     }
 
     [Fact]
+    public void A_depth_limit_from_the_snapshot_options_does_not_cut_change_reports()
+    {
+        var renderer = new SnapshotRenderer(new RefRegistry(), new SnapshotOptions { MaxDepth = 0 });
+        var before = Tree(Win("Main", "w", Button("Delete", key: "del")));
+        var dialog = Win("Confirm", "dlg", Node(ControlTypeIds.Group, "Question", key: "q", children: [Text("Are you sure?", key: "t"), Button("Yes", key: "yes")]));
+        var after = Tree(Win("Main", "w", Button("Delete", key: "del")), dialog);
+
+        var text = ChangeReporter.Build(before, after, renderer).Text;
+
+        Assert.Contains("+ button \"Yes\"", text, StringComparison.Ordinal);
+        Assert.Contains("+ text \"Are you sure?\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("below", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Reports_changed_state_removed_elements_and_focus()
     {
         var before = Tree(Win("Main", "w",
