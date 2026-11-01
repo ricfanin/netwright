@@ -67,8 +67,15 @@ public sealed partial class DesktopSession : IAsyncDisposable
             if (!string.IsNullOrWhiteSpace(request.Project))
             {
                 // Building runs the project's MSBuild logic, so the allow list must be checked before
-                // the build, against the executable the project is expected to produce.
-                EnsureAllowed(System.IO.Path.ChangeExtension(System.IO.Path.GetFullPath(request.Project), ".exe"));
+                // the build, against the executable the project is expected to produce. Its name comes
+                // from an MSBuild evaluation (evaluation only: props are imported, no targets run), with
+                // response files off and framework and configuration limited to plain names.
+                if (_options.AllowedApps.Count > 0)
+                {
+                    var (expected, evaluated) = await ProjectBuilder.ExpectedExecutableAsync(_options.DotnetExecutable, request.Project, request.Configuration, request.Framework, cancellationToken).ConfigureAwait(false);
+                    EnsureAllowed(expected, evaluated ? null : "The project could not be evaluated, so its file name was used.");
+                }
+
                 (fileName, arguments) = await ProjectBuilder.BuildAsync(_options.DotnetExecutable, request.Project, request.Configuration, request.Framework, cancellationToken).ConfigureAwait(false);
                 if (request.Arguments.Count > 0)
                 {
@@ -582,7 +589,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
         }
     }
 
-    private void EnsureAllowed(string executablePath)
+    private void EnsureAllowed(string executablePath, string? note = null)
     {
         if (_options.AllowedApps.Count == 0)
         {
@@ -603,7 +610,7 @@ public sealed partial class DesktopSession : IAsyncDisposable
         throw new NetwrightException(
             ErrorCodes.NotAllowed,
             $"{executablePath} is not in the allowed apps list.",
-            $"The server was started with --allow {string.Join(" --allow ", _options.AllowedApps)}. Ask the User to add this app.");
+            (note is null ? "" : note + " ") + $"The server was started with --allow {string.Join(" --allow ", _options.AllowedApps)}. Ask the User to add this app.");
     }
 
     private static Process FindProcess(AttachRequest request)

@@ -44,8 +44,10 @@ public sealed record LaunchRequest
 
     public string? WorkingDirectory { get; init; }
 
+    /// <summary>Build configuration (default Debug). A plain name only: letters, digits, '.', '_' and '-'.</summary>
     public string? Configuration { get; init; }
 
+    /// <summary>Target framework of a multi-targeted project. A plain name, like <see cref="Configuration"/>.</summary>
     public string? Framework { get; init; }
 
     public int TimeoutMs { get; init; } = 30000;

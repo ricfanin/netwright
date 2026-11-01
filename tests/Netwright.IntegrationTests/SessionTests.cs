@@ -392,6 +392,82 @@ public sealed partial class SessionTests(ITestOutputHelper output)
         var ex = await Assert.ThrowsAsync<NetwrightException>(() => session.LaunchAsync(new LaunchRequest { Project = project }));
 
         Assert.Equal(ErrorCodes.NotAllowed, ex.Code);
+
+        // Without an SDK the project cannot be evaluated; the Agent learns that the file name stood in.
+        Assert.Contains("could not be evaluated, so its file name was used", ex.Hint, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("Category", "Build")]
+    public async Task Allow_list_is_checked_against_the_evaluated_assembly_name()
+    {
+        // The name comes from Directory.Build.props and a property, as in many larger solutions.
+        var directory = Directory.CreateTempSubdirectory("netwright-allow-").FullName;
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, "Directory.Build.props"), "<Project><PropertyGroup><AssemblyName>Acme.$(MSBuildProjectName)</AssemblyName></PropertyGroup></Project>");
+            var project = Path.Combine(directory, "Client.Shell.csproj");
+            File.WriteAllText(project, "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework></PropertyGroup></Project>");
+
+            // A response file next to the project would turn the name into an allowed one; it must not be read.
+            File.WriteAllText(Path.Combine(directory, "Directory.Build.rsp"), "-p:AssemblyName=Client.Shell");
+
+            Assert.Equal((Path.Combine(directory, "Acme.Client.Shell.exe"), true), await ProjectBuilder.ExpectedExecutableAsync("dotnet", project, null, null, CancellationToken.None));
+
+            // Matching only the project file name no longer passes the check, and nothing gets built.
+            await using var session = new DesktopSession(new SessionOptions { AllowedApps = ["Client.Shell*"], DotnetExecutable = "dotnet" });
+            var ex = await Assert.ThrowsAsync<NetwrightException>(() => session.LaunchAsync(new LaunchRequest { Project = project }));
+            Assert.Equal(ErrorCodes.NotAllowed, ex.Code);
+            Assert.Contains("Acme.Client.Shell.exe", ex.Message, StringComparison.Ordinal);
+            Assert.False(Directory.Exists(Path.Combine(directory, "obj")), "The project must not be restored or built before the allow list check.");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "Build")]
+    public async Task Evaluation_ignores_a_global_json_next_to_the_project()
+    {
+        // Since .NET 10, sdk.paths lets global.json point the dotnet host at an SDK folder beside it.
+        // Run from the project folder, the host would load this dotnet.dll before the allow list check.
+        var directory = Directory.CreateTempSubdirectory("netwright-allow-").FullName;
+        try
+        {
+            var sdk = Directory.CreateDirectory(Path.Combine(directory, ".dotnet", "sdk", "10.0.100")).FullName;
+            File.WriteAllText(Path.Combine(sdk, "dotnet.dll"), "not an SDK");
+            File.WriteAllText(Path.Combine(directory, "global.json"), "{\"sdk\":{\"version\":\"10.0.100\",\"paths\":[\".dotnet\"]}}");
+            var project = Path.Combine(directory, "Client.Shell.csproj");
+            File.WriteAllText(project, "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><AssemblyName>Acme.Client.Shell</AssemblyName></PropertyGroup></Project>");
+
+            Assert.Equal((Path.Combine(directory, "Acme.Client.Shell.exe"), true), await ProjectBuilder.ExpectedExecutableAsync("dotnet", project, null, null, CancellationToken.None));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "Build")]
+    public async Task Projects_on_a_unc_or_device_path_are_not_evaluated()
+    {
+        // \\?\UNC\host\share paths start the same way, so a local \\?\ path stands in for a share here.
+        var directory = Directory.CreateTempSubdirectory("netwright-allow-").FullName;
+        try
+        {
+            var project = Path.Combine(directory, "Client.Shell.csproj");
+            File.WriteAllText(project, "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><AssemblyName>Acme.Client.Shell</AssemblyName></PropertyGroup></Project>");
+
+            Assert.True((await ProjectBuilder.ExpectedExecutableAsync("dotnet", project, null, null, CancellationToken.None)).Evaluated);
+            Assert.Equal((@"\\?\" + Path.Combine(directory, "Client.Shell.exe"), false), await ProjectBuilder.ExpectedExecutableAsync("dotnet", @"\\?\" + project, null, null, CancellationToken.None));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]
