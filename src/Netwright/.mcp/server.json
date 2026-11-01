@@ -24,6 +24,12 @@
           "description": "Optional ';'-separated wildcard patterns of apps the agent may launch or attach to.",
           "isRequired": false,
           "isSecret": false
+        },
+        {
+          "name": "NETWRIGHT_SCREENSHOT_DIR",
+          "description": "Optional directory desktop_screenshot may save PNGs into (path=, relative to it). Without it, saving is off.",
+          "isRequired": false,
+          "isSecret": false
         }
       ]
     }

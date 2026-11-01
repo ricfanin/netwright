@@ -189,7 +189,7 @@ A `target` that does not accept keyboard focus (a label, for example) fails at o
 |---|---|
 | `target` | window or element (default: the main window) |
 | `max_size` | longest side in pixels (default 1280) |
-| `path` | also save the PNG to this file, relative to the server's `--screenshot-dir` (`.png` is added when missing, an existing file is replaced). Paths outside that directory, through a link, or with device names or `:` are refused; without the option, saving is off |
+| `path` | also save the PNG to this file, relative to the server's `--screenshot-dir` (`.png` is added when missing, an existing file is replaced). Absolute paths, paths outside that directory, through a link, or with device names or `:` are refused; without the option, saving is off |
 | `image` | `false` returns only the text with the saved path, which saves the image tokens (needs `path`) |
 
 Returns a text line with the element and the image size, followed by the PNG image. With `path`, the text has a second line with the full path of the saved file; with `image=false`, the result is only that text:
