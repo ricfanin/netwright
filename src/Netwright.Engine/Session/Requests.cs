@@ -27,6 +27,9 @@ public sealed record SessionOptions
 
     public int ChangeReportMaxLines { get; init; } = 40;
 
+    /// <summary>The only directory screenshots may be saved to; null turns saving off.</summary>
+    public string? ScreenshotDirectory { get; init; }
+
     /// <summary>The .NET SDK host used to build projects.</summary>
     public string DotnetExecutable { get; init; } = Environment.GetEnvironmentVariable("NETWRIGHT_DOTNET") ?? "dotnet";
 }

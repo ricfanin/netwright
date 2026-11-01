@@ -79,6 +79,7 @@ dotnet tool install -g Netwright
 | `--allow <pattern>` (repeatable), or `NETWRIGHT_ALLOW="a*;b.exe"` | allow all | Restrict which executables can be launched or attached. The pattern matches the full path, file name, or name without `.exe`; `*` and `?` are wildcards |
 | `--action-timeout <ms>` | 5000 | How long actions wait for their target to be Actionable |
 | `--settle-timeout <ms>` | 3000 | Upper bound of the wait for the UI to settle after an action |
+| `--screenshot-dir <dir>` | (off) | Lets `desktop_screenshot path=` save PNGs inside this directory, so an Agent can reference them in a report. A relative directory is resolved against the server's working directory at startup. Also read from `NETWRIGHT_SCREENSHOT_DIR` |
 | `--max-snapshot-lines <n>` | 300 | Line budget of a filtered Snapshot |
 | `NETWRIGHT_DOTNET` | `dotnet` | SDK host used to build projects for `desktop_app action=launch project=…` |
 
@@ -147,4 +148,4 @@ Every successful action and expectation is recorded with a stable Selector. Afte
 - Netwright only talks to the local machine over stdio; it opens no network ports.
 - Use `--allow` so an agent cannot operate unrelated apps, such as your mail client or password manager, on the same desktop.
 - Snapshots, values and screenshots are sent to the model. Password fields are masked as `value=***`, but screenshots show whatever is on screen.
-- `desktop_app`, `desktop_click`, `desktop_press_key` and `desktop_window` are annotated as destructive, and read-only tools as read-only, so clients can ask for confirmation selectively.
+- `desktop_app`, `desktop_click`, `desktop_press_key`, `desktop_window` and `desktop_screenshot` (with `path` it replaces existing files in the screenshot directory) are annotated as destructive, and read-only tools as read-only, so clients can ask for confirmation selectively.

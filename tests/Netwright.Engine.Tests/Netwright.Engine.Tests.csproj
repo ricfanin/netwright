@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Netwright.Engine\Netwright.Engine.csproj" />
+    <ProjectReference Include="..\..\src\Netwright\Netwright.csproj" />
   </ItemGroup>
 
   <ItemGroup>
