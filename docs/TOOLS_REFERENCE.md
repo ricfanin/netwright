@@ -68,7 +68,7 @@ focus: button "Yes" [e32] #btnYes
 
 `+` added, `-` removed, `~` changed, `focus:` focus moved. Read the report instead of taking a new Snapshot after every action.
 
-**Foreground Action.** Some input cannot be delivered in the background: key presses, right and double clicks, and clicks on elements that have no click pattern. Those tools return `NEEDS_FOREGROUND`. Pass `foreground: true` to briefly bring the window forward and use the real mouse or keyboard. Netwright then returns focus and the cursor to where the user left them. The exception is when the action opened a menu or dialog, which would close if it lost focus.
+**Foreground Action.** Some input cannot be delivered in the background: key presses (except single keys in WPF apps, see [desktop_press_key](#desktop_press_key)), right and double clicks, and clicks on elements that have no click pattern. Those tools return `NEEDS_FOREGROUND`. Pass `foreground: true` to briefly bring the window forward and use the real mouse or keyboard. Netwright then returns focus and the cursor to where the user left them. The exception is when the action opened a menu or dialog, which would close if it lost focus.
 
 ---
 
@@ -161,10 +161,18 @@ Set exactly one of:
 | Parameter | Description |
 |---|---|
 | `keys` | `Enter`, `Ctrl+S`, `Alt+F4`, `Tab Tab Enter`: key names are Enter, Tab, Escape, Space, Backspace, Delete, Insert, Home, End, PageUp, PageDown, Up/Down/Left/Right, F1–F24, A–Z, 0–9, combined with Ctrl/Alt/Shift/Win |
-| `target` | focus this element first |
-| `foreground` | must be `true` |
+| `target` | the element that gets the keys (with `foreground`, it is focused first) |
+| `foreground` | `true` presses real keys. Without it, only WPF apps launched by Netwright take key presses (see below) |
 
-A `target` that does not accept keyboard focus (a label, for example) fails at once with `NOT_ACTIONABLE` ("does not accept keyboard focus") instead of being clicked, because a click may act on it. The same applies when focus does not reach it ("did not take keyboard focus"), e.g. an unselected WinForms tree item, whose tree keeps focus. Waiting does not help: target the element that should receive the keys, or click or select it first and press the keys without a target.
+**Background (WPF apps launched by Netwright, .NET 8 or later).** Without `foreground`, single keys without modifiers are raised as WPF key events inside the app ([ADR 0009](adr/0009-background-key-presses-through-the-companion.md)), without taking focus. The result always says so:
+
+```
+pressed Down in treeitem "Root" [e2] (raised as WPF key events)
+```
+
+This is not real input. The target and its ancestors get `PreviewKeyDown`/`KeyDown`, the text of a letter, digit or Space, and `PreviewKeyUp`/`KeyUp`, and `KeyBinding`s without modifiers fire. Nothing runs at the WPF input-manager level: no Tab navigation, no access keys or menu mnemonics, no IME. If the app does not react as it does to real keys, retry with `foreground: true`. Chords (Ctrl, Alt, Shift, Win), other apps (WinForms, WinUI, attached, .NET Framework) and elements the Companion cannot find return `NEEDS_FOREGROUND`. A target in a window that an open modal dialog blocks returns `NOT_ACTIONABLE`: press the keys in the dialog. Test Export keeps the mode (`PressKeyAsync(keys, target, foreground: false)`).
+
+**Foreground.** A `target` that does not accept keyboard focus (a label, for example) fails at once with `NOT_ACTIONABLE` ("does not accept keyboard focus") instead of being clicked, because a click may act on it. The same applies when focus does not reach it ("did not take keyboard focus"), e.g. an unselected WinForms tree item, whose tree keeps focus. Waiting does not help: target the element that should receive the keys, or click or select it first and press the keys without a target.
 
 ## desktop_scroll
 

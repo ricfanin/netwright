@@ -35,8 +35,10 @@ internal static class CompanionServer
     /// <item><c>commit &lt;window&gt; &lt;element&gt;</c>: write pending binding values of the element
     /// (WinForms) or of the window (WPF) to their source. Answers <c>ok &lt;count&gt;</c>.</item>
     /// <item><c>act &lt;action&gt; &lt;runtime id&gt; &lt;element&gt; &lt;base64 argument or -&gt;</c>: run
-    /// a pattern on the element. Answers <c>ok</c> (<c>ok &lt;count&gt;</c> for setvalue, with the
-    /// bindings it committed), <c>notfound</c> or <c>unsupported</c>.</item>
+    /// a pattern on the element, or press keys on it (<c>keys</c>, with space-separated virtual-key
+    /// codes, WPF only). Answers <c>ok</c> (<c>ok &lt;count&gt;</c> for setvalue, with the bindings it
+    /// committed), <c>notfound</c>, <c>blocked</c> (keys, the window is disabled by a modal dialog) or
+    /// <c>unsupported</c>.</item>
     /// <item><c>reveal &lt;window&gt;</c> / <c>conceal &lt;window&gt;</c>: show or hide a window of a hidden
     /// app around a Foreground Action. Answers <c>ok</c>.</item>
     /// </list>
@@ -87,7 +89,7 @@ internal static class CompanionServer
 
         if (answer is null && IsLoaded("PresentationFramework"))
         {
-            answer = WpfActions.Perform(action, runtimeId, argument);
+            answer = WpfActions.Perform(action, runtimeId, element, argument);
         }
 
         return answer ?? "unsupported";

@@ -92,7 +92,7 @@ The server sends these rules to the client as MCP instructions; they are repeate
 3. **Read the Change Report.** Each action returns what appeared, disappeared or changed once the UI settled, so a dialog that opens or a validation message that appears is already in the response.
 4. **Wait for asynchronous work** with `desktop_wait text="Loaded"` or `desktop_wait target=#btnNext state=enabled`. Don't poll with Snapshots.
 5. **Verify with `desktop_expect`.** It is cheap, retries until timeout, and the check becomes an assertion in the exported test.
-6. **Stay in the background.** Use `desktop_type` and `desktop_set_state` rather than key presses. Pass `foreground=true` only when a tool asks for it (`NEEDS_FOREGROUND`).
+6. **Stay in the background.** Use `desktop_type` and `desktop_set_state` rather than key presses. A key press in the background (WPF only) is raised as WPF key events, which is not real input. Pass `foreground=true` only when a tool asks for it (`NEEDS_FOREGROUND`).
 7. **Check `desktop_logs`** when behaviour is surprising. Crashes are reported automatically in the next response.
 
 Example session:

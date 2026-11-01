@@ -22,6 +22,9 @@ public class TestExporterTests
         Step("click", "#pnlMouse", ("count", "2"), ("foreground", "true")),
         Step("type", "#txtKeys", ("text", "x"), ("submit", "true"), ("foreground", "true")),
         Step("press_key", "#txtKeys", ("keys", "Ctrl+S")),
+        Step("press_key", "#txtKeys", ("keys", "Enter"), ("foreground", "false")),
+        Step("press_key", null, ("keys", "F5"), ("foreground", "false")),
+        Step("press_key", null, ("keys", "Escape")),
         Step("scroll", "#scrLong", ("to", "bottom")),
         Step("scroll", "#btnItem100", ("into_view", "true")),
         Step("wait", null, ("text", "Loaded 3 items"), ("state", "Visible"), ("timeout", "5000")),
@@ -52,6 +55,9 @@ public class TestExporterTests
         Assert.Contains("await app.DoubleClickAsync(\"#pnlMouse\");", code, StringComparison.Ordinal);
         Assert.Contains("await app.TypeAsync(\"#txtKeys\", \"x\", submit: true, foreground: true);", code, StringComparison.Ordinal);
         Assert.Contains("await app.PressKeyAsync(\"Ctrl+S\", \"#txtKeys\");", code, StringComparison.Ordinal);
+        Assert.Contains("await app.PressKeyAsync(\"Enter\", \"#txtKeys\", foreground: false);", code, StringComparison.Ordinal);
+        Assert.Contains("await app.PressKeyAsync(\"F5\", foreground: false);", code, StringComparison.Ordinal);
+        Assert.Contains("await app.PressKeyAsync(\"Escape\");", code, StringComparison.Ordinal);
         Assert.Contains("await app.ScrollToAsync(\"#scrLong\", ScrollEdge.Bottom);", code, StringComparison.Ordinal);
         Assert.Contains("await app.ScrollIntoViewAsync(\"#btnItem100\");", code, StringComparison.Ordinal);
         Assert.Contains("await app.WaitForTextAsync(\"Loaded 3 items\", timeoutMs: 5000);", code, StringComparison.Ordinal);

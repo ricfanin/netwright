@@ -287,7 +287,7 @@ public sealed partial class DesktopSession
         var chords = KeyParser.Parse(keys);
         if (!foreground)
         {
-            throw NeedsForeground("Key presses need real keyboard input, which Windows only delivers to the focused window.");
+            return PressKeyInBackgroundAsync(target, keys, chords, cancellationToken);
         }
 
         return ActCoreAsync(
@@ -322,6 +322,58 @@ public sealed partial class DesktopSession
             },
             "press_key",
             [("keys", keys)],
+            recordSelector: target is not null,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Presses keys without the foreground: the Companion raises the element's WPF key events inside the
+    /// app (ADR 0009). They are not real input, so every result says so. Chords with modifiers, and apps
+    /// without a WPF Companion, need a Foreground Action; there is no silent fallback to the real keyboard.
+    /// </summary>
+    private Task<ActionOutcome> PressKeyInBackgroundAsync(string? target, string keys, IReadOnlyList<VirtualKeyShort[]> chords, CancellationToken cancellationToken)
+    {
+        if (chords.Any(c => c.Length > 1 || c[0] is VirtualKeyShort.CONTROL or VirtualKeyShort.SHIFT or VirtualKeyShort.ALT or VirtualKeyShort.LWIN))
+        {
+            throw NeedsForeground("Key combinations with Ctrl, Alt, Shift or Win need real keyboard input, because WPF reads modifiers from the real keyboard.");
+        }
+
+        if (_app is not { HasCompanion: true })
+        {
+            throw NeedsForeground("Key presses need real keyboard input, except in WPF apps launched by Netwright (.NET 8 or later), where the Netwright Companion raises them as WPF key events.");
+        }
+
+        var codes = string.Join(' ', chords.Select(c => ((int)c[0]).ToString(CultureInfo.InvariantCulture)));
+        return ActCoreAsync(
+            () => LocateAsync(target, Actionability.Enabled, cancellationToken),
+            foreground: false,
+            context =>
+            {
+                var line = Line(context.Node);
+                context.Summary = $"pressed {keys}" + (target is null ? "" : $" in {line}") + " (raised as WPF key events)";
+                var answer = _app is { HasCompanion: true } app && ProcessOf(context.Node) is { } processId
+                    ? CompanionClient.Act(processId, "keys", context.Node.Key, ElementHandle(context.Node), codes, CompanionTimeoutMs)
+                    : null;
+                if (answer is null && _app is { } lost)
+                {
+                    lost.HasCompanion = false;
+                }
+
+                switch (answer)
+                {
+                    case "ok":
+                        return;
+                    case "blocked":
+                        throw new NetwrightException(
+                            ErrorCodes.NotActionable,
+                            $"{line} is in a window that an open modal dialog blocks, so real keys could not reach it either.",
+                            "Press the keys in the dialog: target it or an element in it.");
+                    default:
+                        throw NeedsForeground($"{line} cannot take key presses in the background (only WPF elements of apps launched by Netwright can).");
+                }
+            },
+            "press_key",
+            [("keys", keys), ("foreground", "false")],
             recordSelector: target is not null,
             cancellationToken);
     }

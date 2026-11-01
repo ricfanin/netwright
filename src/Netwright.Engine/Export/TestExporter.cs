@@ -160,9 +160,11 @@ public static class TestExporter
                 break;
 
             case "press_key":
+                // A press raised as WPF key events replays the same way, so the test does what the Agent did.
+                var background = step.Argument("foreground") == "false" ? ", foreground: false" : "";
                 yield return target is null
-                    ? $"await app.PressKeyAsync({Literal(step.Argument("keys") ?? "")});"
-                    : $"await app.PressKeyAsync({Literal(step.Argument("keys") ?? "")}, {target});";
+                    ? $"await app.PressKeyAsync({Literal(step.Argument("keys") ?? "")}{background});"
+                    : $"await app.PressKeyAsync({Literal(step.Argument("keys") ?? "")}, {target}{background});";
                 break;
 
             case "scroll":
