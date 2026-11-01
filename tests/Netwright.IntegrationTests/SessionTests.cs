@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Netwright.Engine;
 using Netwright.Engine.Session;
@@ -241,6 +242,24 @@ public sealed partial class SessionTests(ITestOutputHelper output)
         Assert.Equal(800, Math.Max(window.Image.Width, window.Image.Height));
         Assert.Equal(0x89, window.Image.Png[0]);
         Assert.True(element.Image.Width < 400 && element.Image.Height < 200, $"element capture was {element.Image.Width}x{element.Image.Height}");
+    }
+
+    [Theory]
+    [MemberData(nameof(Kinds))]
+    public async Task Screenshots_say_where_on_the_screen_they_were_taken(FixtureKind kind)
+    {
+        await using var session = await Fixtures.LaunchAsync(kind);
+
+        var window = await session.ScreenshotAsync(maxSize: 400);
+        var element = await session.ScreenshotAsync("#btnSubmit");
+        var bounds = Regex.Match(await session.InspectAsync("#btnSubmit"), @"bounds: x=(?<x>-?\d+) y=(?<y>-?\d+)");
+        output.WriteLine(window.Summary);
+        output.WriteLine(element.Summary);
+
+        Assert.Matches(@"^Screenshot of window .*: 400x\d+ \(scaled from \d+x\d+\), origin -?\d+,-?\d+ on screen$", window.Summary);
+        Assert.EndsWith($", origin {bounds.Groups["x"].Value},{bounds.Groups["y"].Value} on screen", element.Summary, StringComparison.Ordinal);
+        Assert.Equal(element.Image.SourceWidth, element.Image.Width);
+        Assert.Equal(new System.Drawing.Point(int.Parse(bounds.Groups["x"].Value, CultureInfo.InvariantCulture), int.Parse(bounds.Groups["y"].Value, CultureInfo.InvariantCulture)), element.Image.Origin);
     }
 
     [Theory]
