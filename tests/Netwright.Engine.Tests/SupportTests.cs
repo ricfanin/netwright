@@ -338,6 +338,32 @@ public class LaunchEnvironmentTests
         DesktopSession.ValidateEnvironment(request.EnvironmentVariables, allowed: []);
     }
 
+    [Theory]
+    [InlineData("1\0CORECLR_ENABLE_PROFILING=1")]
+    [InlineData("1\u001Fsecond")]
+    [InlineData(null)]
+    public void Refuses_values_that_would_add_variables_or_break_the_export(string? value)
+    {
+        // A NUL in a value ends the variable in the environment block, and the rest becomes a new one.
+        var error = Assert.Throws<NetwrightException>(() => DesktopSession.ValidateEnvironment(new Dictionary<string, string> { ["DX.UITESTINGENABLED"] = value! }, allowed: ["DX.UITESTINGENABLED"]));
+
+        Assert.Equal(ErrorCodes.InvalidArgument, error.Code);
+    }
+
+    [Fact]
+    public void Refuses_names_with_the_export_separator()
+    {
+        var error = Assert.Throws<NetwrightException>(() => DesktopSession.ValidateEnvironment(Env("A\u001FB"), allowed: null));
+
+        Assert.Equal(ErrorCodes.InvalidArgument, error.Code);
+    }
+
+    [Fact]
+    public void Allows_an_empty_value()
+    {
+        DesktopSession.ValidateEnvironment(new Dictionary<string, string> { ["DX.UITESTINGENABLED"] = "" }, allowed: ["DX.UITESTINGENABLED"]);
+    }
+
     [Fact]
     public void Refuses_names_that_differ_only_in_case()
     {

@@ -216,6 +216,22 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         Assert.StartsWith("error NO_APP:", await Call("desktop_snapshot", expectError: true), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Launch_refuses_a_nul_that_would_smuggle_in_another_variable()
+    {
+        // JSON "\u0000" arrives as a NUL; the allowed name would otherwise carry DOTNET_STARTUP_HOOKS along.
+        var refused = await Call("desktop_app", new
+        {
+            action = "launch",
+            path = Fixtures.ExecutablePath(FixtureKind.Wpf),
+            args = new[] { "--no-activate" },
+            env = new Dictionary<string, string> { ["NETWRIGHT_FIXTURE_ENV"] = "1\0DOTNET_STARTUP_HOOKS=\\\\attacker\\share\\hook.dll" },
+        }, expectError: true);
+
+        Assert.StartsWith("error INVALID_ARGUMENT:", refused, StringComparison.Ordinal);
+        Assert.StartsWith("error NO_APP:", await Call("desktop_snapshot", expectError: true), StringComparison.Ordinal);
+    }
+
     private async Task<string> Call(string tool, object? arguments = null, bool expectError = false)
     {
         var args = arguments is null

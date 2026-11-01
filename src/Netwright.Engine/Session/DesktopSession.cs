@@ -603,18 +603,31 @@ public sealed partial class DesktopSession : IAsyncDisposable
     }
 
     /// <summary>
-    /// Refuses malformed names, <c>NETWRIGHT_HIDDEN</c>, names that differ only in case, and, when
-    /// <paramref name="allowed"/> is set, every name not in it: a variable such as
+    /// Refuses malformed names and values, <c>NETWRIGHT_HIDDEN</c>, names that differ only in case,
+    /// and, when <paramref name="allowed"/> is set, every name not in it: a variable such as
     /// <c>DOTNET_STARTUP_HOOKS</c> runs code in the Target App.
     /// </summary>
     internal static void ValidateEnvironment(IReadOnlyDictionary<string, string> variables, IReadOnlyList<string>? allowed)
     {
         var seen = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var name in variables.Keys)
+        foreach (var (name, value) in variables)
         {
-            if (string.IsNullOrWhiteSpace(name) || name.Contains('=', StringComparison.Ordinal) || name.Contains('\0', StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(name) || name.Contains('=', StringComparison.Ordinal) || HasBreakingCharacter(name))
             {
                 throw NetwrightException.InvalidArgument($"'{name}' is not a valid environment variable name.");
+            }
+
+            // The environment block is "name=value\0..." and .NET does not check values for NUL, so a NUL would
+            // smuggle in variables the allow list never saw. A null value would unset the inherited variable,
+            // which the exported test cannot replay.
+            if (value is null)
+            {
+                throw NetwrightException.InvalidArgument($"{name} has no value.", "Pass a string; an empty string sets the variable to empty.");
+            }
+
+            if (HasBreakingCharacter(value))
+            {
+                throw NetwrightException.InvalidArgument($"The value of {name} contains a NUL or U+001F character.", "Environment values cannot contain them.");
             }
 
             // Netwright would overwrite it anyway; refusing it says so instead of ignoring it silently.
@@ -641,6 +654,10 @@ public sealed partial class DesktopSession : IAsyncDisposable
             }
         }
     }
+
+    /// <summary>NUL ends a variable in the environment block; the export separator splits the recorded launch.</summary>
+    private static bool HasBreakingCharacter(string text) =>
+        text.Contains('\0', StringComparison.Ordinal) || text.Contains(Export.TestExporter.ArgumentSeparator, StringComparison.Ordinal);
 
     private void EnsureAllowed(string executablePath)
     {
