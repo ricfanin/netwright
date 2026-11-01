@@ -104,7 +104,7 @@ public sealed partial class DesktopSession
             var window = node.Window;
             var image = WindowCapture.Capture(UiaTreeReader.LiveWindowHandle(window), ReferenceEquals(node, window) ? null : UiaTreeReader.LiveBounds(node), Math.Clamp(maxSize, 200, 4096));
             var summary = string.Create(CultureInfo.InvariantCulture,
-                $"Screenshot of {Renderer().RenderLine(node)}: {image.Width}x{image.Height}{(image.Width != image.SourceWidth ? $" (scaled from {image.SourceWidth}x{image.SourceHeight})" : "")}");
+                $"Screenshot of {Renderer().RenderLine(node)}: {image.Width}x{image.Height}{(image.Width != image.SourceWidth ? $" (scaled from {image.SourceWidth}x{image.SourceHeight})" : "")}, origin {image.Origin.X},{image.Origin.Y} on screen");
             return Task.FromResult(new ScreenshotOutcome(image, summary));
         }, cancellationToken);
 

@@ -192,12 +192,14 @@ A `target` that does not accept keyboard focus (a label, for example) fails at o
 | `path` | also save the PNG to this file, relative to the server's `--screenshot-dir` (`.png` is added when missing, an existing file is replaced). Paths outside that directory, through a link, or with device names or `:` are refused; without the option, saving is off |
 | `image` | `false` returns only the text with the saved path, which saves the image tokens (needs `path`) |
 
-Returns a text line with the element and the image size, followed by the PNG image. With `path`, the text has a second line with the full path of the saved file; with `image=false`, the result is only that text:
+Returns a text line with the element, the image size and where the captured area is on the screen, followed by the PNG image. With `path`, the text has a second line with the full path of the saved file; with `image=false`, the result is only that text:
 
 ```
-Screenshot of window "Orders" [e1]: 1280x720 (scaled from 1920x1080)
+Screenshot of window "Orders" [e1]: 1280x720 (scaled from 1920x1080), origin 412,180 on screen
 saved: C:\reports\shots\run 1\orders.png
 ```
+
+Image pixel (x, y) is at screen point `origin + (x, y) × scale`, where scale = source size / image size (1920 / 1280 = 1.5 above; 1 when the image is not scaled). Screen points are physical pixels, the same unit as the `bounds` in `desktop_inspect`. An element partly outside its window is cut at the window's edge, and the origin is the corner of the part that was captured.
 
 Windows are rendered with `PrintWindow`, so the capture is correct even when other windows cover the app. Minimized windows cannot be captured; restore them first.
 

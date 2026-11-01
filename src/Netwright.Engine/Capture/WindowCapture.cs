@@ -5,7 +5,20 @@ using Netwright.Engine.Uia;
 
 namespace Netwright.Engine.Capture;
 
-public sealed record CapturedImage(byte[] Png, int Width, int Height, int SourceWidth, int SourceHeight);
+/// <param name="Png">The image.</param>
+/// <param name="Width">Width of the image.</param>
+/// <param name="Height">Height of the image.</param>
+/// <param name="SourceWidth">Width of the captured area in screen pixels, before scaling.</param>
+/// <param name="SourceHeight">Height of the captured area in screen pixels, before scaling.</param>
+/// <param name="Origin">Top-left corner of the captured area in screen pixels.</param>
+public sealed record CapturedImage(byte[] Png, int Width, int Height, int SourceWidth, int SourceHeight, Point Origin);
+
+/// <summary>What to cut from a window capture and how large to make it.</summary>
+/// <param name="Crop">The captured area, relative to the window.</param>
+/// <param name="Width">Width of the output image.</param>
+/// <param name="Height">Height of the output image.</param>
+/// <param name="Origin">Top-left corner of the captured area in screen pixels.</param>
+internal readonly record struct CapturePlan(Rectangle Crop, int Width, int Height, Point Origin);
 
 /// <summary>
 /// Captures windows with <c>PrintWindow(PW_RENDERFULLCONTENT)</c>, which renders the window itself
@@ -52,10 +65,35 @@ internal static class WindowCapture
             }
         }
 
-        var crop = new Rectangle(0, 0, width, height);
+        var plan = Plan(new Rectangle(rect.Left, rect.Top, width, height), elementBounds, maxSize);
+
+        using var output = new Bitmap(plan.Width, plan.Height, PixelFormat.Format24bppRgb);
+        using (var graphics = Graphics.FromImage(output))
+        {
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            graphics.DrawImage(full, new Rectangle(0, 0, plan.Width, plan.Height), plan.Crop, GraphicsUnit.Pixel);
+        }
+
+        using var stream = new MemoryStream();
+        output.Save(stream, ImageFormat.Png);
+        return new CapturedImage(stream.ToArray(), plan.Width, plan.Height, plan.Crop.Width, plan.Crop.Height, plan.Origin);
+    }
+
+    /// <summary>
+    /// The part of the window to keep (the element clipped to the window, or the whole window), the
+    /// output size that fits <paramref name="maxSize"/>, and where the kept part starts on the screen.
+    /// Image pixel (x, y) is at screen point origin + (x, y) * crop size / output size.
+    /// </summary>
+    /// <param name="window">The window in screen pixels.</param>
+    /// <param name="elementBounds">The element in screen pixels, or null for the whole window.</param>
+    /// <param name="maxSize">Longest side of the output image.</param>
+    internal static CapturePlan Plan(Rectangle window, Rectangle? elementBounds, int maxSize)
+    {
+        var crop = new Rectangle(0, 0, window.Width, window.Height);
         if (elementBounds is { IsEmpty: false } bounds)
         {
-            crop = Rectangle.Intersect(crop, new Rectangle(bounds.X - rect.Left, bounds.Y - rect.Top, bounds.Width, bounds.Height));
+            crop = Rectangle.Intersect(crop, new Rectangle(bounds.X - window.Left, bounds.Y - window.Top, bounds.Width, bounds.Height));
             if (crop.IsEmpty)
             {
                 throw new NetwrightException(ErrorCodes.NotSupported, "The element is outside its window's visible area.", "Scroll it into view first.");
@@ -63,19 +101,10 @@ internal static class WindowCapture
         }
 
         var scale = Math.Min(1.0, (double)maxSize / Math.Max(crop.Width, crop.Height));
-        var outWidth = Math.Max(1, (int)Math.Round(crop.Width * scale));
-        var outHeight = Math.Max(1, (int)Math.Round(crop.Height * scale));
-
-        using var output = new Bitmap(outWidth, outHeight, PixelFormat.Format24bppRgb);
-        using (var graphics = Graphics.FromImage(output))
-        {
-            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            graphics.DrawImage(full, new Rectangle(0, 0, outWidth, outHeight), crop, GraphicsUnit.Pixel);
-        }
-
-        using var stream = new MemoryStream();
-        output.Save(stream, ImageFormat.Png);
-        return new CapturedImage(stream.ToArray(), outWidth, outHeight, crop.Width, crop.Height);
+        return new CapturePlan(
+            crop,
+            Math.Max(1, (int)Math.Round(crop.Width * scale)),
+            Math.Max(1, (int)Math.Round(crop.Height * scale)),
+            new Point(window.Left + crop.X, window.Top + crop.Y));
     }
 }
