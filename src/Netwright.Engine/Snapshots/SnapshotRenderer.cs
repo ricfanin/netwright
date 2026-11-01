@@ -41,6 +41,8 @@ public sealed class SnapshotRenderer(RefRegistry refs, SnapshotOptions options)
 
     public SnapshotOptions Options => options;
 
+    internal RefRegistry Refs => refs;
+
     public RenderResult Render(IEnumerable<UiNode> roots)
     {
         if (options.MaxDepth < 0)

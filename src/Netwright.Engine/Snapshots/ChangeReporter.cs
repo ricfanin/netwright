@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Netwright.Engine.Model;
+using Netwright.Engine.Refs;
 
 namespace Netwright.Engine.Snapshots;
 
@@ -13,6 +14,7 @@ public sealed record ChangeReport(string Text, int Changes, bool Truncated)
 /// Compares the Target App before and after an action and describes what the Agent would notice:
 /// elements that appeared (<c>+</c>), disappeared (<c>-</c>) or changed (<c>~</c>), plus focus moves.
 /// Elements are matched by RuntimeId, so a Ref in the report is the same Ref the Agent already knows.
+/// An element that got a new RuntimeId but kept its role, AutomationId, name and children is matched too.
 /// </summary>
 public static class ChangeReporter
 {
@@ -29,6 +31,9 @@ public static class ChangeReporter
 
         var beforeVisible = VisibleReportable(before, renderer);
         var afterVisible = VisibleReportable(after, renderer);
+        var renewed = PairRenewed(beforeVisible, afterVisible, renderer.Refs);
+        var renewedFrom = new HashSet<string>(renewed.Values, StringComparer.Ordinal);
+        string BeforeKey(string key) => renewed.GetValueOrDefault(key, key);
 
         var sb = new StringBuilder();
         var lines = 0;
@@ -57,7 +62,7 @@ public static class ChangeReporter
             }
 
             var ancestorAdded = node.Ancestors().Any(a => addedRoots.Contains(a.Key));
-            if (!beforeVisible.ContainsKey(node.Key))
+            if (!beforeVisible.TryGetValue(BeforeKey(node.Key), out var previous))
             {
                 if (ancestorAdded)
                 {
@@ -83,7 +88,6 @@ public static class ChangeReporter
                 continue;
             }
 
-            var previous = beforeVisible[node.Key];
             if (HasObservableChange(previous, node))
             {
                 Emit(b => b.Append("~ ").AppendLine(renderer.RenderLine(node, withFocus: false)));
@@ -93,7 +97,7 @@ public static class ChangeReporter
         var removedRoots = new HashSet<string>(StringComparer.Ordinal);
         foreach (var node in before.AllNodes)
         {
-            if (!beforeVisible.ContainsKey(node.Key) || afterVisible.ContainsKey(node.Key))
+            if (!beforeVisible.ContainsKey(node.Key) || afterVisible.ContainsKey(node.Key) || renewedFrom.Contains(node.Key))
             {
                 continue;
             }
@@ -109,7 +113,7 @@ public static class ChangeReporter
 
         var focusBefore = before.Focused;
         var focusAfter = after.Focused;
-        if (focusAfter is not null && focusAfter.Key != focusBefore?.Key && focusAfter.Key != actionTargetKey &&
+        if (focusAfter is not null && BeforeKey(focusAfter.Key) != focusBefore?.Key && BeforeKey(focusAfter.Key) != actionTargetKey &&
             focusAfter.ControlTypeId != Uia.ControlTypeIds.Window)
         {
             Emit(b => b.Append("focus: ").AppendLine(renderer.RenderLine(focusAfter, withAttributes: false)));
@@ -152,6 +156,51 @@ public static class ChangeReporter
             Collect(child, renderer, result);
         }
     }
+
+    /// <summary>
+    /// Some providers give an element a new RuntimeId when they re-create it although nothing about it
+    /// changed, like the inner pane of a DevExpress HamburgerMenu on every navigation, while its children
+    /// keep theirs. Such an element would be reported as removed and added again with all its children.
+    /// A removed and an added element with the same role, AutomationId, name and children are paired
+    /// instead, and the Refs the Agent holds move to the new key. An element without children is not
+    /// paired: nothing but its name shows that it is the same element.
+    /// </summary>
+    /// <returns>The before key of each paired element, by its after key.</returns>
+    private static Dictionary<string, string> PairRenewed(Dictionary<string, UiNode> beforeVisible, Dictionary<string, UiNode> afterVisible, RefRegistry refs)
+    {
+        var renewed = new Dictionary<string, string>(StringComparer.Ordinal);
+        var removedByFirstChild = new Dictionary<string, UiNode>(StringComparer.Ordinal);
+        foreach (var (key, node) in beforeVisible)
+        {
+            if (node.Children.Count > 0 && !afterVisible.ContainsKey(key))
+            {
+                removedByFirstChild.TryAdd(node.Children[0].Key, node);
+            }
+        }
+
+        if (removedByFirstChild.Count == 0)
+        {
+            return renewed;
+        }
+
+        foreach (var (key, node) in afterVisible)
+        {
+            if (node.Children.Count > 0 && !beforeVisible.ContainsKey(key) &&
+                removedByFirstChild.TryGetValue(node.Children[0].Key, out var old) && IsSameElement(old, node))
+            {
+                renewed[key] = old.Key;
+                refs.Rebind(old.Key, key);
+            }
+        }
+
+        return renewed;
+    }
+
+    private static bool IsSameElement(UiNode before, UiNode after) =>
+        before.ControlTypeId == after.ControlTypeId &&
+        string.Equals(before.AutomationId, after.AutomationId, StringComparison.Ordinal) &&
+        string.Equals(before.Name, after.Name, StringComparison.Ordinal) &&
+        before.Children.Select(c => c.Key).SequenceEqual(after.Children.Select(c => c.Key), StringComparer.Ordinal);
 
     private static bool HasObservableChange(UiNode before, UiNode after) =>
         !string.Equals(before.Name, after.Name, StringComparison.Ordinal) ||

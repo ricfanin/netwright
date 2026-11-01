@@ -57,7 +57,7 @@ The numbers come from `tests/Netwright.IntegrationTests/CapturePerformanceProbe.
 - **Refs** (`RefRegistry`) are keyed by RuntimeId, so the same element keeps the same Ref across Snapshots. Virtualized lists recycle containers under the same RuntimeId; an item whose name changed counts as a different element and its old Ref is stale.
 - **SnapshotRenderer** keeps interactive elements, text and named containers. It collapses unnamed panes, drops scrollbars, title bars and the parts of composite controls, turns grid rows into `row "a | b | c"` for both WPF (DataItem rows) and WinForms (Custom rows with DataItem cells), and caps items and lines.
 - **Selectors** are parsed into steps and matched in memory against the captured tree. Snapshot and Selector therefore always agree on what exists. `SelectorBuilder` produces the shortest unique Selector for an element (AutomationId first); it is shown by `desktop_inspect` and recorded for Test Export.
-- **ChangeReporter** compares two trees by RuntimeId, restricted to visible, reportable elements. It emits the topmost added subtrees, removed elements, changed states and focus moves, within a line budget.
+- **ChangeReporter** compares two trees by RuntimeId, restricted to visible, reportable elements. It emits the topmost added subtrees, removed elements, changed states and focus moves, within a line budget. Some providers give an unchanged element a new RuntimeId while its children keep theirs (the inner pane of a DevExpress HamburgerMenu, on every navigation). A removed and an added element with the same role, AutomationId, name and children are therefore treated as one element, and its Refs move to the new RuntimeId.
 
 ## Acting
 
