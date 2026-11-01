@@ -110,6 +110,7 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         var image = Assert.Single(result.Content.OfType<ImageContentBlock>());
         Assert.Equal("image/png", image.MimeType);
         Assert.Contains("640x", Assert.Single(result.Content.OfType<TextContentBlock>()).Text, StringComparison.Ordinal);
+        Assert.Null(result.StructuredContent);
     }
 
     [Fact]
@@ -156,6 +157,7 @@ public sealed class McpServerTests(ITestOutputHelper output) : IAsyncLifetime
         var text = string.Join("\n", result.Content.OfType<TextContentBlock>().Select(t => t.Text));
         output.WriteLine($"> {tool}: {text}");
         Assert.True(expectError == (result.IsError == true), $"{tool} returned isError={result.IsError}: {text}");
+        Assert.Null(result.StructuredContent);
 
         return text;
     }

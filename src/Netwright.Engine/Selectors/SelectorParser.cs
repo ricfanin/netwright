@@ -140,9 +140,18 @@ public static class SelectorParser
             if (reader.Peek == '\\' && reader.Position + 1 < reader.Length)
             {
                 reader.Advance();
+                sb.Append(reader.Peek switch
+                {
+                    'n' => '\n',
+                    'r' => '\r',
+                    var c => c,
+                });
+            }
+            else
+            {
+                sb.Append(reader.Peek);
             }
 
-            sb.Append(reader.Peek);
             reader.Advance();
         }
 

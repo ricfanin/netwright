@@ -114,6 +114,21 @@ public class SnapshotRendererTests
     }
 
     [Fact]
+    public void Automation_ids_with_line_breaks_stay_on_their_line()
+    {
+        var window = Window("Main", Node(ControlTypeIds.Button, "Save", "Save\r\nButton", UiPatterns.Invoke));
+
+        var text = Renderer().Render([window]).Text;
+
+        Assert.Equal(
+            """
+            - window "Main" [e1]
+              - button "Save" [e2] #"Save\r\nButton"
+            """.ReplaceLineEndings(),
+            text.ReplaceLineEndings());
+    }
+
+    [Fact]
     public void Hides_the_parts_of_composite_controls()
     {
         var slider = Node(ControlTypeIds.Slider, "Quantity", patterns: UiPatterns.RangeValue, children: [Node(ControlTypeIds.Button, "", "IncreaseLarge", UiPatterns.Invoke)]);
