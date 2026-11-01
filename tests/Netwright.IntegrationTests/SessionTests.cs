@@ -303,13 +303,13 @@ public sealed partial class SessionTests(ITestOutputHelper output)
         await session.ExpectAsync("#lblMouse", new ExpectRequest { Assertion = Assertion.Text, Expected = "Mouse: double" });
     }
 
-    // WPF only, like the next test. WinForms providers accept UIA SetFocus on tree items and labels without
-    // moving focus or failing (AccessibleObject.SetFocus is empty and TreeNode/Label do not override it), so
-    // the keys go to whichever control has focus and there is no refusal to report.
-    [Fact]
-    public async Task Targeted_key_press_on_a_tree_item_moves_the_selection()
+    // WinForms tree items accept UIA SetFocus without taking focus: the tree keeps it and routes keys to its
+    // selected item. A targeted press is therefore allowed there only on the selected item.
+    [Theory]
+    [MemberData(nameof(Kinds))]
+    public async Task Targeted_key_press_on_a_tree_item_moves_the_selection(FixtureKind kind)
     {
-        await using var session = await Fixtures.LaunchAsync(FixtureKind.Wpf, "Tree");
+        await using var session = await Fixtures.LaunchAsync(kind, "Tree");
         await session.SetStateAsync("treeitem \"Root\"", new SetStateRequest { Expanded = true });
         await session.SetStateAsync("treeitem \"Root\"", new SetStateRequest { Selected = true });
 
@@ -317,6 +317,23 @@ public sealed partial class SessionTests(ITestOutputHelper output)
         output.WriteLine(pressed.Summary + Environment.NewLine + pressed.Changes.Text);
 
         await session.ExpectAsync("#lblSelectedNode", new ExpectRequest { Assertion = Assertion.Text, Expected = "Selected: Documents" });
+    }
+
+    // Without the focus check the keys went to the tree and moved the selection from Root, while the result
+    // said they were pressed in Pictures.
+    [Fact]
+    public async Task Targeted_key_press_on_an_item_that_does_not_take_focus_is_refused()
+    {
+        await using var session = await Fixtures.LaunchAsync(FixtureKind.WinForms, "Tree");
+        await session.SetStateAsync("treeitem \"Root\"", new SetStateRequest { Expanded = true });
+        await session.SetStateAsync("treeitem \"Root\"", new SetStateRequest { Selected = true });
+
+        var error = await Assert.ThrowsAsync<NetwrightException>(() => session.PressKeyAsync("treeitem \"Pictures\"", "Down", foreground: true));
+        output.WriteLine($"{error.Code}: {error.Message} | {error.Hint}");
+
+        Assert.Equal(ErrorCodes.NotActionable, error.Code);
+        Assert.Contains("did not take keyboard focus", error.Message, StringComparison.Ordinal);
+        await session.ExpectAsync("#lblSelectedNode", new ExpectRequest { Assertion = Assertion.Text, Expected = "Selected: Root" });
     }
 
     [Fact]
