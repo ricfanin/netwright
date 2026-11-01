@@ -289,7 +289,7 @@ public sealed partial class SessionTests(ITestOutputHelper output)
     {
         await using var session = await Fixtures.LaunchAsync(kind, "Keyboard");
 
-        Assert.Equal(ErrorCodes.NeedsForeground, (await Assert.ThrowsAsync<NetwrightException>(() => session.PressKeyAsync("#txtKeys", "Enter", foreground: false))).Code);
+        Assert.Equal(ErrorCodes.NeedsForeground, (await Assert.ThrowsAsync<NetwrightException>(() => session.PressKeyAsync("#txtKeys", "Ctrl+A", foreground: false))).Code);
         Assert.Equal(ErrorCodes.NeedsForeground, (await Assert.ThrowsAsync<NetwrightException>(() => session.ClickAsync("#pnlMouse"))).Code);
 
         await session.PressKeyAsync("#txtKeys", "Enter", foreground: true);

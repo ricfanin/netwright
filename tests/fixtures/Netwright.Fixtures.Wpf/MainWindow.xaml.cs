@@ -37,6 +37,12 @@ public partial class MainWindow : Window
 
         // handledEventsToo: TextBox marks navigation/editing keys (arrows, Backspace, ...) as handled.
         txtKeys.AddHandler(KeyDownEvent, new KeyEventHandler(TxtKeys_KeyDown), handledEventsToo: true);
+
+        // F5 runs a command through a window-level KeyBinding, the way an app's shortcuts usually work.
+        var refresh = new RoutedCommand();
+        var refreshes = 0;
+        CommandBindings.Add(new CommandBinding(refresh, (_, _) => lblCommand.Text = $"Command: refreshed {++refreshes}"));
+        InputBindings.Add(new KeyBinding(refresh, Key.F5, ModifierKeys.None));
     }
 
     public void SelectTab(string header)

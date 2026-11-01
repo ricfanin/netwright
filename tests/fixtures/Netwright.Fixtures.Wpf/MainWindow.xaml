@@ -175,6 +175,7 @@
                     <TextBox x:Name="txtKeys" AutomationProperties.AutomationId="txtKeys" AutomationProperties.Name="Keys"
                              Width="300" Margin="4" HorizontalAlignment="Left" />
                     <TextBlock x:Name="lblLastKey" AutomationProperties.AutomationId="lblLastKey" Style="{StaticResource ValueLabel}" Text="Last key: none" />
+                    <TextBlock x:Name="lblCommand" AutomationProperties.AutomationId="lblCommand" Style="{StaticResource ValueLabel}" Text="Command: none" />
                     <local:MouseTarget x:Name="pnlMouse" AutomationProperties.AutomationId="pnlMouse" AutomationProperties.Name="Mouse target"
                                        Width="200" Height="100" Margin="4" HorizontalAlignment="Left"
                                        Background="SteelBlue" BorderBrush="DarkSlateBlue" BorderThickness="1"

@@ -133,10 +133,10 @@ public sealed class DesktopTools(DesktopSession session)
         }, cancellationToken)));
 
     [McpServerTool(Name = "desktop_press_key", Title = "Press key", Destructive = true, OpenWorld = false)]
-    [Description("Press keys, e.g. Enter, Ctrl+S, \"Tab Tab Enter\". Needs foreground=true.")]
+    [Description("Press keys, e.g. Enter, Ctrl+S, \"Tab Tab Enter\". Without foreground, WPF apps get single keys raised as WPF key events (not real input); chords and other apps need foreground=true.")]
     public Task<CallToolResult> PressKey(
         string keys,
-        [Description("Focus first")] string? target = null,
+        [Description("Element that gets the keys")] string? target = null,
         bool foreground = false,
         CancellationToken cancellationToken = default) =>
         RunAsync(async () => Reply.Action(await session.PressKeyAsync(target, keys, foreground, cancellationToken)));

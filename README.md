@@ -105,7 +105,7 @@ Prefer a global tool? Run `dotnet tool install -g Netwright` and use `"command":
 | `desktop_click` | Click (background; right/double click with `foreground`) |
 | `desktop_type` | Set text (background) or type real keys |
 | `desktop_set_state` | Check, select, expand, set a value, or pick an item by name |
-| `desktop_press_key` | Key presses and shortcuts (foreground) |
+| `desktop_press_key` | Key presses and shortcuts (foreground; single keys in WPF apps also in the background) |
 | `desktop_scroll` | Scroll by direction, to an edge, or into view |
 | `desktop_window` | List, activate, minimize, maximize, restore, close windows |
 | `desktop_screenshot` | Image of a window or element, even when covered |

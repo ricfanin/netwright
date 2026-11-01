@@ -21,16 +21,21 @@ internal static class WpfActions
     /// Returns null when the runtime id is not a WPF element of this process, so another UI stack or
     /// UI Automation can handle it.
     /// </summary>
-    public static string? Perform(string action, string runtimeId, string? argument)
+    public static string? Perform(string action, string runtimeId, nint element, string? argument)
     {
+        if (Application.Current is not { } app)
+        {
+            return null;
+        }
+
         // WPF builds the UI Automation runtime id of every peer as [7, process id, peer hash code].
         var parts = runtimeId.Split('.');
         if (parts.Length != 3 || parts[0] != "7"
             || parts[1] != Environment.ProcessId.ToString(CultureInfo.InvariantCulture)
-            || !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var hash)
-            || Application.Current is not { } app)
+            || !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var hash))
         {
-            return null;
+            // A window's runtime id comes from its HWND provider; key presses find the window by its handle.
+            return action == "keys" && element != 0 ? app.Dispatcher.Invoke(() => Keys(WpfKeys.Target(null, element), argument)) : null;
         }
 
         return app.Dispatcher.Invoke(() =>
@@ -39,13 +44,15 @@ internal static class WpfActions
             {
                 if (Find(window, hash) is { } peer)
                 {
-                    return Run(peer, action, argument, window);
+                    return action == "keys" ? Keys(WpfKeys.Target(peer, 0), argument) : Run(peer, action, argument, window);
                 }
             }
 
             return "notfound";
         });
     }
+
+    private static string Keys(UIElement? target, string? keys) => target is null ? "notfound" : WpfKeys.Press(target, keys ?? "");
 
     private static string Run(AutomationPeer peer, string action, string? argument, Window window)
     {

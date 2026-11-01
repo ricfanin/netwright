@@ -78,6 +78,7 @@ Rules:
 |---|---|---|---|
 | `txtKeys` | TextBox | Name `Keys` | On KeyDown, sets `lblLastKey` to `Last key: {Key}`. Use the framework key name, e.g. `Enter` in WPF or `Return` in WinForms; tests accept both |
 | `lblLastKey` | Label | `Last key: none` | |
+| `lblCommand` | Label | `Command: none` | **WPF only.** A window-level `KeyBinding` for F5 (no modifiers) runs a command that sets it to `Command: refreshed {n}`, counting the runs |
 | `pnlMouse` | Border/Panel, 200×100, visible background | Name `Mouse target` | **Has no Invoke pattern.** Left click sets `lblMouse` to `Mouse: left`, double click to `Mouse: double`, right click to `Mouse: right` |
 | `lblMouse` | Label | `Mouse: none` | |
 

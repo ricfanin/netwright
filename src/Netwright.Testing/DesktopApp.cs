@@ -96,8 +96,12 @@ public sealed class DesktopApp : IAsyncDisposable
     /// <summary>Sets a slider (number) or an input (text) directly.</summary>
     public Task SetValueAsync(string target, string value) => Session.SetStateAsync(target, new SetStateRequest { Value = value });
 
-    /// <summary>Presses keys such as <c>Enter</c>, <c>Ctrl+S</c> or <c>Tab Tab Enter</c>. Takes focus briefly.</summary>
-    public Task PressKeyAsync(string keys, string? target = null) => Session.PressKeyAsync(target, keys, foreground: true);
+    /// <summary>
+    /// Presses keys such as <c>Enter</c>, <c>Ctrl+S</c> or <c>Tab Tab Enter</c>. Takes focus briefly. With
+    /// <paramref name="foreground"/> false, a WPF app raises keys without modifiers as WPF key events inside
+    /// the app instead, without the focus (ADR 0009); they are not real input.
+    /// </summary>
+    public Task PressKeyAsync(string keys, string? target = null, bool foreground = true) => Session.PressKeyAsync(target, keys, foreground);
 
     public Task ScrollAsync(string target, ScrollDirection direction, ScrollAmountKind amount = ScrollAmountKind.Page) =>
         Session.ScrollAsync(target, new ScrollRequest { Direction = direction, Amount = amount });

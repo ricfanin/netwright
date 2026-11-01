@@ -25,5 +25,5 @@ UI Automation stays the source of truth for observing the UI: Snapshots, Refs, S
   There the Target App may take the foreground for a moment before Netwright gives it back, and the Agent is told once per session that bindings may not be committed.
 - The Companion handles only a fixed list of requests: commit bindings, invoke, toggle, select, deselect, expand, collapse, set value, set range, and select an item. It never runs arbitrary code, and it swallows every failure so it cannot take the Target App down.
 - The startup hook is inherited by the app's child processes, which load their own Companion. Startup hooks the app already sets are kept.
-- Key presses, double clicks and right clicks still need a Foreground Action. The Companion is the channel through which they can later move to the Background.
+- Key presses, double clicks and right clicks still need a Foreground Action. The Companion is the channel through which they can later move to the Background. Single key presses in WPF apps did, as raised WPF key events: see ADR 0009.
 - The Companion targets `net8.0-windows` and references WPF and WinForms, but it loads a UI stack only if the app has already loaded it.
