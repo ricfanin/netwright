@@ -80,6 +80,8 @@ Rules:
 | `lblLastKey` | Label | `Last key: none` | |
 | `pnlMouse` | Border/Panel, 200×100, visible background | Name `Mouse target` | **Has no Invoke pattern.** Left click sets `lblMouse` to `Mouse: left`, double click to `Mouse: double`, right click to `Mouse: right` |
 | `lblMouse` | Label | `Mouse: none` | |
+| `chkSlow` | CheckBox | `Slow work` | **WPF and WinForms only.** When checked, blocks the UI thread for **3000 ms** (`Thread.Sleep`) without opening a window, then sets `lblSlow` to `Slow work done`. A check box, because WPF runs a toggle inside the UI Automation call but defers a button click. On this tab, not on Async, so the Benchmark's `async-load` Snapshot does not change |
+| `lblSlow` | Label | `` | **WPF and WinForms only.** |
 
 **Tab "Scroll"** (`tabScroll`)
 

@@ -53,6 +53,12 @@ public sealed partial class DesktopSession
             get => Volatile.Read(ref _abandoned) == 1;
             set => Volatile.Write(ref _abandoned, value ? 1 : 0);
         }
+
+        /// <summary>True when the action returned without sending its input because it was abandoned.</summary>
+        public bool InputSkipped { get; private set; }
+
+        /// <summary>Call right before sending input; true means return without sending it.</summary>
+        public bool SkipInputIfAbandoned() => InputSkipped = Abandoned;
     }
 
     public Task<ActionOutcome> ClickAsync(string target, ClickRequest? request = null, CancellationToken cancellationToken = default)
@@ -76,7 +82,7 @@ public sealed partial class DesktopSession
             if (request.Foreground)
             {
                 var point = ClickPoint(node);
-                if (context.Abandoned)
+                if (context.SkipInputIfAbandoned())
                 {
                     return;
                 }
@@ -158,7 +164,7 @@ public sealed partial class DesktopSession
             {
                 context.Summary = string.Create(CultureInfo.InvariantCulture, $"typed {request.Text.Length} chars into {line} with the keyboard{(request.Submit ? " and pressed Enter" : "")}");
                 FocusForKeys(node, "Target the text field itself (desktop_find textbox), or leave foreground off if desktop_inspect lists the Value pattern.");
-                if (context.Abandoned)
+                if (context.SkipInputIfAbandoned())
                 {
                     return;
                 }
@@ -301,7 +307,7 @@ public sealed partial class DesktopSession
                     FocusForKeys(context.Node, "Target the element that should receive the keys, or click or select it first (desktop_click, desktop_set_state) and press the keys without a target.");
                 }
 
-                if (context.Abandoned)
+                if (context.SkipInputIfAbandoned())
                 {
                     return;
                 }
@@ -491,9 +497,12 @@ public sealed partial class DesktopSession
 
             try
             {
+                var workTime = Stopwatch.StartNew();
                 var work = Task.Run(() => perform(context), cancellationToken);
+                _ = work.ContinueWith(_ => workTime.Stop(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 var finished = await Task.WhenAny(work, Task.Delay(_options.BlockingCallTimeoutMs, cancellationToken)).ConfigureAwait(false);
-                if (finished == work)
+                var blocked = finished != work;
+                if (!blocked)
                 {
                     await work.ConfigureAwait(false);
                     if (context.Note is { } actionNote)
@@ -505,7 +514,6 @@ public sealed partial class DesktopSession
                 {
                     context.Abandoned = true;
                     _ = work.ContinueWith(t => _ = t.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
-                    note = "The call is still running inside the Target App, which usually means it opened a modal dialog.";
                     if (context.Summary.Length == 0)
                     {
                         context.Summary = $"{kind} on {Line(node)}";
@@ -518,6 +526,20 @@ public sealed partial class DesktopSession
                 }
 
                 var (after, settled) = await SettleAsync(cancellationToken).ConfigureAwait(false);
+                var exited = _app is null || _app.HasExited;
+                if (blocked)
+                {
+                    if (LateCallNote(work, () => context.Note, () => context.InputSkipped, exited, before, after, workTime.ElapsedMilliseconds, Line) is { } late)
+                    {
+                        note = Append(note, late);
+                    }
+
+                    if (work.IsCompletedSuccessfully && context.InputSkipped)
+                    {
+                        context.Summary = $"{kind} sent no input to {Line(node)}";
+                    }
+                }
+
                 if (foreground && !revealed && (keepFocus || after.Windows.Any(w => before.Find(w.Key) is null)))
                 {
                     scope.KeepFocus();
@@ -536,7 +558,7 @@ public sealed partial class DesktopSession
                     }
                 }
 
-                if (_app is null || _app.HasExited)
+                if (exited)
                 {
                     note = Append(note, "The Target App exited.");
                 }
@@ -554,6 +576,55 @@ public sealed partial class DesktopSession
                 }
             }
         }, cancellationToken);
+
+    /// <summary>
+    /// The note for a call that did not return within <see cref="SessionOptions.BlockingCallTimeoutMs"/>,
+    /// judged once the UI Settled. A call that failed in the meantime rethrows its exception, as awaiting
+    /// it in time would have; a call that returned keeps the action's own note. Null when the Target App
+    /// exited: the call then failed or hangs because the app went away, and the exit note says so.
+    /// </summary>
+    internal static string? LateCallNote(
+        Task work, Func<string?> actionNote, Func<bool> inputSkipped, bool appExited, UiTree before, UiTree after, long elapsedMs, Func<UiNode, string> line)
+    {
+        if (appExited)
+        {
+            return null;
+        }
+
+        // Read the status once, so a call that ends during this method is not reported both ways.
+        var status = work.Status;
+        if (status is TaskStatus.Faulted or TaskStatus.Canceled)
+        {
+            work.GetAwaiter().GetResult();
+        }
+
+        var returned = status == TaskStatus.RanToCompletion;
+        if (returned && inputSkipped())
+        {
+            return string.Create(CultureInfo.InvariantCulture, $"No input was sent: the Target App's UI thread was busy for {elapsedMs} ms, so Netwright stopped waiting before the input. Wait with desktop_wait, then repeat the action.");
+        }
+
+        var note = BlockedCallNote(before, after, returned, elapsedMs, line);
+        return returned && actionNote() is { } late ? note + " " + late : note;
+    }
+
+    /// <summary>
+    /// Explains a call that did not return within <see cref="SessionOptions.BlockingCallTimeoutMs"/>: a
+    /// modal dialog only when a new window actually appeared, otherwise a busy UI thread.
+    /// </summary>
+    internal static string BlockedCallNote(UiTree before, UiTree after, bool returned, long elapsedMs, Func<UiNode, string> line)
+    {
+        if (after.AllNodes.FirstOrDefault(n => n.ControlTypeId == ControlTypeIds.Window && before.Find(n.Key) is null) is { } opened)
+        {
+            return returned
+                ? $"The call returned only after a new window opened: {line(opened)}."
+                : $"The call is still running inside the Target App because it opened a modal dialog: {line(opened)}.";
+        }
+
+        return returned
+            ? string.Create(CultureInfo.InvariantCulture, $"The Target App was busy for {elapsedMs} ms before the call returned; no window opened.")
+            : string.Create(CultureInfo.InvariantCulture, $"The call has not returned after {elapsedMs} ms: the Target App's UI thread is busy, and no window opened. Wait with desktop_wait before the next action.");
+    }
 
     /// <summary>Shows or hides again a window of a hidden Target App; false when the app is not hidden.</summary>
     private bool Reveal(nint window, bool revealed) =>

@@ -1,5 +1,6 @@
 using Netwright.Engine.Diagnostics;
 using Netwright.Engine.Input;
+using Netwright.Engine.Model;
 using Netwright.Engine.Refs;
 using Netwright.Engine.Session;
 using Netwright.Engine.Uia;
@@ -241,5 +242,123 @@ public class PatternCallsTests
         Assert.False(PatternCalls.IsFocusRefusal(PatternCalls.Translate(new System.Runtime.InteropServices.COMException(), node)));
         Assert.False(PatternCalls.IsFocusRefusal(PatternCalls.Translate(new TimeoutException(), node)));
         Assert.False(PatternCalls.IsFocusRefusal(new NetwrightException(ErrorCodes.NotSupported, "no inner exception")));
+    }
+}
+
+public class BlockedCallNoteTests
+{
+    private static UiNode Win(string title, string key, params UiNode[] children) =>
+        Node(ControlTypeIds.Window, title, patterns: UiPatterns.Window, key: key, children: children);
+
+    [Fact]
+    public void Names_the_dialog_only_when_a_window_opened()
+    {
+        var before = Tree(Win("Main", "w", Button("Delete", key: "del")));
+        var withDialog = Tree(Win("Main", "w", Button("Delete", key: "del"), Win("Confirm", "dlg", Button("Yes"))));
+
+        var note = DesktopSession.BlockedCallNote(before, withDialog, returned: false, 1600, n => $"window \"{n.Name}\"");
+
+        Assert.Contains("opened a modal dialog: window \"Confirm\"", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Names_the_window_a_call_opened_before_it_returned()
+    {
+        var before = Tree(Win("Main", "w", Button("Open", key: "open")));
+        var after = Tree(Win("Main", "w", Button("Open", key: "open"), Win("Tool Window", "tool", Button("Close"))));
+
+        var note = DesktopSession.BlockedCallNote(before, after, returned: true, 1600, n => $"window \"{n.Name}\"");
+
+        Assert.Equal("The call returned only after a new window opened: window \"Tool Window\".", note);
+    }
+
+    [Fact]
+    public void A_call_that_returned_late_keeps_the_action_note()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.LateCallNote(Task.CompletedTask, () => "Bindings were not committed.", () => false, appExited: false, tree, tree, 1600, n => n.Name);
+
+        Assert.StartsWith("The Target App was busy for 1600 ms", note, StringComparison.Ordinal);
+        Assert.EndsWith(" Bindings were not committed.", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_still_running_does_not_read_the_action_note()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var running = new TaskCompletionSource();
+
+        var note = DesktopSession.LateCallNote(running.Task, () => throw new InvalidOperationException("read the note of a running call"), () => false, appExited: false, tree, tree, 1600, n => n.Name);
+
+        Assert.Contains("has not returned after 1600 ms", note, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false, "has not returned after 1600 ms")]
+    [InlineData(true, "was busy for 1600 ms")]
+    public void Reports_a_busy_ui_thread_when_no_window_opened(bool returned, string expected)
+    {
+        var before = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var after = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.BlockedCallNote(before, after, returned, 1600, n => n.Name);
+
+        Assert.Contains(expected, note, StringComparison.Ordinal);
+        Assert.DoesNotContain("dialog", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_that_failed_late_rethrows_its_exception()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var failure = new InvalidOperationException("perform failed");
+
+        var thrown = Assert.Throws<InvalidOperationException>(() =>
+            DesktopSession.LateCallNote(Task.FromException(failure), () => null, () => false, appExited: false, tree, tree, 1600, n => n.Name));
+
+        Assert.Same(failure, thrown);
+    }
+
+    [Fact]
+    public void A_call_that_was_cancelled_late_rethrows_the_cancellation()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        Assert.ThrowsAny<OperationCanceledException>(() =>
+            DesktopSession.LateCallNote(Task.FromCanceled(new CancellationToken(canceled: true)), () => null, () => false, appExited: false, tree, tree, 1600, n => n.Name));
+    }
+
+    [Fact]
+    public void A_call_that_failed_because_the_app_exited_leaves_it_to_the_exit_note()
+    {
+        // A handler that crashed the app after the timeout faults the call with "element not available".
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+        var gone = Task.FromException(new NetwrightException(ErrorCodes.StaleRef, "button \"Load\" disappeared while acting on it."));
+
+        Assert.Null(DesktopSession.LateCallNote(gone, () => null, () => false, appExited: true, tree, tree, 1600, n => n.Name));
+        Assert.Null(DesktopSession.LateCallNote(new TaskCompletionSource().Task, () => null, () => false, appExited: true, tree, tree, 1600, n => n.Name));
+    }
+
+    [Fact]
+    public void A_call_that_returned_without_its_input_says_no_input_was_sent()
+    {
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.LateCallNote(Task.CompletedTask, () => null, () => true, appExited: false, tree, tree, 1600, n => n.Name);
+
+        Assert.StartsWith("No input was sent", note, StringComparison.Ordinal);
+        Assert.DoesNotContain("before the call returned", note, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_call_still_running_is_not_asked_whether_it_skipped_its_input()
+    {
+        // The flag is only final once the call returned.
+        var tree = Tree(Win("Main", "w", Button("Load", key: "load")));
+
+        var note = DesktopSession.LateCallNote(new TaskCompletionSource().Task, () => null, () => throw new InvalidOperationException("read the flag of a running call"), appExited: false, tree, tree, 1600, n => n.Name);
+
+        Assert.Contains("has not returned after 1600 ms", note, StringComparison.Ordinal);
     }
 }

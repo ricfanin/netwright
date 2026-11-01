@@ -18,8 +18,9 @@ public sealed record SessionOptions
     public int SettleQuietMs { get; init; } = 150;
 
     /// <summary>
-    /// A UI Automation call that has not returned after this long is assumed to have opened modal UI
-    /// (for example a dialog shown from a click handler); the action continues without waiting for it.
+    /// The action stops waiting for a UI Automation call that has not returned after this long (a
+    /// dialog shown from a click handler, or a handler that keeps the UI thread busy) and continues;
+    /// its note says which of the two it was.
     /// </summary>
     public int BlockingCallTimeoutMs { get; init; } = 1500;
 
